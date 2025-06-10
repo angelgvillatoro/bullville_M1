@@ -128,3 +128,23 @@ def run_simulation_presion_lineal(nx=1600, ny=1600):
         "params": {"nx": nx, "ny": ny, "dt_star": dt_star, "nt": nt},
         "X_star": X_star, "Y_star": Y_star
     }
+
+
+
+def guardar_resultado(sim_data, nx, ny, folder='sim_datos_pres'):
+    os.makedirs(folder, exist_ok=True)
+    archivo = os.path.join(folder, f"{nx}x{ny}.pkl")
+    with open(archivo, 'wb') as f:
+        pickle.dump(sim_data, f)
+    print(f"📁 Resultado guardado en {archivo}")
+
+# Ejecutar simulación de alta resolución
+if __name__ == "__main__":
+
+    for size in [25, 50, 100, 200, 400, 800, 1600]:
+        print(f"🔄 Ejecutando simulación para {size}x{size}...")
+        sim = run_simulation_presion_lineal(size, size)
+        guardar_resultado(sim, size, size)
+
+
+# 1600, 1200, 800, 400, 200, 100, 50, 25
