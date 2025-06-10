@@ -5,8 +5,11 @@ import sys
 from numba import njit, prange
 
 @njit(parallel=True, fastmath=True)
-def actualizar_campos(u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star,
-                      Re, Pr, Ec, Eu, dt_star, dx_star, dy_star, nx, ny):
+def actualizar_campos_presion_lineal(u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star,
+                                     Re, Pr, Ec, Eu, dt_star, dx_star, dy_star, nx, ny):
+    for j in prange(nx):
+        p_star[-1, j] = j / (nx - 1)  # presión lineal en pared superior
+
     for i in prange(1, ny - 1):
         for j in prange(1, nx - 1):
             conv_u_x = u_old[i, j] * (u_old[i, j + 1] - u_old[i, j - 1]) / (2 * dx_star)
@@ -56,7 +59,7 @@ def actualizar_campos(u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star
         for j in prange(nx):
             tau[i, j] = (u_star[i + 1, j] - u_star[i - 1, j]) / (2 * dy_star)
 
-    # Aplicar condiciones de frontera como en la versión segunda
+    # Condiciones de frontera
     v_star[0, :] = 0
     v_star[-1, :] = 0
     u_star[0, :] = -0.5
@@ -69,8 +72,8 @@ def actualizar_campos(u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star
 
     return u_star, v_star, p_star, T_star, tau
 
-def run_simulation(nx=1600, ny=1600):
-    # Parámetros
+
+def run_simulation_presion_lineal(nx=1600, ny=1600):
     Re, Pr, Ec, Eu = 20.0, 10.0, 0.1, 1.0
     Lx_star = Ly_star = 1.0
     dx_star = Lx_star / (nx - 1)
@@ -79,29 +82,26 @@ def run_simulation(nx=1600, ny=1600):
     nt = int(np.ceil(1.0 / dt_cfl))
     dt_star = 1.0 / nt
 
-    # Malla
     x_star = np.linspace(0, Lx_star, nx)
     y_star = np.linspace(0, Ly_star, ny)
     X_star, Y_star = np.meshgrid(x_star, y_star)
 
-    # Campos
-    u0, up = 1.0, -0.5
-    T0_star, T1_star = 0.0, 0.0
-    u_star = np.ones((ny, nx)) * u0
+    u_star = np.ones((ny, nx))
     v_star = np.zeros((ny, nx))
     p_star = np.zeros((ny, nx))
-    T_star = np.ones((ny, nx)) * T1_star
-    u_star[0, :] = up
-    u_star[-1, :] = u0
-    T_star[0, :] = T0_star
-    T_star[-1, :] = T1_star
+    T_star = np.zeros((ny, nx))
+    u_star[0, :] = -0.5
+    u_star[-1, :] = 1.0
+    T_star[0, :] = 0.0
+    T_star[-1, :] = 0.0
 
     u_hist, v_hist, p_hist, T_hist, tau_hist = [], [], [], [], []
 
     for n in range(nt):
         u_old, v_old, p_old, T_old = u_star.copy(), v_star.copy(), p_star.copy(), T_star.copy()
-        u_star, v_star, p_star, T_star, tau = actualizar_campos(
-            u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star,
+        u_star, v_star, p_star, T_star, tau = actualizar_campos_presion_lineal(
+            u_old, v_old, p_old, T_old,
+            u_star, v_star, p_star, T_star,
             Re, Pr, Ec, Eu, dt_star, dx_star, dy_star, nx, ny
         )
         if nx < 800:
@@ -128,21 +128,3 @@ def run_simulation(nx=1600, ny=1600):
         "params": {"nx": nx, "ny": ny, "dt_star": dt_star, "nt": nt},
         "X_star": X_star, "Y_star": Y_star
     }
-
-def guardar_resultado(sim_data, nx, ny, folder='sim_datos'):
-    os.makedirs(folder, exist_ok=True)
-    archivo = os.path.join(folder, f"{nx}x{ny}.pkl")
-    with open(archivo, 'wb') as f:
-        pickle.dump(sim_data, f)
-    print(f"📁 Resultado guardado en {archivo}")
-
-# Ejecutar simulación de alta resolución
-if __name__ == "__main__":
-
-    for size in [800, 1600]:
-        print(f"🔄 Ejecutando simulación para {size}x{size}...")
-        sim = run_simulation(size, size)
-        guardar_resultado(sim, size, size)
-
-
-# 1600, 1200, 800, 400, 200, 100, 50, 25
