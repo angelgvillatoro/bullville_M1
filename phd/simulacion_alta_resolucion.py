@@ -98,28 +98,21 @@ def run_simulation(nx=1600, ny=1600):
 
     u_hist, v_hist, p_hist, T_hist, tau_hist = [], [], [], [], []
 
+    save_interval = max(1, nt // 300)  # calcula cada cuántos pasos guardar (máximo 300 frames)
+
     for n in range(nt):
         u_old, v_old, p_old, T_old = u_star.copy(), v_star.copy(), p_star.copy(), T_star.copy()
         u_star, v_star, p_star, T_star, tau = actualizar_campos(
             u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star,
             Re, Pr, Ec, Eu, dt_star, dx_star, dy_star, nx, ny
         )
-        if nx < 800:
-            if n % 50 == 0:
-                print(f"\rPaso {n}/{nt}", end="")
-                u_hist.append(u_star.copy())
-                v_hist.append(v_star.copy())
-                p_hist.append(p_star.copy())
-                T_hist.append(T_star.copy())
-                tau_hist.append(tau.copy())
-        else:
-            if n % 100 == 0:
-                print(f"\rPaso {n}/{nt}", end="")
-                u_hist.append(u_star.copy())
-                v_hist.append(v_star.copy())
-                p_hist.append(p_star.copy())
-                T_hist.append(T_star.copy())
-                tau_hist.append(tau.copy())
+        if n % save_interval == 0 or n == nt - 1:
+            print(f"\rPaso {n}/{nt}", end="")
+            u_hist.append(u_star.copy())
+            v_hist.append(v_star.copy())
+            p_hist.append(p_star.copy())
+            T_hist.append(T_star.copy())
+            tau_hist.append(tau.copy())
 
     print("\n✅ Simulación finalizada.")
     return {
@@ -136,13 +129,13 @@ def guardar_resultado(sim_data, nx, ny, folder='sim_datos'):
         pickle.dump(sim_data, f)
     print(f"📁 Resultado guardado en {archivo}")
 
+resoluciones = [25, 50, 100, 200, 400]
+#resoluciones = [800, 1600]
+
 # Ejecutar simulación de alta resolución
 if __name__ == "__main__":
 
-    for size in [800, 1600]:
+    for size in resoluciones:
         print(f"🔄 Ejecutando simulación para {size}x{size}...")
         sim = run_simulation(size, size)
         guardar_resultado(sim, size, size)
-
-
-# 1600, 1200, 800, 400, 200, 100, 50, 25
