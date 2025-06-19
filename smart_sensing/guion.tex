@@ -253,6 +253,16 @@ maintain large-scale consistency with observations \parencite{uppala2005era}.\\
 A more advanced form is \textit{spectral nudging}, where only specific spatial scales (e.g., synoptic structures) 
 are nudged, allowing finer scales to evolve freely.\\
 
+\subsubsection{Nudging: Flow Around a Square Cylinder}
+
+Zauner et al. \parencite{zauner2020nudging} applied nudging-based DA to the turbulent wake behind a square cylinder at a Reynolds number of 22,000. They used synthetic velocity field data from DNS as observational input and applied nudging in an unsteady RANS (URANS) solver. The study showed:
+\begin{itemize}
+  \item Recovery of both large-scale vortex shedding and small-scale Kelvin–Helmholtz instabilities.
+  \item Use of Spectral Proper Orthogonal Decomposition (SPOD) to quantify spectral agreement between assimilated and reference flows.
+  \item Importance of observation resolution in capturing high-frequency content.
+\end{itemize}
+
+
 \textbf{Modern variants:}\\
 
 \begin{itemize}
@@ -400,6 +410,24 @@ soil moisture. Streamflow observations are assimilated to correct the ensemble a
 spread. Observations from thermal imagery and wind conditions are used to adjust uncertain model parameters in 
 real time.\\
 
+\subsubsection{Kalman Filter (EnKF): Hurricane and Wildfire Modeling}
+
+\textbf{Hurricane Katrina (Torn and Hakim)} \parencite{torn2009ensemble}:  
+EnKF was applied to real observations from the 2005 Hurricane Katrina event. The study assimilated data from dropsondes, satellite radiances, and surface stations into the WRF model. Key outcomes:
+\begin{itemize}
+  \item Improved track and intensity forecasts over deterministic methods.
+  \item Demonstrated benefits of ensemble-derived flow-dependent covariances.
+  \item Showed that assimilation frequency and observation type strongly influence forecast quality.
+\end{itemize}
+
+\textbf{Wildfire Spread (Rochoux et al.)} \parencite{rochoux2020towards}:  
+A reduced-order surrogate model based on Polynomial Chaos Expansion (PCE) was coupled with EnKF to estimate key parameters of wildfire spread in real time. Main features:
+\begin{itemize}
+  \item Thermal imagery and meteorological data used as observations.
+  \item Demonstrated orders-of-magnitude faster runtime compared to full physics-based models.
+  \item Effective estimation of uncertain inputs like fuel moisture and wind speed.
+\end{itemize}
+
 \textbf{Modern applications:}\\
 
 \begin{itemize}
@@ -537,6 +565,24 @@ nonlinear dynamics, satellite radiative transfer, and complex observation operat
   \item \textit{Weak-constraint 4D-Var:} accounts for model errors explicitly.
 \end{itemize}
 
+\subsection{Variational Methods (4D-Var): RANS Mean Flow Reconstruction}
+
+Foures et al. \parencite{foures2014data} developed a 4D-Var technique to reconstruct Reynolds-averaged Navier–Stokes (RANS) mean flows. DNS data of flow around a circular cylinder were subsampled to simulate sparse observations. Highlights include:
+\begin{itemize}
+  \item Reconstruction of velocity fields and Reynolds stress distributions from partial data.
+  \item Use of a steady adjoint solver to minimize a cost function defined over time-averaged states.
+  \item Demonstrated the ability to extrapolate information into unmeasured regions.
+\end{itemize}
+
+Extra (D. Rival)\\
+
+\textbf{State Observer / PID-Inspired Assimilation Application: Pressure-Driven Flow (Neetson et al.)}\\
+
+Neetson and Rival introduced a state observer method inspired by PID control, where 
+assimilation is applied in the pressure Poisson equation instead of momentum equations. 
+The method dynamically corrected both pressure and velocity fields and was robust even 
+under noisy conditions. The assimilation was tested in flow with vortex shedding, showing 
+improved frequency response and stability.
 
 \printbibliography
 

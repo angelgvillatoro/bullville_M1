@@ -2399,16 +2399,20 @@
     <bcf:citekey order="20" intorder="1">stauffer1993use</bcf:citekey>
     <bcf:citekey order="20" intorder="2">kalnay2003atmospheric</bcf:citekey>
     <bcf:citekey order="21" intorder="1">uppala2005era</bcf:citekey>
-    <bcf:citekey order="22" intorder="1">kalman1960new</bcf:citekey>
-    <bcf:citekey order="22" intorder="2">kalnay2003atmospheric</bcf:citekey>
-    <bcf:citekey order="23" intorder="1">evensen1994sequential</bcf:citekey>
-    <bcf:citekey order="23" intorder="2">houtekamer2005ensemble</bcf:citekey>
-    <bcf:citekey order="24" intorder="1">rochoux2020towards</bcf:citekey>
-    <bcf:citekey order="25" intorder="1">lorenc1986analysis</bcf:citekey>
-    <bcf:citekey order="25" intorder="2">courtier1994strategy</bcf:citekey>
-    <bcf:citekey order="26" intorder="1">courtier1994strategy</bcf:citekey>
-    <bcf:citekey order="26" intorder="2">rabier2000ecmwf</bcf:citekey>
-    <bcf:citekey order="27" intorder="1">rabier2000ecmwf</bcf:citekey>
+    <bcf:citekey order="22" intorder="1">zauner2020nudging</bcf:citekey>
+    <bcf:citekey order="23" intorder="1">kalman1960new</bcf:citekey>
+    <bcf:citekey order="23" intorder="2">kalnay2003atmospheric</bcf:citekey>
+    <bcf:citekey order="24" intorder="1">evensen1994sequential</bcf:citekey>
+    <bcf:citekey order="24" intorder="2">houtekamer2005ensemble</bcf:citekey>
+    <bcf:citekey order="25" intorder="1">rochoux2020towards</bcf:citekey>
+    <bcf:citekey order="26" intorder="1">torn2009ensemble</bcf:citekey>
+    <bcf:citekey order="27" intorder="1">rochoux2020towards</bcf:citekey>
+    <bcf:citekey order="28" intorder="1">lorenc1986analysis</bcf:citekey>
+    <bcf:citekey order="28" intorder="2">courtier1994strategy</bcf:citekey>
+    <bcf:citekey order="29" intorder="1">courtier1994strategy</bcf:citekey>
+    <bcf:citekey order="29" intorder="2">rabier2000ecmwf</bcf:citekey>
+    <bcf:citekey order="30" intorder="1">rabier2000ecmwf</bcf:citekey>
+    <bcf:citekey order="31" intorder="1">foures2014data</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nyt">

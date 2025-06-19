@@ -179,6 +179,48 @@
       \field{pages}{10143\bibrangedash 10162}
       \range{pages}{20}
     \endentry
+    \entry{foures2014data}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=287a9d7c4a77cc225efffc06de1c2a89}{%
+           family={Foures},
+           familyi={F\bibinitperiod},
+           given={David\bibnamedelimb P\bibnamedelima G},
+           giveni={D\bibinitperiod\bibinitdelim P\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=3da508e50c6904b9b6473f475f5a9514}{%
+           family={Caulfield},
+           familyi={C\bibinitperiod},
+           given={C\bibnamedelima P},
+           giveni={C\bibinitperiod\bibinitdelim P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=04dc1a6588142d0cee4237fe24ed942f}{%
+           family={Schmid},
+           familyi={S\bibinitperiod},
+           given={Peter\bibnamedelima J},
+           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{fullhash}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{fullhashraw}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{bibnamehash}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{authorbibnamehash}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{authornamehash}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{authorfullhash}{338033ab8c0c86502d24e37e7f0c342e}
+      \strng{authorfullhashraw}{338033ab8c0c86502d24e37e7f0c342e}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Fluid Mechanics}
+      \field{title}{A data-assimilation method for Reynolds-averaged Navier–Stokes-driven mean flow reconstruction}
+      \field{volume}{748}
+      \field{year}{2014}
+      \field{pages}{241\bibrangedash 264}
+      \range{pages}{24}
+    \endentry
     \entry{gandin1963objective}{book}{}{}
       \name{author}{1}{}{%
         {{un=0,uniquepart=base,hash=0f6043e06d52993fcfb271948711c9e6}{%
@@ -725,6 +767,43 @@
       \verb 10.1175/1520-0493(1993)121<0617:UOFDDA>2.0.CO;2
       \endverb
     \endentry
+    \entry{torn2009ensemble}{article}{}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=85c244b9de908e2fa14c32bee147a54c}{%
+           family={Torn},
+           familyi={T\bibinitperiod},
+           given={Ryan\bibnamedelima D},
+           giveni={R\bibinitperiod\bibinitdelim D\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d9ab0fdce6ec0d11b714e0d70ddd5bdc}{%
+           family={Hakim},
+           familyi={H\bibinitperiod},
+           given={Gregory\bibnamedelima J},
+           giveni={G\bibinitperiod\bibinitdelim J\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{fullhash}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{fullhashraw}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{bibnamehash}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{authorbibnamehash}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{authornamehash}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{authorfullhash}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \strng{authorfullhashraw}{2eee2cebf8f69b5dbb426247f0f5fd79}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Monthly Weather Review}
+      \field{number}{9}
+      \field{title}{Ensemble data assimilation applied to RAINEX observations of Hurricane Katrina (2005)}
+      \field{volume}{137}
+      \field{year}{2009}
+      \field{pages}{2817\bibrangedash 2829}
+      \range{pages}{13}
+    \endentry
     \entry{uppala2005era}{article}{}{}
       \true{moreauthor}
       \true{morelabelname}
@@ -793,6 +872,39 @@
       \field{year}{2007}
       \field{pages}{1\bibrangedash 16}
       \range{pages}{16}
+    \endentry
+    \entry{zauner2020nudging}{article}{}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=c99a2e962964856447254a21741d54ab}{%
+           family={Zauner},
+           familyi={Z\bibinitperiod},
+           given={Lukas},
+           giveni={L\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=db6dbc60226726da996e17dcd8166a9b}{%
+           family={Wassen},
+           familyi={W\bibinitperiod},
+           given={Elke},
+           giveni={E\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{fullhash}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{fullhashraw}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{bibnamehash}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{authorbibnamehash}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{authornamehash}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{authorfullhash}{a34cb1b28a84b32420db2c0aca627729}
+      \strng{authorfullhashraw}{a34cb1b28a84b32420db2c0aca627729}
+      \field{sortinit}{Z}
+      \field{sortinithash}{96892c0b0a36bb8557c40c49813d48b3}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Turbulence}
+      \field{title}{Nudging-based data assimilation of the turbulent flow around a square cylinder}
+      \field{year}{2020}
     \endentry
   \enddatalist
 \endrefsection
