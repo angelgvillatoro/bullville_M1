@@ -1,0 +1,21 @@
+[0] Config.pm:308> INFO - This is Biber 2.20
+[0] Config.pm:311> INFO - Logfile is 'guion.blg'
+[39] biber-darwin:340> INFO - === Wed Jun 18, 2025, 15:47:48
+[47] Biber.pm:420> INFO - Reading 'guion.bcf'
+[93] Biber.pm:994> INFO - Found 20 citekeys in bib section 0
+[101] Biber.pm:4463> INFO - Processing section 0
+[106] Biber.pm:4654> INFO - Looking for bibtex file 'ref_DA.bib' for section 0
+[107] bibtex.pm:1713> INFO - LaTeX decoding ...
+[121] bibtex.pm:1519> INFO - Found BibTeX data source 'ref_DA.bib'
+[201] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[201] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[201] Biber.pm:4283> INFO - Sorting list 'nyt/global//global/global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[201] Biber.pm:4289> INFO - No sort tailoring available for locale 'en-US'
+[212] bbl.pm:676> INFO - Writing 'guion.bbl' with encoding 'UTF-8'
+[218] bbl.pm:779> INFO - Output to guion.bbl
+[219] Biber.pm:131> WARN - Duplicate entry key: 'kalnay2003atmospheric' in file 'ref_DA.bib', skipping ...
+[219] Biber.pm:131> WARN - Duplicate entry key: 'evensen1994sequential' in file 'ref_DA.bib', skipping ...
+[219] Biber.pm:131> WARN - Duplicate entry key: 'rochoux2020towards' in file 'ref_DA.bib', skipping ...
+[219] Biber.pm:131> WARN - Duplicate entry key: 'courtier1994strategy' in file 'ref_DA.bib', skipping ...
+[219] Biber.pm:131> WARN - BibTeX subsystem: /var/folders/lx/vhxvbgp94fj63r8wrldf_13m0000gn/T/biber_tmp_qug5/062559cbd3c7a2043d53d99263db895e_9400.utf8, line 152, warning: 1 characters of junk seen at toplevel
+[219] Biber.pm:133> INFO - WARNINGS: 5

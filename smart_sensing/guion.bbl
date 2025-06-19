@@ -1,0 +1,800 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{benner2015survey}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=8a4cdf8b13f7500bf3d444308098cf91}{%
+           family={Benner},
+           familyi={B\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2f983f6c3f88c341ca92205b1e0d04f5}{%
+           family={Gugercin},
+           familyi={G\bibinitperiod},
+           given={Serkan},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=540b98b0f45aa1fed9a28bd57312dfd6}{%
+           family={Willcox},
+           familyi={W\bibinitperiod},
+           given={Karen},
+           giveni={K\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{fullhash}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{fullhashraw}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{bibnamehash}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{authorbibnamehash}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{authornamehash}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{authorfullhash}{1222f1fc98cf7390e40be1da1681923e}
+      \strng{authorfullhashraw}{1222f1fc98cf7390e40be1da1681923e}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{SIAM Review}
+      \field{number}{4}
+      \field{title}{A survey of projection-based model reduction methods for parametric dynamical systems}
+      \field{volume}{57}
+      \field{year}{2015}
+      \field{pages}{483\bibrangedash 531}
+      \range{pages}{49}
+    \endentry
+    \entry{bertoglio2012identification}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=ed212bf28b6f511bd8a261d991b2af6c}{%
+           family={Bertoglio},
+           familyi={B\bibinitperiod},
+           given={Cristina},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=480e788db6daef9475358778c1d8cdad}{%
+           family={Moireau},
+           familyi={M\bibinitperiod},
+           given={Philippe},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=cceb436ef6f3ff9ba479dd8646840f07}{%
+           family={Fernandez},
+           familyi={F\bibinitperiod},
+           given={Miguel\bibnamedelima A},
+           giveni={M\bibinitperiod\bibinitdelim A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{29583172bd32253905a805bf0fd9989b}
+      \strng{fullhash}{29583172bd32253905a805bf0fd9989b}
+      \strng{fullhashraw}{29583172bd32253905a805bf0fd9989b}
+      \strng{bibnamehash}{29583172bd32253905a805bf0fd9989b}
+      \strng{authorbibnamehash}{29583172bd32253905a805bf0fd9989b}
+      \strng{authornamehash}{29583172bd32253905a805bf0fd9989b}
+      \strng{authorfullhash}{29583172bd32253905a805bf0fd9989b}
+      \strng{authorfullhashraw}{29583172bd32253905a805bf0fd9989b}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Computational Physics}
+      \field{number}{3}
+      \field{title}{Identification of artery wall stiffness: In vitro validation and in vivo results of a data assimilation procedure applied to a 3D fluid–structure interaction model}
+      \field{volume}{231}
+      \field{year}{2012}
+      \field{pages}{721\bibrangedash 738}
+      \range{pages}{18}
+    \endentry
+    \entry{courtier1994strategy}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=b28080807afd056411d4e36e8398f998}{%
+           family={Courtier},
+           familyi={C\bibinitperiod},
+           given={Philippe},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=64812b83bec350cdb1548c8a1bbbc4c8}{%
+           family={Thépaut},
+           familyi={T\bibinitperiod},
+           given={Jean-Noël},
+           giveni={J\bibinithyphendelim N\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=cffa75e2c0156f7566201f21fa7bdff8}{%
+           family={Hollingsworth},
+           familyi={H\bibinitperiod},
+           given={Anthony},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{fullhash}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{fullhashraw}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{bibnamehash}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{authorbibnamehash}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{authornamehash}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{authorfullhash}{c03f1a1c18d584f294bf392b86b14408}
+      \strng{authorfullhashraw}{c03f1a1c18d584f294bf392b86b14408}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Quarterly Journal of the Royal Meteorological Society}
+      \field{number}{519}
+      \field{title}{A strategy for operational implementation of 3D-Var (and 4D-Var)}
+      \field{volume}{120}
+      \field{year}{1994}
+      \field{pages}{1367\bibrangedash 1387}
+      \range{pages}{21}
+    \endentry
+    \entry{evensen1994sequential}{article}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=66b68a5e0b4f5f4ab6eea212262aa674}{%
+           family={Evensen},
+           familyi={E\bibinitperiod},
+           given={Geir},
+           giveni={G\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{fullhash}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{fullhashraw}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{bibnamehash}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{authorbibnamehash}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{authornamehash}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{authorfullhash}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \strng{authorfullhashraw}{66b68a5e0b4f5f4ab6eea212262aa674}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Geophysical Research: Oceans}
+      \field{number}{C5}
+      \field{title}{Sequential data assimilation with a nonlinear quasi-geostrophic model using Monte Carlo methods to forecast error statistics}
+      \field{volume}{99}
+      \field{year}{1994}
+      \field{pages}{10143\bibrangedash 10162}
+      \range{pages}{20}
+    \endentry
+    \entry{gandin1963objective}{book}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=0f6043e06d52993fcfb271948711c9e6}{%
+           family={Gandin},
+           familyi={G\bibinitperiod},
+           given={Leonid\bibnamedelima S},
+           giveni={L\bibinitperiod\bibinitdelim S\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {Israel Program for Scientific Translations}%
+      }
+      \strng{namehash}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{fullhash}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{fullhashraw}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{bibnamehash}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{authorbibnamehash}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{authornamehash}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{authorfullhash}{0f6043e06d52993fcfb271948711c9e6}
+      \strng{authorfullhashraw}{0f6043e06d52993fcfb271948711c9e6}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Objective analysis of meteorological fields}
+      \field{year}{1963}
+    \endentry
+    \entry{houtekamer2005ensemble}{article}{}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=9051b476c6b53d0082eb0fb2c73b04f0}{%
+           family={Houtekamer},
+           familyi={H\bibinitperiod},
+           given={Peter\bibnamedelima L},
+           giveni={P\bibinitperiod\bibinitdelim L\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=4d191f151b25a7b03bbafda45c0cb61c}{%
+           family={Mitchell},
+           familyi={M\bibinitperiod},
+           given={Hal\bibnamedelima C},
+           giveni={H\bibinitperiod\bibinitdelim C\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{fullhash}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{fullhashraw}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{bibnamehash}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{authorbibnamehash}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{authornamehash}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{authorfullhash}{8652015cd6bbb0c8e2458753b6f1f921}
+      \strng{authorfullhashraw}{8652015cd6bbb0c8e2458753b6f1f921}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Quarterly Journal of the Royal Meteorological Society}
+      \field{number}{613}
+      \field{title}{Ensemble Kalman filtering}
+      \field{volume}{131}
+      \field{year}{2005}
+      \field{pages}{3269\bibrangedash 3289}
+      \range{pages}{21}
+    \endentry
+    \entry{kalman1960new}{article}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=a32c80cc5a0f50b3e16df8d642c19dd8}{%
+           family={Kalman},
+           familyi={K\bibinitperiod},
+           given={Rudolph\bibnamedelima E},
+           giveni={R\bibinitperiod\bibinitdelim E\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {ASME}%
+      }
+      \strng{namehash}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{fullhash}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{fullhashraw}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{bibnamehash}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{authorbibnamehash}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{authornamehash}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{authorfullhash}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \strng{authorfullhashraw}{a32c80cc5a0f50b3e16df8d642c19dd8}
+      \field{sortinit}{K}
+      \field{sortinithash}{c02bf6bff1c488450c352b40f5d853ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Basic Engineering}
+      \field{number}{1}
+      \field{title}{A new approach to linear filtering and prediction problems}
+      \field{volume}{82}
+      \field{year}{1960}
+      \field{pages}{35\bibrangedash 45}
+      \range{pages}{11}
+    \endentry
+    \entry{kalnay2003atmospheric}{book}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=84342e7995fd06a514ab2b746431c0b0}{%
+           family={Kalnay},
+           familyi={K\bibinitperiod},
+           given={Eugenia},
+           giveni={E\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press}%
+      }
+      \strng{namehash}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{fullhash}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{fullhashraw}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{bibnamehash}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{authorbibnamehash}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{authornamehash}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{authorfullhash}{84342e7995fd06a514ab2b746431c0b0}
+      \strng{authorfullhashraw}{84342e7995fd06a514ab2b746431c0b0}
+      \field{sortinit}{K}
+      \field{sortinithash}{c02bf6bff1c488450c352b40f5d853ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Atmospheric Modeling, Data Assimilation and Predictability}
+      \field{year}{2003}
+    \endentry
+    \entry{law2015data}{book}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=45068592c196c83fb695df3e87ebb65a}{%
+           family={Law},
+           familyi={L\bibinitperiod},
+           given={Kody},
+           giveni={K\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=9fdd1b883dec513483f9ee5c99b7e251}{%
+           family={Stuart},
+           familyi={S\bibinitperiod},
+           given={Andrew},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=336efd1bc428f52fdda8628e361a3687}{%
+           family={Zygalakis},
+           familyi={Z\bibinitperiod},
+           given={Konstantinos},
+           giveni={K\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{da24feae67ab0f66d826b6be408382df}
+      \strng{fullhash}{da24feae67ab0f66d826b6be408382df}
+      \strng{fullhashraw}{da24feae67ab0f66d826b6be408382df}
+      \strng{bibnamehash}{da24feae67ab0f66d826b6be408382df}
+      \strng{authorbibnamehash}{da24feae67ab0f66d826b6be408382df}
+      \strng{authornamehash}{da24feae67ab0f66d826b6be408382df}
+      \strng{authorfullhash}{da24feae67ab0f66d826b6be408382df}
+      \strng{authorfullhashraw}{da24feae67ab0f66d826b6be408382df}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Data Assimilation: A Mathematical Introduction}
+      \field{year}{2015}
+    \endentry
+    \entry{lorenc1986analysis}{article}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=b21584fecc1507eb8cb883ecb0a04dea}{%
+           family={Lorenc},
+           familyi={L\bibinitperiod},
+           given={Andrew\bibnamedelima C},
+           giveni={A\bibinitperiod\bibinitdelim C\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{fullhash}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{fullhashraw}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{bibnamehash}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{authorbibnamehash}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{authornamehash}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{authorfullhash}{b21584fecc1507eb8cb883ecb0a04dea}
+      \strng{authorfullhashraw}{b21584fecc1507eb8cb883ecb0a04dea}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Quarterly Journal of the Royal Meteorological Society}
+      \field{number}{474}
+      \field{title}{Analysis methods for numerical weather prediction}
+      \field{volume}{112}
+      \field{year}{1986}
+      \field{pages}{1177\bibrangedash 1194}
+      \range{pages}{18}
+    \endentry
+    \entry{maier2021bayesian}{article}{}{}
+      \name{author}{5}{}{%
+        {{un=0,uniquepart=base,hash=9c9300d4c8d389ae60df543e53d2525f}{%
+           family={Maier},
+           familyi={M\bibinitperiod},
+           given={Anne},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=e53f7de843a06c8473cebd4ad0cc19e2}{%
+           family={Fuhrmann},
+           familyi={F\bibinitperiod},
+           given={Jakob},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=e9af5612219d19a2504af8f9c14e8ba2}{%
+           family={Sch{"a}fer},
+           familyi={S\bibinitperiod},
+           given={Andreas},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=6200a50c519c71ca15f23f7e7ac5c327}{%
+           family={Lipowsky},
+           familyi={L\bibinitperiod},
+           given={R{"u}diger},
+           giveni={R\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=ca860c0ad12db9c781bfefb37052eb0d}{%
+           family={D{"u}rr},
+           familyi={D\bibinitperiod},
+           given={Oliver},
+           giveni={O\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{eaadca978c28b11d0d09556149a2f3ca}
+      \strng{fullhash}{79c7547e6eff8036c73dc33c9a1fd951}
+      \strng{fullhashraw}{79c7547e6eff8036c73dc33c9a1fd951}
+      \strng{bibnamehash}{eaadca978c28b11d0d09556149a2f3ca}
+      \strng{authorbibnamehash}{eaadca978c28b11d0d09556149a2f3ca}
+      \strng{authornamehash}{eaadca978c28b11d0d09556149a2f3ca}
+      \strng{authorfullhash}{79c7547e6eff8036c73dc33c9a1fd951}
+      \strng{authorfullhashraw}{79c7547e6eff8036c73dc33c9a1fd951}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Medical Image Analysis}
+      \field{title}{Bayesian data assimilation to support informed decision-making in individualized chemotherapy}
+      \field{volume}{70}
+      \field{year}{2021}
+      \field{pages}{102006}
+      \range{pages}{1}
+    \endentry
+    \entry{rabier2000ecmwf}{article}{}{}
+      \name{author}{5}{}{%
+        {{un=0,uniquepart=base,hash=2318f8b8a7bc7c2784854045ccf613ed}{%
+           family={Rabier},
+           familyi={R\bibinitperiod},
+           given={Florence},
+           giveni={F\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=a17ed97d99c224089d0b431a7d1765a3}{%
+           family={Järvinen},
+           familyi={J\bibinitperiod},
+           given={Heikki},
+           giveni={H\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=463885f20eaf51f83e55c7600db051dd}{%
+           family={Klinker},
+           familyi={K\bibinitperiod},
+           given={Eric},
+           giveni={E\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2ebe1f5c3acd80b84a154635fd0b24ec}{%
+           family={Mahfouf},
+           familyi={M\bibinitperiod},
+           given={Jean-François},
+           giveni={J\bibinithyphendelim F\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=b33a60e3fb8b7fd01be2c35be4fb1ef8}{%
+           family={Simmons},
+           familyi={S\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{cc153bd9ca5c7a519c9f4857f2ff77c3}
+      \strng{fullhash}{ef4af6700b9539fe5e9a5dcafcb25de4}
+      \strng{fullhashraw}{ef4af6700b9539fe5e9a5dcafcb25de4}
+      \strng{bibnamehash}{cc153bd9ca5c7a519c9f4857f2ff77c3}
+      \strng{authorbibnamehash}{cc153bd9ca5c7a519c9f4857f2ff77c3}
+      \strng{authornamehash}{cc153bd9ca5c7a519c9f4857f2ff77c3}
+      \strng{authorfullhash}{ef4af6700b9539fe5e9a5dcafcb25de4}
+      \strng{authorfullhashraw}{ef4af6700b9539fe5e9a5dcafcb25de4}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Quarterly Journal of the Royal Meteorological Society}
+      \field{number}{564}
+      \field{title}{The ECMWF operational implementation of four-dimensional variational assimilation. I: Experimental results with simplified physics}
+      \field{volume}{126}
+      \field{year}{2000}
+      \field{pages}{1143\bibrangedash 1170}
+      \range{pages}{28}
+    \endentry
+    \entry{raissi2019physics}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=95a17c39168b9e6b8812f207b4e036c1}{%
+           family={Raissi},
+           familyi={R\bibinitperiod},
+           given={Maziar},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=197d71332633e07aa578718628fdc405}{%
+           family={Perdikaris},
+           familyi={P\bibinitperiod},
+           given={Paris},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=9aae361c2be63ce52bc98112e2a2fffa}{%
+           family={Karniadakis},
+           familyi={K\bibinitperiod},
+           given={George\bibnamedelima E},
+           giveni={G\bibinitperiod\bibinitdelim E\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{fullhash}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{fullhashraw}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{bibnamehash}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{authorbibnamehash}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{authornamehash}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{authorfullhash}{93ae6c4ff4235c02057fbd439fa964f6}
+      \strng{authorfullhashraw}{93ae6c4ff4235c02057fbd439fa964f6}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Computational Physics}
+      \field{title}{Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations}
+      \field{volume}{378}
+      \field{year}{2019}
+      \field{pages}{686\bibrangedash 707}
+      \range{pages}{22}
+    \endentry
+    \entry{richardson1922weather}{book}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=b71eb4c01bbf9a79b0f93274ee9c0b50}{%
+           family={Richardson},
+           familyi={R\bibinitperiod},
+           given={Lewis\bibnamedelima Fry},
+           giveni={L\bibinitperiod\bibinitdelim F\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press}%
+      }
+      \strng{namehash}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{fullhash}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{fullhashraw}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{bibnamehash}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{authorbibnamehash}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{authornamehash}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{authorfullhash}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \strng{authorfullhashraw}{b71eb4c01bbf9a79b0f93274ee9c0b50}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Weather Prediction by Numerical Process}
+      \field{year}{1922}
+    \endentry
+    \entry{rochoux2020towards}{article}{}{}
+      \name{author}{5}{}{%
+        {{un=0,uniquepart=base,hash=9e4a0db294cf5f9666216a81d986b6cc}{%
+           family={Rochoux},
+           familyi={R\bibinitperiod},
+           given={Marie\bibnamedelima C},
+           giveni={M\bibinitperiod\bibinitdelim C\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=47ba2bd5b301955eb3ac0e26ff7c4790}{%
+           family={Cuenot},
+           familyi={C\bibinitperiod},
+           given={B{'e}atrice},
+           giveni={B\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=9546878bfd81132a751bc0987b65b479}{%
+           family={Ricci},
+           familyi={R\bibinitperiod},
+           given={Sophie\bibnamedelima M},
+           giveni={S\bibinitperiod\bibinitdelim M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=c5946d1d222596eb94e803840e87e445}{%
+           family={Trouv{'e}},
+           familyi={T\bibinitperiod},
+           given={Arnaud},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=888e69a218127e1465539952a4aad799}{%
+           family={Mandel},
+           familyi={M\bibinitperiod},
+           given={Jan},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{99db877dafb7d393d7ff82f943335df2}
+      \strng{fullhash}{b3f09634554329a41279f073f95134db}
+      \strng{fullhashraw}{b3f09634554329a41279f073f95134db}
+      \strng{bibnamehash}{99db877dafb7d393d7ff82f943335df2}
+      \strng{authorbibnamehash}{99db877dafb7d393d7ff82f943335df2}
+      \strng{authornamehash}{99db877dafb7d393d7ff82f943335df2}
+      \strng{authorfullhash}{b3f09634554329a41279f073f95134db}
+      \strng{authorfullhashraw}{b3f09634554329a41279f073f95134db}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Natural Hazards and Earth System Sciences}
+      \field{number}{5}
+      \field{title}{Towards predictive data-driven simulations of wildfire spread – Part I: Reduced-cost Ensemble Kalman Filter based on a Polynomial Chaos surrogate model for parameter estimation}
+      \field{volume}{20}
+      \field{year}{2020}
+      \field{pages}{1473\bibrangedash 1495}
+      \range{pages}{23}
+    \endentry
+    \entry{saredi2022state}{article}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=b30e1894b3643811069d03d480a060e0}{%
+           family={Saredi},
+           familyi={S\bibinitperiod},
+           given={Edoardo},
+           giveni={E\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=dfb35a7b650e80cfd87190f52a85ef8f}{%
+           family={Rapp},
+           familyi={R\bibinitperiod},
+           given={C},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=812a88ac94ce01b5524b87b1530ec80d}{%
+           family={Manhart},
+           familyi={M\bibinitperiod},
+           given={M},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{fullhash}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{fullhashraw}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{bibnamehash}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{authorbibnamehash}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{authornamehash}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{authorfullhash}{d3e3f34fc2c91295881cb043ac1bc990}
+      \strng{authorfullhashraw}{d3e3f34fc2c91295881cb043ac1bc990}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Fluids Engineering}
+      \field{title}{State Observer Data Assimilation for RANS with Time-Averaged 3D-PIV Data}
+      \field{year}{2022}
+    \endentry
+    \entry{sasaki1958objective}{article}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=e229dd58be1f6f9e936869fa35c6cb88}{%
+           family={Sasaki},
+           familyi={S\bibinitperiod},
+           given={Yoshi},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{fullhash}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{fullhashraw}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{bibnamehash}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{authorbibnamehash}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{authornamehash}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{authorfullhash}{e229dd58be1f6f9e936869fa35c6cb88}
+      \strng{authorfullhashraw}{e229dd58be1f6f9e936869fa35c6cb88}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of the Meteorological Society of Japan}
+      \field{number}{3}
+      \field{title}{An objective analysis based on the variational method}
+      \field{volume}{36}
+      \field{year}{1958}
+      \field{pages}{77\bibrangedash 88}
+      \range{pages}{12}
+    \endentry
+    \entry{stauffer1993use}{article}{}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=1c277ac5bda45e2bd70466954a779a3f}{%
+           family={Stauffer},
+           familyi={S\bibinitperiod},
+           given={David\bibnamedelima R.},
+           giveni={D\bibinitperiod\bibinitdelim R\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=e4943f0ea10fc88a52bc85f6cccea9c1}{%
+           family={Seaman},
+           familyi={S\bibinitperiod},
+           given={Nelson\bibnamedelima L.},
+           giveni={N\bibinitperiod\bibinitdelim L\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{fullhash}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{fullhashraw}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{bibnamehash}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{authorbibnamehash}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{authornamehash}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{authorfullhash}{bad9fe7f5ac0d3253635c2648cb56336}
+      \strng{authorfullhashraw}{bad9fe7f5ac0d3253635c2648cb56336}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Monthly Weather Review}
+      \field{number}{3}
+      \field{title}{Use of Four-Dimensional Data Assimilation in a Limited-Area Mesoscale Model. Part I: Experiments with Synoptic-Scale Data}
+      \field{volume}{121}
+      \field{year}{1993}
+      \field{pages}{617\bibrangedash 644}
+      \range{pages}{28}
+      \verb{doi}
+      \verb 10.1175/1520-0493(1993)121<0617:UOFDDA>2.0.CO;2
+      \endverb
+    \endentry
+    \entry{uppala2005era}{article}{}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=804c9e5f2bcabfaf14e1ce7ec94caa75}{%
+           family={Uppala},
+           familyi={U\bibinitperiod},
+           given={S.K.},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{fullhash}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{fullhashraw}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{bibnamehash}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{authorbibnamehash}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{authornamehash}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{authorfullhash}{c1c63b0b48186699148c3cc673acf46b}
+      \strng{authorfullhashraw}{c1c63b0b48186699148c3cc673acf46b}
+      \field{sortinit}{U}
+      \field{sortinithash}{6901a00e45705986ee5e7ca9fd39adca}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Quarterly Journal of the Royal Meteorological Society}
+      \field{title}{The ERA-40 re-analysis}
+      \field{volume}{131}
+      \field{year}{2005}
+      \field{pages}{2961\bibrangedash 3012}
+      \range{pages}{52}
+    \endentry
+    \entry{wikle2007bayesian}{article}{}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=cd009bb3738e62926e16ced5a538991c}{%
+           family={Wikle},
+           familyi={W\bibinitperiod},
+           given={Christopher\bibnamedelima K},
+           giveni={C\bibinitperiod\bibinitdelim K\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=5ef96c70e2e24beb011e0e345c71b116}{%
+           family={Berliner},
+           familyi={B\bibinitperiod},
+           given={L\bibnamedelima Mark},
+           giveni={L\bibinitperiod\bibinitdelim M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{fullhash}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{fullhashraw}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{bibnamehash}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{authorbibnamehash}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{authornamehash}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{authorfullhash}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \strng{authorfullhashraw}{f50e89daec6ea0ef4ec9458c7d59c0dc}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Physica D: Nonlinear Phenomena}
+      \field{number}{1-2}
+      \field{title}{A Bayesian tutorial for data assimilation}
+      \field{volume}{230}
+      \field{year}{2007}
+      \field{pages}{1\bibrangedash 16}
+      \range{pages}{16}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

@@ -1,0 +1,543 @@
+\documentclass[a4paper]{article}
+\usepackage{graphicx}
+\usepackage[top=10mm, bottom=20mm, left=30mm, right=30mm, includehead]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{mathptmx}
+\usepackage{subcaption}
+%\usepackage{parskip}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{ref_DA.bib}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}  % Elimina la línea en la cabecera
+\date{}
+\setlength{\headheight}{23.10004pt}
+\setlength{\parindent}{0pt}
+
+
+\fancypagestyle{plain}{
+    \fancyhead[R]{\textit{Smart Sensing}}
+    \fancyhead[L]{\textit{Ángel González Villatoro, Michael Hilfer, Paolo Olivucci}}
+    \renewcommand{\headrulewidth}{0pt}
+    }
+
+\title{\bfseries\Large{Data Assimilation}}
+
+\begin{document}
+\maketitle 
+
+\section{Introduction}
+
+\subsection{Historical Development of Data Assimilation}
+
+\textbf{1. Initial Motivation: Weather Prediction}\\
+
+The concept of Data Assimilation emerged in the early 20th century with the attempt to use mathematical 
+models for atmospheric prediction. Lewis Fry Richardson (1922) attempted to forecast weather by manually 
+solving atmospheric equations \parencite{richardson1922weather}. However, the failure due to inconsistent 
+initial conditions highlighted the need for a method to combine real-world data with models.\\
+
+\textbf{2. Mathematical Formalization}\\
+
+In the 1950s–60s, foundational algorithms were developed. Sasaki (1958) introduced the variational approach 
+(3D-Var), minimizing the difference between model output and observations \parencite{sasaki1958objective}. 
+Gandin (1963) then developed Optimal Interpolation (OI), a key method in operational meteorology 
+\parencite{gandin1963objective}. These efforts introduced key concepts like background (prior forecast) and 
+analysis (corrected state).\\
+
+\textbf{3. Expansion with Supercomputing}\\
+
+In the 1970s–80s, the rise of numerical weather models and observational data from satellites and radar 
+made Data Assimilation essential. Institutions such as ECMWF and NCEP adopted it for global forecasting. 
+The 4D-Var method also emerged, allowing time-evolving correction using forward and backward integrations.\\
+
+\textbf{4. Stochastic Methods}\\
+
+In the 1990s–2000s, ensemble-based methods like the Ensemble Kalman Filter (EnKF) by Evensen and Houtekamer 
+became popular. These are more robust for nonlinear systems and allow estimation of uncertainty by running 
+multiple perturbed simulations.\\
+
+\textbf{5. Cross-Disciplinary Expansion}\\
+
+Today, DA is applied in diverse fields:
+\begin{itemize}
+    \item \textbf{Oceanography and climatology}
+    \item \textbf{Aerodynamics and fluid mechanics}
+    \item \textbf{Cardiovascular modeling} \parencite{bertoglio2012identification}
+    \item \textbf{Wildfire forecasting} \parencite{rochoux2020towards}
+    \item \textbf{Energy systems and engineering control} \parencite{saredi2022state}
+    \item \textbf{Medicine and oncology} \parencite{maier2021bayesian}
+    \item \textbf{Economics and uncertainty quantification} \parencite{wikle2007bayesian}
+\end{itemize}
+
+\subsection{Relationships to Other Key Concepts}
+
+\textbf{Design of Experiments (DoE)}: DA benefits from well-designed measurement strategies and can guide 
+them in return. DoE optimizes when and where to measure to extract maximum information. DA enables adaptive 
+observation targeting (e.g., in OSSEs), improving future experiment planning \parencite{kalnay2003atmospheric}.\\
+
+\textbf{Predictive Uncertainty}: DA is not only about estimating system states, but also about their 
+associated uncertainty. Methods like EnKF and Bayesian DA provide probabilistic forecasts, crucial in 
+fields like meteorology and medicine \parencite{evensen1994sequential, wikle2007bayesian}.\\
+
+\textbf{Mode Decomposition}: Techniques like POD, DMD, and SVD are often used in tandem with DA. Modal 
+decomposition reduces model order, making DA computationally feasible and efficient. Alternatively, DA 
+can reconstruct modal coefficients from partial data \parencite{benner2015survey}.
+
+\textbf{Machine Learning (ML)}: DA is increasingly integrated with ML. Hybrid models leverage DA for 
+physical structure and ML for flexibility. Physics-Informed Neural Networks (PINNs) incorporate model physics 
+into neural training, while DA can refine internal states or assist in training under noise \parencite{raissi2019physics, benner2015survey}.
+
+\section{Key Components of Data Assimilation}
+
+Data Assimilation (DA) integrates model predictions with observations to estimate the evolving state of a physical 
+system. Regardless of the specific method (e.g., variational, ensemble-based, hybrid), most DA frameworks share the 
+following fundamental components \parencite{kalnay2003atmospheric, evensen1994sequential, wikle2007bayesian}.\\
+
+\textbf{1. Model (Forward Operator)}\\
+
+The model is typically a set of dynamical equations—often derived from physics—that describe the time evolution of 
+the system's state. This could be:\\
+
+\begin{itemize}
+  \item Navier–Stokes equations for fluid flow,
+  \item Atmospheric or oceanic circulation models,
+  \item Biomechanical or epidemiological models.
+\end{itemize}
+
+The model provides the \textit{background forecast} (also known as the \textit{prior}) used in the assimilation 
+process \parencite{kalnay2003atmospheric}.\\
+
+\textbf{2. Observations (Data)}\\
+
+These are real-world measurements, often noisy and partial, obtained from:
+\begin{itemize}
+  \item Sensors (e.g., weather stations, PIV cameras),
+  \item Satellites, drones, or in-situ probes,
+  \item Medical imaging or industrial diagnostics.
+\end{itemize}
+
+DA seeks to correct the model using these observations while respecting the system dynamics \parencite{wikle2007bayesian}.\\
+
+\textbf{3. Observation Operator (H)}\\
+
+This maps the model state into the observational space \parencite{law2015data}. It may be:\\
+
+\begin{itemize}
+  \item A simple projection (e.g., extracting velocity at a point),
+  \item A complex nonlinear operator (e.g., computing a Doppler signal or pressure field).
+\end{itemize}
+
+This operator allows comparing model predictions to actual measurements.\\
+
+\textbf{4. Error Statistics (Covariances)}\\
+
+DA explicitly or implicitly uses error models for:\\
+
+\begin{itemize}
+  \item Background error (uncertainty in the model prediction),
+  \item Observation error (noise, bias, or measurement limitations).
+\end{itemize}
+
+These are often encoded in covariance matrices:\\
+
+\begin{itemize}
+  \item $\mathbf{B}$ for background,
+  \item $\mathbf{R}$ for observations.
+\end{itemize}
+
+In ensemble methods, these are estimated from sample statistics \parencite{evensen1994sequential}.\\
+
+\textbf{5. Assimilation Algorithm}\\
+
+This is the mathematical method that combines model and data. Examples include:\\
+
+\begin{itemize}
+  \item Variational methods: 3D-Var, 4D-Var,
+  \item Sequential methods: Kalman Filter, EnKF,
+  \item Bayesian or particle-based methods.
+\end{itemize}
+
+The goal is to find an \textit{analysis state}, which is the best estimate of the true system, balancing fidelity 
+to the model and the observations \parencite{kalnay2003atmospheric}.\\
+
+\textbf{6. Update Cycle (Sequential or Smoothing)}\\
+
+In \textit{filtering}, assimilation is performed each time new data arrives (e.g., at every timestep). In 
+\textit{smoothing}, future data is used to update past states. In both cases, assimilation is often repeated 
+iteratively over a time window \parencite{law2015data}.\\
+
+\begin{table}[h!]
+\centering
+\caption{Summary of Key Components}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Component} & \textbf{Description} \\
+\hline
+Model (M) & Governs system evolution \\
+Observations (y) & Real-world data inputs \\
+Observation Operator (H) & Projects model to data space \\
+Covariance Matrices (B, R) & Represent uncertainties in model and measurements \\
+Assimilation Algorithm & Merges data and model (e.g., EnKF, 4D-Var) \\
+Update Mechanism & Filter (online) or smoother (retrospective) \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Methods of Data Assimilation}
+
+\subsection{Nudging}
+
+Nudging, also known as \textit{Newtonian relaxation}, is one of the earliest and simplest data assimilation 
+techniques. It works by adding a correction term to the model dynamics, proportional to the difference between 
+observations and the model state \parencite{stauffer1993use, kalnay2003atmospheric}:\\
+
+\[
+\frac{dx}{dt} = f(x) + \alpha \left( y - H(x) \right)
+\]
+
+Here:\\
+
+\begin{itemize}
+  \item $x$ is the system state,
+  \item $f(x)$ is the model evolution,
+  \item $y$ is the observation,
+  \item $H(x)$ maps the model to observation space,
+  \item $\alpha$ is the nudging (relaxation) coefficient.
+\end{itemize}
+
+\textbf{Advantages:}\\
+
+\begin{itemize}
+  \item Simple to implement and computationally efficient.
+  \item Useful for stabilizing or guiding model trajectories.
+\end{itemize}
+
+\textbf{Limitations:}\\
+
+\begin{itemize}
+  \item No uncertainty quantification.
+  \item Sensitive to the choice of $\alpha$.
+  \item Ignores spatial correlations in errors.
+\end{itemize}
+
+\textbf{Example — Simple: Heat diffusion in a room}\\
+
+Consider a 1D heat equation:
+\[
+\frac{\partial T}{\partial t} = \kappa \frac{\partial^2 T}{\partial x^2}
+\]
+
+Given a single temperature observation at $x_0$, we apply nudging:
+\[
+\frac{\partial T}{\partial t} = \kappa \frac{\partial^2 T}{\partial x^2} + \alpha \left( T_{obs} - T(x_0, t) \right) \delta(x - x_0)
+\]
+
+This forces the temperature at $x_0$ to approach the observed value while still evolving according to the diffusion 
+model.\\
+
+\textbf{Example — Complex: Global atmospheric models}\\
+
+Before the adoption of 4D-Var and EnKF, nudging was widely used by operational centers like ECMWF and GFDL to 
+assimilate temperature and wind data into global models. For instance, the ERA-40 reanalysis used nudging to 
+maintain large-scale consistency with observations \parencite{uppala2005era}.\\
+
+A more advanced form is \textit{spectral nudging}, where only specific spatial scales (e.g., synoptic structures) 
+are nudged, allowing finer scales to evolve freely.\\
+
+\textbf{Modern variants:}\\
+
+\begin{itemize}
+  \item \textit{Adaptive nudging:} The $\alpha$ coefficient varies with time or observation quality.
+  \item \textit{Physics-informed learning:} Nudging principles are sometimes embedded in machine learning models to enforce physical consistency.
+\end{itemize}
+
+
+\subsection{Kalman Filter (KF)}
+
+The Kalman Filter (KF) is a recursive data assimilation algorithm that provides the optimal estimate of the state 
+of a linear dynamical system with Gaussian errors. It updates both the state estimate and its associated uncertainty 
+as new observations become available \parencite{kalman1960new, kalnay2003atmospheric}.\\
+
+\textbf{System model:}\\
+
+\begin{align}
+x_{k} &= A x_{k-1} + w_{k-1}, \quad w_{k-1} \sim \mathcal{N}(0, Q) \\
+y_{k} &= H x_{k} + v_{k}, \quad v_{k} \sim \mathcal{N}(0, R)
+\end{align}
+
+Where:\\
+
+\begin{itemize}
+  \item $x_k$ is the system state at time $k$,
+  \item $A$ is the system transition matrix,
+  \item $H$ is the observation operator,
+  \item $Q$ and $R$ are the process and observation error covariances.
+\end{itemize}
+
+\textbf{KF Equations:}\\
+
+\begin{itemize}
+  \item \textit{Prediction step:}
+    \[
+    \hat{x}_{k}^{-} = A \hat{x}_{k-1}, \quad P_k^{-} = A P_{k-1} A^T + Q
+    \]
+  \item \textit{Update step:}
+    \[
+    K_k = P_k^{-} H^T (H P_k^{-} H^T + R)^{-1}
+    \]
+    \[
+    \hat{x}_{k} = \hat{x}_k^{-} + K_k (y_k - H \hat{x}_k^{-}), \quad P_k = (I - K_k H) P_k^{-}
+    \]
+\end{itemize}
+
+\textbf{Advantages:}\\
+
+\begin{itemize}
+  \item Provides statistically optimal estimate under Gaussian linear assumptions.
+  \item Updates uncertainty along with state.
+  \item Recursive and efficient for low-dimensional systems.
+\end{itemize}
+
+\textbf{Limitations:}\\
+
+\begin{itemize}
+  \item Requires linear dynamics and observation models.
+  \item Assumes Gaussian errors.
+  \item Poor performance in nonlinear or high-dimensional systems.
+\end{itemize}
+
+\textbf{Example — Simple: GPS tracking of a vehicle}\\
+
+Consider tracking the position and velocity of a car in 1D using GPS (position measurements) and an accelerometer 
+(model-based prediction). The Kalman Filter fuses noisy measurements with a constant-acceleration motion model to 
+provide smoother estimates and quantify uncertainty.\\
+
+\textbf{Example — Complex: Real-time atmospheric estimation}\\
+
+In meteorology, early efforts used the Kalman Filter for small regional weather models to assimilate pressure and 
+wind observations. However, due to computational costs, it was replaced by EnKF for high-dimensional systems. Still, 
+it is used in subsystems such as satellite orbit tracking or in embedded filters in robotics and navigation systems.\\
+
+\textbf{Modern developments:}\\
+
+\begin{itemize}
+  \item \textit{Extended Kalman Filter (EKF)}: handles mild nonlinearity using linearization.
+  \item \textit{Unscented Kalman Filter (UKF)}: uses deterministic sampling for better performance in nonlinear systems.
+  \item \textit{Ensemble Kalman Filter (EnKF)}: approximates KF using Monte Carlo ensemble statistics (covered in next section).
+\end{itemize}
+
+
+\subsection{Ensemble Kalman Filter (EnKF)}
+
+The Ensemble Kalman Filter (EnKF) extends the classical Kalman Filter to nonlinear and high-dimensional systems 
+using a Monte Carlo approach. Instead of computing and propagating the full covariance matrix, it uses an ensemble 
+of state realizations to approximate forecast and analysis error statistics \parencite{evensen1994sequential, houtekamer2005ensemble}.\\
+
+\textbf{System model:}\\
+
+\begin{align}
+x_k^{(i)} &= \mathcal{M}(x_{k-1}^{(i)}) + w_{k-1}^{(i)}, \quad i = 1, ..., N_e \\
+y_k &= H x_k + v_k
+\end{align}
+
+Where:\\
+
+\begin{itemize}
+  \item $x_k^{(i)}$: the $i$-th ensemble member at time $k$,
+  \item $\mathcal{M}$: nonlinear model operator,
+  \item $H$: (possibly linear or nonlinear) observation operator,
+  \item $w_k^{(i)}$, $v_k$: random process and observation noise.
+\end{itemize}
+
+\textbf{Basic algorithm steps:}\\
+
+\begin{enumerate}
+  \item \textit{Forecast step:} Propagate each ensemble member using the model.
+  \item \textit{Analysis step:} Compute sample mean and covariances:
+    \[
+    \bar{x}_f = \frac{1}{N_e} \sum_{i=1}^{N_e} x_k^{(i)}, \quad
+    P_f = \frac{1}{N_e - 1} \sum_{i=1}^{N_e} (x_k^{(i)} - \bar{x}_f)(x_k^{(i)} - \bar{x}_f)^T
+    \]
+  \item Update each member using:
+    \[
+    x_k^{(i,a)} = x_k^{(i,f)} + K \left( y_k + \eta_k^{(i)} - H x_k^{(i,f)} \right)
+    \]
+    where $K$ is the Kalman gain computed from the ensemble statistics and $\eta_k^{(i)}$ is perturbed observation noise.
+\end{enumerate}
+
+\textbf{Advantages:}\\
+
+\begin{itemize}
+  \item Suitable for nonlinear and high-dimensional systems.
+  \item No need to compute or store full covariance matrices.
+  \item Provides flow-dependent error covariances.
+\end{itemize}
+
+\textbf{Limitations:}\\
+
+\begin{itemize}
+  \item Sampling errors for small ensembles.
+  \item Requires ensemble inflation and localization to control spurious correlations.
+\end{itemize}
+
+\textbf{Example — Simple: Hydrologic water level estimation}\\
+
+A rainfall-runoff model (e.g., for a reservoir) is simulated with 20 ensemble members, each with different initial 
+soil moisture. Streamflow observations are assimilated to correct the ensemble and improve flood forecasting.\\
+
+\textbf{Example — Complex: Wildfire spread modeling}\\
+
+\textcite{rochoux2020towards} apply EnKF with a surrogate model based on Polynomial Chaos to predict wildfire 
+spread. Observations from thermal imagery and wind conditions are used to adjust uncertain model parameters in 
+real time.\\
+
+\textbf{Modern applications:}\\
+
+\begin{itemize}
+  \item Operational oceanographic and meteorological forecasting (e.g., NCEP).
+  \item Reservoir engineering (e.g., oil/gas field assimilation).
+  \item Environmental hazard prediction (e.g., wildfires, pollution spread).
+\end{itemize}
+
+
+\subsection{Three-Dimensional Variational Data Assimilation (3D-Var)}
+
+The 3D-Var method is a widely used variational approach in data assimilation. It estimates the state of a system 
+by minimizing a cost function that balances the discrepancy between the model background (prior) and the 
+observations \parencite{lorenc1986analysis, courtier1994strategy}.\\
+
+\textbf{Cost function:}\\
+
+\[
+J(x) = \frac{1}{2}(x - x_b)^T B^{-1} (x - x_b) + \frac{1}{2}(y - H(x))^T R^{-1} (y - H(x))
+\]
+
+Where:\\
+
+\begin{itemize}
+  \item $x$: analysis state (to be estimated),
+  \item $x_b$: background state (model forecast),
+  \item $y$: observations,
+  \item $H(x)$: observation operator (possibly nonlinear),
+  \item $B$: background error covariance matrix,
+  \item $R$: observation error covariance matrix.
+\end{itemize}
+
+The solution $x_a$ minimizes $J(x)$ and represents the best estimate combining model and observation information.\\
+
+\textbf{Advantages:}\\
+
+\begin{itemize}
+  \item Robust and computationally efficient.
+  \item Suitable for large-scale operational systems.
+  \item Well-established theoretical and numerical framework.
+\end{itemize}
+
+\textbf{Limitations:}\\
+
+\begin{itemize}
+  \item Only uses observations at a single time (no time window).
+  \item Requires careful specification of $B$ and $R$.
+  \item Assumes stationary background statistics.
+\end{itemize}
+
+\textbf{Example — Simple: Flow estimation in a wind tunnel}\\
+
+A steady 2D incompressible flow is simulated over a flat plate. Sparse pressure measurements from the surface are 
+assimilated using 3D-Var to estimate the full velocity field. The background is provided by a coarse CFD simulation, 
+and $H$ maps states to surface pressures.\\
+
+\textbf{Example — Complex: Operational weather forecasting}\\
+
+Centers like Météo-France and NCEP used 3D-Var operationally for years. For instance, in NCEP's Global Data 
+Assimilation System (GDAS), surface and satellite observations are assimilated every 6 hours to produce an analysis 
+state used for forecasting. It replaced Optimal Interpolation and later evolved into hybrid 3DEnVar systems.\\
+
+\textbf{Implementation considerations:}\\
+
+\begin{itemize}
+  \item Minimization is typically performed via iterative gradient-based methods.
+  \item Preconditioning and multigrid approaches help accelerate convergence.
+  \item Hybrid versions combine ensemble-based flow-dependent covariances with static $B$ matrices.
+\end{itemize}
+
+
+\subsection{Four-Dimensional Variational Data Assimilation (4D-Var)}
+
+The 4D-Var method extends 3D-Var by incorporating time-evolving observations over a specified assimilation window. 
+It minimizes a cost function over the initial condition $x_0$ such that the model trajectory fits both the 
+background and all observations within the time window \parencite{courtier1994strategy, rabier2000ecmwf}.\\
+
+\textbf{Cost function:}\\
+
+\[
+J(x_0) = \frac{1}{2}(x_0 - x_b)^T B^{-1} (x_0 - x_b) + \frac{1}{2} \sum_{i=0}^{N} (y_i - H_i(x_i))^T R^{-1} (y_i - H_i(x_i))
+\]
+
+Where:\\
+
+\begin{itemize}
+  \item $x_0$: initial state to optimize,
+  \item $x_b$: background state (prior),
+  \item $y_i$: observations at time $t_i$,
+  \item $x_i = \mathcal{M}_{0 \rightarrow i}(x_0)$: model forecast from $x_0$ to $t_i$,
+  \item $H_i$: observation operator at $t_i$,
+  \item $B$: background covariance, $R$: observation covariance.
+\end{itemize}
+
+\textbf{Key features:}\\
+
+\begin{itemize}
+  \item Uses time-distributed observations, increasing observational impact.
+  \item Requires tangent linear and adjoint models for gradient computation.
+\end{itemize}
+
+\textbf{Advantages:}\\
+
+\begin{itemize}
+  \item Accurate use of dynamics and time-correlated observations.
+  \item Strong theoretical basis in control theory and inverse problems.
+  \item Proven performance in operational weather forecasting.
+\end{itemize}
+
+\textbf{Limitations:}\\
+
+\begin{itemize}
+  \item Requires development of adjoint and linearized models.
+  \item Computationally expensive, especially for large windows.
+  \item Assumes linearity of model error within the window.
+\end{itemize}
+
+\textbf{Example — Simple: 1D heat equation inversion}\\
+
+Given temperature observations at several times and locations in a rod, 4D-Var can estimate the initial temperature 
+distribution that leads to best fit over time using forward integration of the heat equation and backward adjoint 
+optimization.\\
+
+\textbf{Example — Complex: ECMWF global atmospheric analysis}\\
+
+The ECMWF uses 4D-Var to assimilate millions of observations from satellites, aircraft, balloons, and surface 
+stations into a high-resolution global atmospheric model. The assimilation window spans 6–12 hours and includes 
+nonlinear dynamics, satellite radiative transfer, and complex observation operators \parencite{rabier2000ecmwf}.\\
+
+\textbf{Variants and developments:}\\
+
+\begin{itemize}
+  \item \textit{Incremental 4D-Var:} solves in reduced space using linearized operators.
+  \item \textit{Hybrid 4DEnVar:} combines 4D-Var structure with ensemble-based covariances.
+  \item \textit{Weak-constraint 4D-Var:} accounts for model errors explicitly.
+\end{itemize}
+
+
+\printbibliography
+
+\end{document}
