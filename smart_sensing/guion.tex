@@ -10,6 +10,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
+\usepackage{verbatim}
+
 
 \usepackage[backend=biber,style=authoryear]{biblatex}
 \addbibresource{ref_DA.bib}
@@ -90,7 +92,7 @@ fields like meteorology and medicine \parencite{evensen1994sequential, wikle2007
 
 \textbf{Mode Decomposition}: Techniques like POD, DMD, and SVD are often used in tandem with DA. Modal 
 decomposition reduces model order, making DA computationally feasible and efficient. Alternatively, DA 
-can reconstruct modal coefficients from partial data \parencite{benner2015survey}.
+can reconstruct modal coefficients from partial data \parencite{benner2015survey}.\\
 
 \textbf{Machine Learning (ML)}: DA is increasingly integrated with ML. Hybrid models leverage DA for 
 physical structure and ML for flexibility. Physics-Informed Neural Networks (PINNs) incorporate model physics 
@@ -229,6 +231,7 @@ Here:\\
   \item Ignores spatial correlations in errors.
 \end{itemize}
 
+\begin{comment}
 \textbf{Example — Simple: Heat diffusion in a room}\\
 
 Consider a 1D heat equation:
@@ -244,6 +247,7 @@ Given a single temperature observation at $x_0$, we apply nudging:
 This forces the temperature at $x_0$ to approach the observed value while still evolving according to the diffusion 
 model.\\
 
+
 \textbf{Example — Complex: Global atmospheric models}\\
 
 Before the adoption of 4D-Var and EnKF, nudging was widely used by operational centers like ECMWF and GFDL to 
@@ -252,16 +256,83 @@ maintain large-scale consistency with observations \parencite{uppala2005era}.\\
 
 A more advanced form is \textit{spectral nudging}, where only specific spatial scales (e.g., synoptic structures) 
 are nudged, allowing finer scales to evolve freely.\\
+\end{comment}
 
-\subsubsection{Nudging: Flow Around a Square Cylinder}
+\begin{comment}
+\subsubsection{Simple Nudging Example: 1D Heat Diffusion with a Single Observation}
 
-Zauner et al. \parencite{zauner2020nudging} applied nudging-based DA to the turbulent wake behind a square cylinder at a Reynolds number of 22,000. They used synthetic velocity field data from DNS as observational input and applied nudging in an unsteady RANS (URANS) solver. The study showed:
+\textbf{Physical Model}\\
+
+Consider the temperature evolution in a 1D rod of length $L$ governed by the heat equation:
+\[
+\frac{\partial T(x,t)}{\partial t} = \kappa \frac{\partial^2 T(x,t)}{\partial x^2}
+\]
+with homogeneous boundary conditions:
+\[
+T(0,t) = T(L,t) = 0, \quad T(x,0) = T_0(x)
+\]
+
+\textbf{Observation Setup}\\
+
+Assume we have one temperature sensor located at position $x = x_m$ that records the true temperature $T_{\text{obs}}(t) \approx T(x_m,t)$ over time.\\
+
+\textbf{Nudging-Augmented Model}\\
+
+To incorporate the observation, we modify the equation by adding a nudging term:
+\[
+\frac{\partial T(x,t)}{\partial t} = \kappa \frac{\partial^2 T(x,t)}{\partial x^2} + \alpha (T_{\text{obs}}(t) - T(x,t)) \delta(x - x_m)
+\]
+where:
 \begin{itemize}
-  \item Recovery of both large-scale vortex shedding and small-scale Kelvin–Helmholtz instabilities.
-  \item Use of Spectral Proper Orthogonal Decomposition (SPOD) to quantify spectral agreement between assimilated and reference flows.
-  \item Importance of observation resolution in capturing high-frequency content.
+  \item $\alpha$ is the nudging gain,
+  \item $\delta(x - x_m)$ is a Dirac delta function centered at the sensor location.
 \end{itemize}
 
+\subsection*{Purpose and Interpretation}
+
+This example demonstrates:
+\begin{itemize}
+  \item How localized observations influence a dynamical system,
+  \item The impact of the nudging gain $\alpha$,
+  \item How nudging helps reconcile simulated and observed data,
+  \item That even a single observation can correct the full state over time via diffusion.
+\end{itemize}
+
+This is a pedagogical test case ideal for teaching nudging principles.
+
+
+
+\subsubsection{Application Example: Turbulent Flow Around a Square Cylinder}
+
+Zauner et al. (2020) apply nudging to a URANS simulation of flow around a square cylinder at $Re = 22{,}000$. DNS data is used as observation input to guide the URANS solution.
+
+\subsubsection*{Model Setup}
+
+\begin{itemize}
+  \item Governing equations: URANS with $k$--$\omega$ SST model.
+  \item Geometry: 2D square cylinder in cross-flow.
+  \item Observations: velocity fields from DNS.
+  \item Nudging applied: in a spatial region downstream of the cylinder, with $\alpha = 1$.
+\end{itemize}
+
+\subsubsection*{Equation}
+
+Nudged momentum equation:
+\[
+\frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla) \mathbf{u} = -\nabla p + \nu \nabla^2 \mathbf{u} + \alpha (\mathbf{u}_{\text{DNS}} - \mathbf{u})
+\]
+
+\subsubsection*{Results}
+
+\begin{itemize}
+  \item Vortex shedding frequency ($St \approx 0.137$) was accurately recovered.
+  \item High-frequency KH instabilities ($St \approx 4.384$) were also captured.
+  \item SPOD analysis showed spectral agreement between nudged URANS and DNS.
+\end{itemize}
+
+\textbf{Conclusion:} Nudging allowed URANS to capture multiscale flow features with minimal complexity, bridging the gap between low-cost and high-fidelity simulations.
+
+\end{comment}
 
 \textbf{Modern variants:}\\
 
@@ -325,6 +396,8 @@ Where:\\
   \item Poor performance in nonlinear or high-dimensional systems.
 \end{itemize}
 
+\begin{comment}
+
 \textbf{Example — Simple: GPS tracking of a vehicle}\\
 
 Consider tracking the position and velocity of a car in 1D using GPS (position measurements) and an accelerometer 
@@ -345,6 +418,7 @@ it is used in subsystems such as satellite orbit tracking or in embedded filters
   \item \textit{Ensemble Kalman Filter (EnKF)}: approximates KF using Monte Carlo ensemble statistics (covered in next section).
 \end{itemize}
 
+\end{comment}
 
 \subsection{Ensemble Kalman Filter (EnKF)}
 
@@ -399,6 +473,7 @@ Where:\\
   \item Requires ensemble inflation and localization to control spurious correlations.
 \end{itemize}
 
+\begin{comment}
 \textbf{Example — Simple: Hydrologic water level estimation}\\
 
 A rainfall-runoff model (e.g., for a reservoir) is simulated with 20 ensemble members, each with different initial 
@@ -427,6 +502,8 @@ A reduced-order surrogate model based on Polynomial Chaos Expansion (PCE) was co
   \item Demonstrated orders-of-magnitude faster runtime compared to full physics-based models.
   \item Effective estimation of uncertain inputs like fuel moisture and wind speed.
 \end{itemize}
+
+\end{comment}
 
 \textbf{Modern applications:}\\
 
@@ -478,6 +555,8 @@ The solution $x_a$ minimizes $J(x)$ and represents the best estimate combining m
   \item Assumes stationary background statistics.
 \end{itemize}
 
+\begin{comment}
+
 \textbf{Example — Simple: Flow estimation in a wind tunnel}\\
 
 A steady 2D incompressible flow is simulated over a flat plate. Sparse pressure measurements from the surface are 
@@ -498,6 +577,7 @@ state used for forecasting. It replaced Optimal Interpolation and later evolved 
   \item Hybrid versions combine ensemble-based flow-dependent covariances with static $B$ matrices.
 \end{itemize}
 
+\end{comment}
 
 \subsection{Four-Dimensional Variational Data Assimilation (4D-Var)}
 
@@ -545,6 +625,8 @@ Where:\\
   \item Assumes linearity of model error within the window.
 \end{itemize}
 
+\begin{comment}
+
 \textbf{Example — Simple: 1D heat equation inversion}\\
 
 Given temperature observations at several times and locations in a rod, 4D-Var can estimate the initial temperature 
@@ -583,6 +665,780 @@ assimilation is applied in the pressure Poisson equation instead of momentum equ
 The method dynamically corrected both pressure and velocity fields and was robust even 
 under noisy conditions. The assimilation was tested in flow with vortex shedding, showing 
 improved frequency response and stability.
+
+\end{comment}
+
+\section{Mathematical Implementation of Data Assimilation Methods}
+
+This section presents the detailed mathematical formulation and step-by-step computational implementation of the most widely used data assimilation (DA) techniques.
+
+\subsection{Kalman Filter (KF)}
+
+\textbf{Goal:} Estimate the state $\hat{x}_k$ of a linear dynamical system at time $k$ using a recursive filter.
+
+\textbf{Model:}
+\[
+x_k = A x_{k-1} + w_{k-1}, \quad w_{k-1} \sim \mathcal{N}(0, Q)
+\]
+\[
+y_k = H x_k + v_k, \quad v_k \sim \mathcal{N}(0, R)
+\]
+
+\textbf{Procedure:}
+\begin{itemize}
+  \item \textbf{Initialization:} Provide initial guess $\hat{x}_0$, $P_0$.
+  \item \textbf{Forecast:}
+  \[
+  \hat{x}_k^{-} = A \hat{x}_{k-1}, \quad P_k^{-} = A P_{k-1} A^T + Q
+  \]
+  \item \textbf{Update:}
+  \[
+  K_k = P_k^{-} H^T (H P_k^{-} H^T + R)^{-1}
+  \]
+  \[
+  \hat{x}_k = \hat{x}_k^{-} + K_k (y_k - H \hat{x}_k^{-}), \quad P_k = (I - K_k H) P_k^{-}
+  \]
+\end{itemize}
+
+\subsection{Ensemble Kalman Filter (EnKF)}
+
+\textbf{Goal:} Extend Kalman filter for nonlinear models using ensemble statistics.
+
+\textbf{Forecast:} For each ensemble member $i$:
+\[
+x_k^{(i,f)} = \mathcal{M}(x_{k-1}^{(i)})
+\]
+
+\textbf{Statistics:}
+\[
+\bar{x}_f = \frac{1}{N_e} \sum x_k^{(i,f)}, \quad
+P_f = \frac{1}{N_e - 1} \sum (x_k^{(i,f)} - \bar{x}_f)(x_k^{(i,f)} - \bar{x}_f)^T
+\]
+
+\textbf{Update:}
+\[
+K_k = P_f H^T (H P_f H^T + R)^{-1}
+\]
+\[
+x_k^{(i,a)} = x_k^{(i,f)} + K_k \left(y_k + \eta_k^{(i)} - H x_k^{(i,f)} \right)
+\]
+
+\subsection{Three-Dimensional Variational Method (3D-Var)}
+
+\textbf{Goal:} Find the best state $x$ that minimizes a cost function at a single time.
+
+\[
+J(x) = \frac{1}{2}(x - x_b)^T B^{-1}(x - x_b) + \frac{1}{2}(y - H(x))^T R^{-1} (y - H(x))
+\]
+
+\textbf{Solution:} Use optimization (e.g., gradient descent) to find $x_a = \arg\min J(x)$.
+
+\subsection{Four-Dimensional Variational Method (4D-Var)}
+
+\textbf{Goal:} Optimize initial condition $x_0$ to minimize mismatch between model trajectory and observations over a time window.
+
+\[
+J(x_0) = \frac{1}{2}(x_0 - x_b)^T B^{-1}(x_0 - x_b) + \frac{1}{2} \sum_{i=0}^{N} (y_i - H_i(x_i))^T R^{-1} (y_i - H_i(x_i))
+\]
+
+\textbf{Where:} $x_i = \mathcal{M}_{0 \rightarrow i}(x_0)$
+
+\textbf{Procedure:}
+\begin{itemize}
+  \item Use forward model to propagate $x_0$ and calculate residuals.
+  \item Use adjoint model to compute gradient of $J$.
+  \item Apply iterative minimization to update $x_0$.
+\end{itemize}
+
+\subsection{Nudging}
+
+\textbf{Goal:} Introduce a feedback correction term into the model equations.
+
+\[
+\frac{dx}{dt} = f(x) + \alpha (y - H(x))
+\]
+
+\textbf{Implementation:}
+\begin{itemize}
+  \item At each time step, compute the discrepancy $e = y - H(x)$.
+  \item Add a relaxation term $\alpha e$ to guide the state toward the observation.
+  \item $\alpha$ controls the strength of the correction.
+\end{itemize}
+
+
+\section{Nudging: Theory and Application}
+
+\subsection{Overview of the Nudging Method}
+
+Nudging, also known as Newtonian relaxation, is a data assimilation (DA) technique that introduces a feedback term into the governing equations of a dynamical system to guide its evolution toward observational data. It is particularly effective in scenarios where real-time data assimilation is needed with low computational cost.
+
+The general idea is to augment the model equations with a relaxation term that penalizes the difference between the model state and available measurements.
+
+\subsubsection*{Mathematical Formulation}
+
+Consider a generic dynamical system:
+\[
+\frac{dx}{dt} = f(x)
+\]
+
+In nudging, this becomes:
+\[
+\frac{dx}{dt} = f(x) + \alpha (y - H(x))
+\]
+
+Where:
+\begin{itemize}
+  \item $x$: model state vector,
+  \item $f(x)$: model dynamics,
+  \item $y$: vector of observations,
+  \item $H(x)$: observation operator projecting model state to measurement space,
+  \item $\alpha$: nudging coefficient controlling the strength of feedback.
+\end{itemize}
+
+The correction term $ \alpha (y - H(x)) $ adjusts the model state toward the observations over time.
+
+\subsubsection*{Interpretation}
+
+- If $\alpha$ is large, the model rapidly follows observations (but risks instability).
+- If $\alpha$ is too small, the influence of observations is negligible.
+- $H(x)$ can be linear (e.g., extracting a value at a location) or nonlinear.
+
+Nudging can also be formulated in continuous or discrete time and extended to include spatial operators or localized feedback.
+
+\subsection{Application to Turbulent Flow Around a Square Cylinder}
+
+Zauner et al. \parencite{zauner2020nudging} applied nudging to the turbulent flow past a square cylinder at a Reynolds number $Re = 22{,}000$ using a URANS solver.
+
+\subsubsection*{Governing Equations}
+
+The nudged momentum equation in their study is written as:
+\[
+\frac{\partial \bar{u}_\alpha}{\partial t} + (\bar{u}_\alpha \cdot \nabla)\bar{u}_\alpha + \nabla \bar{p}_\alpha - \nabla \cdot \left[2\left(\frac{1}{Re} + \nu_t(\tilde{\nu}_\alpha)\right) \nabla_s \bar{u}_\alpha\right] = \alpha H^\dagger [H(\bar{u}_\alpha) - m(t)]
+\]
+
+Where:
+\begin{itemize}
+  \item $\bar{u}_\alpha$: nudged velocity field,
+  \item $\bar{p}_\alpha$: pressure,
+  \item $\nu_t$: eddy viscosity from Spalart–Allmaras model,
+  \item $H$: operator extracting observed velocity values,
+  \item $H^\dagger$: adjoint operator redistributing the mismatch to the model space,
+  \item $m(t)$: observed (reference) velocity data from DNS.
+\end{itemize}
+
+\subsubsection*{Implementation Steps}
+
+\begin{enumerate}
+  \item Synthetic reference data were generated from DNS of the same flow.
+  \item Observations were spatially averaged in the spanwise direction and provided at uniform grid points.
+  \item Nudging was applied in a subdomain downstream of the cylinder, at every timestep.
+  \item The nudging coefficient $\alpha$ was tuned for stability and effectiveness.
+\end{enumerate}
+
+\subsubsection*{Key Results}
+
+\begin{itemize}
+  \item \textbf{Low-frequency (vortex shedding)}: The Strouhal number of vortex shedding was corrected from $St = 0.126$ (URANS) to $St = 0.137$ (DNS-like) using nudging.
+  \item \textbf{High-frequency (Kelvin–Helmholtz)}: Successfully recovered small-scale instabilities with sufficient spatial and temporal resolution in the nudged data.
+  \item \textbf{Mean flow accuracy}: Time-averaged quantities such as recirculation zone and pressure distribution improved significantly.
+\end{itemize}
+
+\subsubsection*{Interpretation}
+
+The nudging method effectively synchronizes URANS simulations with high-fidelity DNS data, allowing reconstruction of flow structures across different scales. The feedback mechanism corrects both phase and amplitude of the dynamic structures, even outside the nudged region.
+
+
+
+\section{Kalman Filter: Theory and Applications}
+
+\subsection{Theoretical Foundations}
+
+The Kalman Filter (KF), introduced by Rudolf E. Kalman in 1960 \parencite{kalman1960new}, is a recursive 
+algorithm that provides the optimal estimate of a system’s internal state based on a series of incomplete and 
+noisy measurements. It is especially powerful for linear systems with Gaussian noise.
+
+\subsubsection*{State-Space Model}
+
+A discrete-time linear system is modeled as:
+\[
+x_k = A x_{k-1} + B u_{k-1} + w_{k-1}
+\]
+\[
+z_k = H x_k + v_k
+\]
+
+Where:
+\begin{itemize}
+  \item $x_k$: system state at time $k$,
+  \item $u_k$: control input,
+  \item $z_k$: observation at time $k$,
+  \item $A$: state transition matrix,
+  \item $B$: control matrix,
+  \item $H$: observation matrix,
+  \item $w_k$, $v_k$: zero-mean Gaussian process and observation noise, with covariances $Q$ and $R$.
+\end{itemize}
+
+\subsubsection*{Kalman Filter Algorithm}
+
+\textbf{Prediction step:}
+\[
+\hat{x}_{k|k-1} = A \hat{x}_{k-1|k-1} + B u_{k-1}
+\]
+\[
+P_{k|k-1} = A P_{k-1|k-1} A^T + Q
+\]
+
+\textbf{Update step:}
+\[
+K_k = P_{k|k-1} H^T (H P_{k|k-1} H^T + R)^{-1}
+\]
+\[
+\hat{x}_{k|k} = \hat{x}_{k|k-1} + K_k (z_k - H \hat{x}_{k|k-1})
+\]
+\[
+P_{k|k} = (I - K_k H) P_{k|k-1}
+\]
+
+\subsection{Applications from Literature}
+
+\subsubsection*{Example 1: Target Tracking System}
+
+In \textcite{ghanai2009kalman}, the KF is adapted as a \textit{Kalman Controller} to guide a mobile platform (e.g., laser or antenna) to track a moving target in azimuth and elevation. The radar provides periodic updates on the target's location. The KF estimates control actions to realign the platform, even in the presence of noise and disturbances.
+
+Mathematically, the controller is based on a 1D Kalman Filter with the state representing control actions and the measurements as positional errors. Control is applied via DC motors for azimuth and rise.
+
+Key features:
+\begin{itemize}
+  \item Recursive estimation avoids storage of entire trajectory.
+  \item Resilient to white noise and load disturbances.
+  \item Demonstrated strong tracking and disturbance rejection.
+\end{itemize}
+
+\subsubsection*{Example 2: Fuzzy Model Identification}
+
+In another application, the KF is employed to estimate parameters in a Takagi–Sugeno fuzzy model for nonlinear system identification, such as ECG signal approximation \parencite{ghanai2009kalman}. The model has two estimation stages:
+
+\begin{enumerate}
+  \item \textbf{Premise function estimation:} Using fuzzy clustering and Kalman filtering to identify membership functions.
+  \item \textbf{Consequent parameter estimation:} Using a separate KF (KF2) for linear regression over fuzzy rule outputs.
+\end{enumerate}
+
+This method showed strong performance for noisy and nonlinear time series.
+
+
+\section{Ensemble Kalman Filter: Theory and Applications}
+
+\subsection{Theoretical Overview}
+
+The Ensemble Kalman Filter (EnKF) is an extension of the Kalman Filter designed to handle nonlinear and high-dimensional systems. Originally proposed by Geir Evensen \parencite{evensen1994sequential}, it replaces the explicit computation of error covariance matrices with Monte Carlo estimates using an ensemble of model realizations.
+
+\subsubsection*{State Estimation Framework}
+
+Assume a dynamical model:
+\[
+x_k^{(i)} = \mathcal{M}(x_{k-1}^{(i)}) + w_{k-1}^{(i)}, \quad i = 1, \ldots, N
+\]
+
+And observations:
+\[
+y_k = H x_k + v_k
+\]
+
+Where:
+\begin{itemize}
+  \item $x_k^{(i)}$: $i$-th ensemble member at time $k$,
+  \item $\mathcal{M}$: nonlinear model operator,
+  \item $H$: observation operator (linear or nonlinear),
+  \item $w_k$, $v_k$: process and observation noise.
+\end{itemize}
+
+\subsubsection*{Forecast Step}
+
+Each ensemble member is propagated forward in time:
+\[
+x_k^{(i,f)} = \mathcal{M}(x_{k-1}^{(i)})
+\]
+
+Compute sample mean and covariance:
+\[
+\bar{x}_f = \frac{1}{N} \sum x_k^{(i,f)}, \quad
+P_f = \frac{1}{N - 1} \sum (x_k^{(i,f)} - \bar{x}_f)(x_k^{(i,f)} - \bar{x}_f)^T
+\]
+
+\subsubsection*{Analysis Step}
+
+Perturb observations (optional) and compute the Kalman gain:
+\[
+K_k = P_f H^T (H P_f H^T + R)^{-1}
+\]
+
+Update each ensemble member:
+\[
+x_k^{(i,a)} = x_k^{(i,f)} + K_k \left(y_k + \eta_k^{(i)} - H x_k^{(i,f)}\right)
+\]
+Where $\eta_k^{(i)} \sim \mathcal{N}(0, R)$.
+
+\subsection{Applications from Literature}
+
+\subsubsection*{Example 1: Quasi-Geostrophic Ocean Model (Evensen, 1994)}
+
+Evensen applied EnKF to a nonlinear barotropic quasi-geostrophic model of ocean circulation. The filter assimilated sparse observations and successfully reconstructed evolving vorticity fields. Key contributions:
+\begin{itemize}
+  \item Demonstrated robustness for non-Gaussian distributions.
+  \item Introduced covariance localization and inflation strategies.
+  \item Laid the groundwork for sequential DA in geophysical models.
+\end{itemize}
+
+\subsubsection*{Example 2: Atmospheric EnKF for Operational Forecasting (Houtekamer et al.)}
+
+In \textcite{houtekamer2005ensemble}, the EnKF was implemented in the Canadian global forecasting system. Innovations included:
+\begin{itemize}
+  \item Localization to reduce spurious long-distance correlations.
+  \item Adaptive inflation to stabilize ensemble spread.
+  \item Assimilation of millions of observations including satellite radiances.
+\end{itemize}
+
+
+\subsubsection*{Example 3: Wildfire Spread Modeling (Rochoux et al.)}
+
+\textcite{rochoux2020towards} employed an Ensemble Kalman Filter framework enhanced with a Polynomial Chaos Expansion (PCE) surrogate model to reduce computational cost in wildfire spread forecasting. Their methodology includes:
+
+\begin{itemize}
+  \item Construction of a surrogate model using PCE to approximate the expensive forward wildfire simulation (FIREFLY).
+  \item Use of EnKF to assimilate thermal camera observations to estimate uncertain parameters (e.g., wind, vegetation moisture).
+  \item Implementation of a reduced-cost DA loop capable of providing timely forecasts.
+\end{itemize}
+
+This demonstrated that EnKF is feasible for large-scale operational use and provided comparable results to 4D-Var.
+
+\section{Ensemble Kalman Filter: Theory and Application to Wildfire Forecasting}
+
+\subsection{Theoretical Overview}
+
+The Ensemble Kalman Filter (EnKF) is a Monte Carlo-based sequential data assimilation technique that uses an ensemble of model realizations to estimate the state and error statistics of nonlinear, high-dimensional systems \parencite{evensen1994sequential}. The ensemble approach avoids the need to evolve full covariance matrices explicitly.
+
+\subsubsection*{Formulation}
+
+Consider a nonlinear model:
+\[
+x_k^{(i)} = \mathcal{M}(x_{k-1}^{(i)}) + w_{k-1}^{(i)}
+\]
+\[
+y_k = \mathcal{H}(x_k) + v_k
+\]
+
+where:
+\begin{itemize}
+  \item $x_k^{(i)}$: state vector of the $i$-th ensemble member,
+  \item $\mathcal{M}$: nonlinear model operator,
+  \item $\mathcal{H}$: observation operator,
+  \item $w_k^{(i)}$, $v_k$: process and observation noise.
+\end{itemize}
+
+The forecast ensemble yields mean $\bar{x}_f$ and covariance $P_f$. Each member is updated as:
+\[
+x_k^{(i,a)} = x_k^{(i,f)} + K_k \left( y_k + \eta_k^{(i)} - \mathcal{H}(x_k^{(i,f)}) \right)
+\]
+with Kalman gain:
+\[
+K_k = P^{f}_{k} H^T (H P^{f}_{k} H^T + R)^{-1}
+\]
+
+\subsection{Application: Wildfire Spread Forecasting (Rochoux et al.)}
+
+In \textcite{rochoux2020towards}, the EnKF is applied to the simulation of wildfire spread using a reduced-cost surrogate model based on Polynomial Chaos Expansion (PCE). The study integrates thermal camera observations to infer uncertain environmental parameters affecting fire behavior.
+
+\subsubsection*{Model and Parameters}
+
+The FIREFLY model is used to simulate the wildfire front. Uncertain parameters include:
+\begin{itemize}
+  \item Fuel moisture content,
+  \item Surface-to-volume ratio of grass fuel,
+  \item Wind speed and direction.
+\end{itemize}
+
+\subsubsection*{Observation Operator}
+
+The observation operator projects the model state (fire front) into a space where distances from observed points can be computed:
+\[
+d_t = [(x_1 - x_1^o), (x_2 - x_2^o), \ldots] \in \mathbb{R}^{2N_o}
+\]
+
+\subsubsection*{EnKF Setup}
+
+\begin{itemize}
+  \item An ensemble of model runs is generated using samples of input parameters.
+  \item A PCE surrogate approximates the output of the forward model, significantly reducing cost.
+  \item The EnKF is used to update the estimated parameters by assimilating fire front positions derived from thermal imagery.
+\end{itemize}
+
+\subsubsection*{Outcomes}
+
+\begin{itemize}
+  \item Real-time correction of model forecasts using sparse data.
+  \item Improved tracking of the evolving fire front compared to open-loop predictions.
+  \item A 10-fold reduction in computational cost compared to the original model.
+\end{itemize}
+
+
+
+\section{Variational Methods: 3D-Var and 4D-Var}
+
+Variational data assimilation methods estimate the state of a dynamical system by minimizing a cost function that measures the discrepancy between the model state and available observations, weighted by their error covariances. They rely on optimization rather than sequential updates.
+
+\subsection{3D-Var: Three-Dimensional Variational Assimilation}
+
+\subsubsection*{Formulation}
+
+3D-Var seeks the analysis state $x_a$ that minimizes:
+\[
+J(x) = \frac{1}{2}(x - x_b)^T B^{-1} (x - x_b) + \frac{1}{2}(y - H(x))^T R^{-1} (y - H(x))
+\]
+
+Where:
+\begin{itemize}
+  \item $x_b$: background (prior) state,
+  \item $y$: observation vector,
+  \item $H$: observation operator,
+  \item $B$: background error covariance,
+  \item $R$: observation error covariance.
+\end{itemize}
+
+\textbf{Solution:} Use iterative methods (e.g., conjugate gradients) to minimize $J(x)$.
+
+\subsubsection*{Application: Weather Prediction Systems}
+
+As discussed in \textcite{navon2009data}, 3D-Var was operationally implemented at major centers (ECMWF, Météo-France) for atmospheric analysis. Observations from various sources (surface, upper-air, satellites) are assimilated every 6 hours to initialize forecasts.
+
+\textbf{Advantages:}
+\begin{itemize}
+  \item Stable and computationally efficient.
+  \item Easy to implement with static background covariances.
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+  \item Observations are used at a single time only.
+  \item Assumes static error statistics.
+\end{itemize}
+
+\subsection{4D-Var: Four-Dimensional Variational Assimilation}
+
+\subsubsection*{Formulation}
+
+4D-Var extends 3D-Var by assimilating observations distributed over a time window $[t_0, t_N]$. It minimizes:
+\[
+J(x_0) = \frac{1}{2}(x_0 - x_b)^T B^{-1}(x_0 - x_b) + \frac{1}{2} \sum_{i=0}^{N} \left( y_i - H_i(x_i) \right)^T R^{-1} \left( y_i - H_i(x_i) \right)
+\]
+
+with:
+\[
+x_i = \mathcal{M}_{0 \rightarrow i}(x_0)
+\]
+
+Where $\mathcal{M}$ is the nonlinear model mapping initial state to time $t_i$.
+
+\textbf{Gradient:}
+The minimization requires the gradient of $J$ with respect to $x_0$, which is computed via the adjoint of the tangent linear model:
+\[
+\nabla J = B^{-1}(x_0 - x_b) + \sum_{i=0}^{N} \mathcal{M}^*_{i \rightarrow 0} H_i^T R^{-1}(H_i(x_i) - y_i)
+\]
+
+\subsubsection*{Applications}
+
+In \textcite{courtier1994strategy} and \textcite{courtier1999assimilation}, 4D-Var was implemented for global weather forecasting at ECMWF. It assimilated satellite radiances, aircraft, and balloon observations to improve initial condition accuracy over 12-hour windows.
+
+\textbf{Advantages:}
+\begin{itemize}
+  \item Dynamical consistency: integrates model dynamics directly.
+  \item Efficient use of time-distributed data.
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+  \item Requires adjoint and tangent linear models.
+  \item High computational cost.
+\end{itemize}
+
+
+\section{Detailed Mathematical Description of Variational Data Assimilation Methods}
+
+Variational data assimilation (Var-DA) techniques seek to find the optimal estimate of the system state by minimizing a cost function that combines information from a background forecast and observations. These methods are rooted in control theory and inverse problems, and they form the theoretical basis for high-performance data assimilation systems.
+
+\subsection{3D-Var (Three-Dimensional Variational Assimilation)}
+
+\subsubsection*{Mathematical Formulation}
+
+The goal of 3D-Var is to find the analysis state $x_a$ that minimizes the following cost function:
+
+\[
+J(x) = \frac{1}{2}(x - x_b)^T B^{-1}(x - x_b) + \frac{1}{2}(y - H(x))^T R^{-1}(y - H(x))
+\]
+
+Where:
+\begin{itemize}
+  \item $x$: model state vector (control variable),
+  \item $x_b$: background state (typically a short-range forecast),
+  \item $y$: observation vector,
+  \item $H$: observation operator mapping model space to observation space,
+  \item $B$: background error covariance matrix,
+  \item $R$: observation error covariance matrix.
+\end{itemize}
+
+\textbf{Minimization Process:}
+\begin{enumerate}
+  \item Define $J(x)$ and compute its gradient $\nabla J$:
+  \[
+  \nabla J = B^{-1}(x - x_b) - H^T R^{-1}(y - H(x))
+  \]
+  \item Use an iterative optimization algorithm (e.g., quasi-Newton, conjugate gradient).
+  \item Solve in the control variable space or reduced control space via preconditioning.
+\end{enumerate}
+
+\subsubsection*{Application: Operational Weather Forecasting (Navon, Bouttier \& Courtier)}
+
+3D-Var was a cornerstone in early operational weather centers like ECMWF and Météo-France \parencite{navon2009data, courtier1999assimilation}. It assimilated diverse observations such as radiosondes, surface stations, and satellite radiances every 6 hours to produce an initial state for numerical weather prediction models.
+
+\subsection{4D-Var (Four-Dimensional Variational Assimilation)}
+
+\subsubsection*{Mathematical Formulation}
+
+4D-Var extends 3D-Var by incorporating observations over a time window $[t_0, t_N]$, optimizing the initial condition $x_0$ such that the model trajectory best fits time-distributed observations:
+
+\[
+J(x_0) = \frac{1}{2}(x_0 - x_b)^T B^{-1}(x_0 - x_b) + \frac{1}{2} \sum_{i=0}^{N} \left( y_i - H_i(x_i) \right)^T R^{-1} \left( y_i - H_i(x_i) \right)
+\]
+
+Subject to:
+\[
+x_i = \mathcal{M}_{0 \rightarrow i}(x_0)
+\]
+
+Where $\mathcal{M}$ is the nonlinear model operator advancing the state forward in time.
+
+\textbf{Gradient Computation:}
+The gradient of $J$ is computed using the adjoint of the tangent linear model:
+\[
+\nabla J = B^{-1}(x_0 - x_b) + \sum_{i=0}^{N} \mathcal{M}^*_{i \rightarrow 0} H_i^T R^{-1}(H_i(x_i) - y_i)
+\]
+
+This requires:
+\begin{itemize}
+  \item A tangent linear model (TLM) $\mathcal{M}'$,
+  \item An adjoint model $\mathcal{M}^*$ for back-propagation of sensitivity information.
+\end{itemize}
+
+\textbf{Optimization:} As with 3D-Var, iterative gradient-based algorithms (e.g., L-BFGS) are used to find $x_0^*$.
+
+\subsubsection*{Application: ECMWF 4D-Var System (Courtier et al.)}
+
+In \textcite{courtier1994strategy}, the authors developed and implemented the incremental 4D-Var algorithm at ECMWF. It used a sequence of linearized inner loops within a nonlinear outer loop, improving both convergence and computational feasibility.
+
+\textbf{Implementation Features:}
+\begin{itemize}
+  \item Assimilation window of 12 hours.
+  \item Use of TL/adjoint versions of the IFS (Integrated Forecasting System) model.
+  \item Inner loops use a simplified version of the dynamics to accelerate convergence.
+\end{itemize}
+
+\subsubsection*{Advantages and Limitations}
+
+\textbf{Advantages:}
+\begin{itemize}
+  \item Time consistency: observations at multiple times are fully utilized.
+  \item Physically consistent trajectory constrained by model dynamics.
+  \item Accurate use of correlated observations (e.g., satellite radiances).
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+  \item High computational cost due to model integrations and adjoint calls.
+  \item Complexity in generating tangent linear and adjoint models.
+\end{itemize}
+
+
+% === Extended Variational Methods Section ===
+\section{Detailed Theory of Variational Methods}
+
+Variational data assimilation methods aim to determine the most probable state of a physical system by minimizing a cost function that incorporates prior information (background) and observational data. These techniques leverage optimization frameworks and require a solid understanding of error covariance modeling and adjoint-based gradient computation.
+
+\subsection{3D-Var: Three-Dimensional Variational Assimilation}
+
+3D-Var minimizes a cost function of the form:
+\[
+J(x) = \frac{1}{2}(x - x_b)^T B^{-1}(x - x_b) + \frac{1}{2}(y - H(x))^T R^{-1}(y - H(x))
+\]
+where $x$ is the model state, $x_b$ the background (forecast), $y$ the observations, $B$ the background error covariance matrix, $R$ the observation error covariance matrix, and $H$ the observation operator (possibly nonlinear).
+
+The minimum of $J(x)$ is found using iterative solvers, such as conjugate gradient methods. Preconditioning and variable transformations may be applied to improve convergence, especially in high-dimensional systems.
+
+\textbf{Example: Météo-France operational 3D-Var system} assimilates surface pressure, temperature, and satellite radiances. The model state includes wind, temperature, and humidity. $B$ is constructed from climatological statistics and balance operators.
+
+\subsection{4D-Var: Four-Dimensional Variational Assimilation}
+
+4D-Var extends the 3D-Var framework by incorporating observations across a time window $[t_0, t_N]$. The objective is to optimize the initial state $x_0$ so that the model trajectory $\mathcal{M}(x_0)$ fits observations at multiple times:
+
+\[
+J(x_0) = \frac{1}{2}(x_0 - x_b)^T B^{-1}(x_0 - x_b) + \frac{1}{2} \sum_{i=0}^{N} (y_i - H_i(x_i))^T R^{-1} (y_i - H_i(x_i))
+\]
+with $x_i = \mathcal{M}_{0 \rightarrow i}(x_0)$ where $\mathcal{M}$ is the numerical forecast model.
+
+To compute the gradient $\nabla J$, adjoint and tangent linear models are used:
+\[
+\nabla J = B^{-1}(x_0 - x_b) + \sum_{i=0}^N \mathcal{M}^*_{i \rightarrow 0} H_i^T R^{-1} (H_i(x_i) - y_i)
+\]
+
+\textbf{Example: ECMWF’s Incremental 4D-Var} (Courtier et al., 1994) implemented an efficient scheme using outer loops (nonlinear model) and inner loops (linearized system) for faster convergence. Assimilation windows were 12 hours, with millions of observations assimilated.
+
+\textbf{Example: Foures et al. (2014)} applied 4D-Var to reconstruct RANS-averaged flow fields. The cost function was based on mean velocity from DNS, and adjoint models of the RANS equations were derived. The process allowed estimation of unobserved flow components constrained by physics.
+
+
+
+% === Extended Descriptions of Sequential Methods ===
+
+\section{Detailed Theory of Sequential Methods}
+
+Sequential DA methods estimate the state recursively as new data become available. These include filtering techniques that predict forward in time and update when observations arrive.
+
+\subsection{Nudging}
+
+Nudging, or Newtonian relaxation, modifies model equations to draw the state towards observations:
+\[
+\frac{dx}{dt} = f(x) + \alpha(y - H(x))
+\]
+Here, $\alpha$ is a gain matrix or scalar that determines the influence of observations.
+
+\textbf{Zauner et al. (2020):} Nudging was applied to a turbulent flow simulation around a square cylinder using URANS. DNS data served as synthetic observations. The nudging term was added only in the near wake, improving vortex shedding and turbulence structure. Sensitivity to temporal and spatial sampling was analyzed.
+
+\subsection{Kalman Filter}
+
+For linear systems with Gaussian noise:
+\[
+x_k = A x_{k-1} + w_k, \quad y_k = H x_k + v_k
+\]
+KF updates the state mean and covariance via:
+\begin{align*}
+\hat{x}_k^- &= A \hat{x}_{k-1}, \\
+P_k^- &= A P_{k-1} A^T + Q, \\
+K_k &= P_k^- H^T (H P_k^- H^T + R)^{-1}, \\
+\hat{x}_k &= \hat{x}_k^- + K_k (y_k - H \hat{x}_k^-), \\
+P_k &= (I - K_k H) P_k^-
+\end{align*}
+
+\textbf{Ghanai and Chafaa:} KF was used in two applications:
+\begin{itemize}
+  \item Control of radar antennas: estimated position and velocity of targets under white noise and disturbance.
+  \item Nonlinear ECG modeling: Used two-stage KF to update both fuzzy rule base (premise) and consequent parameters in a Takagi–Sugeno model.
+\end{itemize}
+
+\subsection{Ensemble Kalman Filter (EnKF)}
+
+EnKF is a Monte Carlo approximation of KF:
+\begin{align*}
+x_k^{(i,f)} &= \mathcal{M}(x_{k-1}^{(i)}) + w_k^{(i)} \\
+K_k &= P^f H^T (H P^f H^T + R)^{-1} \\
+x_k^{(i,a)} &= x_k^{(i,f)} + K_k(y_k + \eta_k^{(i)} - H x_k^{(i,f)})
+\end{align*}
+Where $P^f$ is the sample covariance of the ensemble.
+
+\textbf{Evensen (1994):} Applied EnKF to ocean modeling. Used 50-member ensemble in a QG model with sparse observations to track vorticity fields.
+
+\textbf{Torn and Hakim (2009):} Applied EnKF with WRF for real-time forecasting of Hurricane Katrina. Assimilated aircraft and radar observations. Showed sensitivity to ensemble spread and boundary condition perturbations.
+
+\textbf{Rochoux et al. (2020):} Applied EnKF to wildfire modeling. Combined it with a Polynomial Chaos surrogate to reduce model cost. Fire front positions were assimilated from thermal imagery, updating uncertain parameters such as wind and fuel moisture.
+
+
+
+% === Detailed Theory and Applications of Data Assimilation Methods ===
+
+\section{Mathematical Formulation of Data Assimilation}
+
+Let $x_k$ be the state vector, $x_b$ the background (prior), $y_k$ the observations, $H$ the observation operator, $B$ the background error covariance matrix, and $R$ the observation error covariance matrix. The general objective is to obtain the best estimate $x_a$ by combining the prior model forecast and available data, accounting for their respective uncertainties.
+
+\section{Sequential Data Assimilation Methods}
+
+These methods update the state estimate recursively over time as new observations become available.
+
+\subsection{Nudging}
+
+Nudging adds a relaxation term to the model equations:
+\[
+\frac{dx}{dt} = f(x) + \alpha(y - H(x))
+\]
+The coefficient $\alpha$ controls the strength of the relaxation toward the observed state.
+
+\textbf{Application: Zauner et al. (2020)}\\
+In a study of turbulent flow around a square cylinder, nudging was applied in a URANS framework. Synthetic DNS observations were used to correct large-scale vortex shedding. Sensitivity analysis revealed optimal nudging performance depends on the spatial and temporal resolution of observations.
+
+\subsection{Kalman Filter (KF)}
+
+For linear-Gaussian systems:
+\[
+x_k = A x_{k-1} + w_k, \quad y_k = H x_k + v_k
+\]
+With recursive steps:
+\begin{align*}
+\text{Predict:} & \quad \hat{x}_k^- = A \hat{x}_{k-1}, \quad P_k^- = A P_{k-1} A^T + Q \\
+\text{Update:} & \quad K_k = P_k^- H^T (H P_k^- H^T + R)^{-1} \\
+& \quad \hat{x}_k = \hat{x}_k^- + K_k (y_k - H \hat{x}_k^-), \quad P_k = (I - K_k H) P_k^-
+\end{align*}
+
+\textbf{Applications:}
+\begin{itemize}
+  \item \textbf{Ghanai and Chafaa:} KF used for radar antenna tracking and fuzzy ECG modeling. Dual Kalman Filters estimated both system states and parameters of nonlinear models.
+\end{itemize}
+
+\subsection{Ensemble Kalman Filter (EnKF)}
+
+EnKF uses an ensemble of state realizations:
+\begin{align*}
+x_k^{(i,f)} &= \mathcal{M}(x_{k-1}^{(i)}) + w_k^{(i)} \\
+K_k &= P^f H^T (H P^f H^T + R)^{-1} \\
+x_k^{(i,a)} &= x_k^{(i,f)} + K_k(y_k + \eta_k^{(i)} - H x_k^{(i,f)})
+\end{align*}
+Where $P^f$ is the forecast ensemble covariance.
+
+\textbf{Applications:}
+\begin{itemize}
+  \item \textbf{Evensen (1994):} Demonstrated EnKF in oceanography using a QG model.
+  \item \textbf{Torn and Hakim (2009):} Applied EnKF to Hurricane Katrina with the WRF model. Assessed ensemble perturbation strategies.
+  \item \textbf{Rochoux et al. (2020):} Used EnKF with a Polynomial Chaos surrogate model for wildfire spread prediction. Fire front locations were corrected using thermal camera observations.
+\end{itemize}
+
+\section{Variational Data Assimilation Methods}
+
+Variational methods find the optimal state by minimizing a cost function using all available observations at once (3D-Var) or over a time window (4D-Var).
+
+\subsection{3D-Var: Three-Dimensional Variational Assimilation}
+
+\[
+J(x) = \frac{1}{2}(x - x_b)^T B^{-1}(x - x_b) + \frac{1}{2}(y - H(x))^T R^{-1}(y - H(x))
+\]
+
+Gradient descent is used to solve:
+\[
+\nabla J = B^{-1}(x - x_b) - H^T R^{-1}(y - H(x))
+\]
+
+\textbf{Application: Bouttier and Courtier (1999)}\\
+3D-Var was implemented at Météo-France to assimilate surface, upper-air, and satellite data. $B$ was derived from climatological statistics and balance constraints.
+
+\subsection{4D-Var: Four-Dimensional Variational Assimilation}
+
+4D-Var extends 3D-Var by assimilating data over time:
+\[
+J(x_0) = \frac{1}{2}(x_0 - x_b)^T B^{-1}(x_0 - x_b) + \frac{1}{2} \sum_{i=0}^{N} (y_i - H_i(x_i))^T R^{-1} (y_i - H_i(x_i))
+\]
+Where $x_i = \mathcal{M}_{0 \rightarrow i}(x_0)$. Gradients use adjoint models:
+\[
+\nabla J = B^{-1}(x_0 - x_b) + \sum_{i=0}^{N} \mathcal{M}^*_{i \rightarrow 0} H_i^T R^{-1}(H_i(x_i) - y_i)
+\]
+
+\textbf{Applications:}
+\begin{itemize}
+  \item \textbf{Courtier et al. (1994):} ECMWF’s 4D-Var system used nested loops with linearized dynamics for operational weather prediction.
+  \item \textbf{Foures et al. (2014):} Applied 4D-Var to reconstruct mean RANS flow fields using sparse PIV data and adjoint RANS solvers.
+\end{itemize}
 
 \printbibliography
 
