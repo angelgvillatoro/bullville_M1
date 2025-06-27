@@ -1,0 +1,90 @@
+\documentclass[12pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{float}
+\usepackage{caption}
+
+\title{Ejercicios de Flujo Viscoso - Enunciados Traducidos}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Ejercicio 1: Transporte de Combustible (SS2018 - Aufgabe 2)}
+
+Una tubería horizontal de acero comercial, de \textbf{longitud 563{,}27 km} y \textbf{diámetro 0{,}3048 m}, se utiliza para transportar combustible a razón de \textbf{0{,}0531 m³/s} desde una refinería hacia un puerto marítimo.
+
+El combustible tiene una viscosidad dinámica de \textbf{0{,}002 kg/(m·s)} y una densidad de \textbf{730 kg/m³}.
+
+El \textbf{mínimo de presión admisible} en la línea es de \textbf{55\,158 Pa}, para evitar la vaporización del fluido. En la entrada de la tubería (refinería), la presión es de \textbf{758\,420 Pa}.
+
+\begin{enumerate}[label=\alph*)]
+    \item Calcule la \textbf{velocidad media} del combustible en la tubería.
+    \item Determine si el flujo es \textbf{laminar o turbulento}.
+    \item Calcule el \textbf{coeficiente de pérdida por fricción} \( \lambda \), según el tipo de flujo.
+    \item Si la presión de entrada es \( p_1 = 758\,420 \, \mathrm{Pa} \), ¿a qué distancia \( x_1 \) debe instalarse la \textbf{primera bomba} para no caer por debajo de \( p_{\text{min}} \)?
+    \item ¿Cuántas \textbf{bombas adicionales} deben instalarse en el resto de la tubería, con separación uniforme \( x_2 \), si no debe superarse la \textbf{presión máxima} de \( p_{\text{max}} = 827\,370 \, \mathrm{Pa} \)?
+\end{enumerate}
+
+\section*{Ejercicio 2: Pérdida de presión en un inyector (SS2018 - Aufgabe 4)}
+
+Un inyector de motor diésel está diseñado para introducir un volumen de combustible \( V \) desde una presión elevada \( p_1 \) hacia una cámara de combustión de menor presión \( p_3 \).
+
+Durante el breve tiempo de inyección \( t \), se genera un flujo \textbf{laminar entre placas paralelas}, entre la aguja y el cuerpo del inyector. Se desprecian los efectos gravitacionales. Este flujo puede considerarse una \textbf{corriente plana viscosa entre placas paralelas}.
+
+\begin{enumerate}[label=\alph*)]
+    \item Simplifique las ecuaciones de continuidad y momento para un flujo incompresible y estacionario, justificando cada paso.
+    \item Determine el perfil de velocidad \( u(y) \) entre la aguja y el cuerpo del inyector.
+    \item Calcule la \textbf{pérdida de presión} \( \Delta p_{1-2} \), usando el perfil obtenido o, si no fue posible, partiendo de la expresión:
+    \[ u(y) = \frac{1}{2\mu} \frac{dp}{dx}(y^2 - hy) \]
+
+    \textbf{Datos para c):}
+    \begin{itemize}
+        \item Volumen inyectado: \( V = 30 \, \mathrm{mm^3} \)
+        \item Presión de entrada: \( p_1 = 2000 \times 10^5 \, \mathrm{Pa} \)
+        \item Presión de salida: \( p_3 = 50 \times 10^5 \, \mathrm{Pa} \)
+        \item Diámetros: \( d_N = 5 \, \mathrm{mm} \), \( d_K = 5{,}2 \, \mathrm{mm} \)
+        \item Longitud: \( l = 20 \, \mathrm{mm} \)
+        \item Densidad: \( \rho = 840 \, \mathrm{kg/m^3} \)
+        \item Viscosidad: \( \mu = 0{,}0017 \, \mathrm{Pa\cdot s} \)
+        \item Tiempo: \( t = 1 \, \mathrm{ms} \)
+    \end{itemize}
+\end{enumerate}
+
+
+\section*{Ejercicio R21: Efecto de la rugosidad en la velocidad y potencia del barco}
+
+Un barco de carga de \textbf{longitud $l = 100\,\mathrm{m}$} y \textbf{calado $t = 5\,\mathrm{m}$} está equipado con un motor diésel de \textbf{potencia $P = 5100\,\mathrm{kW}$}. La eficiencia de la hélice del barco es \( \eta_S = 0{,}8 \). El barco alcanza una velocidad máxima de \( v_0 = 10 \, \mathrm{m/s} \).
+
+\begin{enumerate}[label=\alph*)]
+    \item ¿Cuál es la \textbf{rugosidad media} de las paredes del casco si la resistencia por fricción y la resistencia por ondas son iguales?
+    \item Después de varios años, la velocidad máxima ha disminuido a \( v = 9{,}5 \, \mathrm{m/s} \). Calcule el \textbf{incremento de rugosidad} de la superficie debido al crecimiento biológico, suponiendo que el coeficiente de resistencia por ondas \( c_{WW} = \frac{WW}{\frac{1}{2} \rho v^2 l t} \) no depende del número de Reynolds.
+    \item ¿Qué \textbf{potencia del motor} sería necesaria para mantener la velocidad máxima original, aún con el aumento de rugosidad? 
+\end{enumerate}
+
+\textbf{Nota:} Cada lado del barco se aproxima como una placa plana mojada por un lado de área \( l \times t \). Utilice la fórmula de \textbf{Prandtl/Schlichting} para paredes completamente rugosas.
+
+\section*{Ejercicio R24: Escalado de resistencia y potencia entre modelos de barco}
+
+Un barco de \textbf{longitud $L_1 = 90\,\mathrm{m}$}, con un área mojada de \( A_1 = 800\,\mathrm{m^2} \) y desplazamiento de \( V_1 = 3000\,\mathrm{m^3} \), está impulsado por un motor diésel de \textbf{$P_1 = 2350\,\mathrm{PS}$} y se mueve a \textbf{26 km/h} con eficiencia de hélice \( \eta_S = 0{,}76 \).
+
+\begin{enumerate}[label=\alph*)]
+    \item ¿Cuáles son la \textbf{resistencia por ondas $WW_1$} y \textbf{resistencia por fricción $WR_1$}, si ambas son iguales y constituyen la mitad de la resistencia total $W_1$?
+    \item Se construirá un barco \textbf{geométricamente similar} con desplazamiento \( V_2 = 9000\,\mathrm{m^3} \). ¿Cuál será su \textbf{velocidad} si se cumple la \textbf{ley de similitud de Froude}?
+    \item ¿Cuál será la \textbf{resistencia por ondas} del barco grande ($WW_2$)?
+    \item ¿Cuál será la \textbf{resistencia por fricción $WR_2$}, si la superficie tiene una \textbf{rugosidad} de \( k_S = 5\,\mathrm{mm} \) y se considera totalmente rugosa?
+    \item ¿Cuál será la \textbf{resistencia total $W_2$} y la \textbf{potencia del motor $P_2$} requerida para el barco nuevo, con la misma eficiencia de hélice?
+\end{enumerate}
+
+
+\end{document}

@@ -1,0 +1,66 @@
+\documentclass[12pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{float}
+\usepackage{caption}
+
+
+\begin{document}
+
+ A research vessel employs a hybrid propulsion system that includes a pressurized water discharge network composed of two connected pipe sections and a conventional hull structure. The ship must overcome hydrodynamic resistance from both the internal pipe flow and the external hull friction.
+
+The pipe system is composed of:
+\begin{itemize}
+    \item \textbf{Section A}: length $L_A = 30\,\mathrm{m}$, diameter $D_A = 0.3\,\mathrm{m}$, roughness $k_A = 0.3\,\mathrm{mm}$
+    \item \textbf{Section B}: length $L_B = 20\,\mathrm{m}$, diameter $D_B = 0.2\,\mathrm{m}$, roughness $k_B = 1.2\,\mathrm{mm}$
+\end{itemize}
+
+The total flow rate through the system is $Q = 0.08\,\mathrm{m^3/s}$. Seawater is assumed with density $\rho = 1025\,\mathrm{kg/m^3}$ and kinematic viscosity $\nu = 1.1 \times 10^{-6}\,\mathrm{m^2/s}$.
+
+The ship's hull has length $L = 85\,\mathrm{m}$, draft $T = 6\,\mathrm{m}$, and an estimated surface roughness $k_s = 4\,\mathrm{mm}$. The vessel moves at a constant velocity $V = 9\,\mathrm{m/s}$ and the propeller has an efficiency of $\eta_S = 0.78$.
+
+\section*{Tasks}
+\begin{enumerate}[label=\alph*)]
+    \item Calculate the \textbf{mean velocity} of the flow in each pipe section.\\
+
+    \item Compute the \textbf{Reynolds number} in each section. Indicate whether the flow is laminar or turbulent.\\
+
+    \item Estimate the \textbf{total pressure loss} in both pipe sections using the Darcy-Weisbach equation:
+    \[
+    \Delta p_V = \lambda \cdot \frac{l}{d} \cdot \frac{\rho}{2} \cdot \bar{u}^2
+    \]
+    Use the following to determine the friction factor $\lambda$:
+    \begin{itemize}
+        \item For laminar flow: $\lambda = \frac{64}{Re}$
+        \item For fully rough turbulent flow:
+        \[
+        \frac{1}{\sqrt{\lambda}} = 1.74 - 2 \log_{10}\left( \frac{2k_s}{d} \right)
+        \]
+    \end{itemize}
+
+    \item Calculate the \textbf{friction coefficient for the hull} using the Prandtl-Schlichting formula:
+    \[
+    c_f = \left(1.89 + 1.62 \cdot \log_{10}\left(\frac{L}{k_s}\right)\right)^{-2.5}
+    \]
+    Then determine the \textbf{total frictional force} on both sides of the hull.\\
+
+    \item Determine the \textbf{total effective power required} to overcome:
+    \begin{itemize}
+        \item The pressure losses in the pipe network
+        \item The hull friction resistance
+    \end{itemize}
+    Then calculate the \textbf{required engine power output} considering the propeller efficiency $\eta_S$.\\
+\end{enumerate}
+
+
+
+
+\end{document}
