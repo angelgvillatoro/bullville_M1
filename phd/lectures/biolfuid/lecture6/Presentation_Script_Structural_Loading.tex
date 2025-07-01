@@ -1,0 +1,93 @@
+
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{parskip}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+
+\title{Presentation Script: Structural Loading on Appendages}
+\date{}
+\begin{document}
+
+\maketitle
+
+\section*{Slide 1: Title}
+Welcome everyone. Today, we'll explore \textbf{Structural Loading on Appendages}, focusing on how wings and fins in nature manage aerodynamic forces. We'll discuss the physics behind it and walk through a practical example using the albatross takeoff scenario.
+
+\section*{Slide 2: Motivation}
+Why does this matter?
+\begin{itemize}
+    \item Nature offers elegant solutions for flight.
+    \item Understanding these mechanisms helps us design efficient and safe aircraft.
+    \item Structural loading is key to performance and avoiding failure.
+\end{itemize}
+
+\section*{Slide 3: Propulsive Appendages in Nature}
+Let’s look at how animals use their appendages:
+\begin{itemize}
+    \item Fish use fins to steer and push through water.
+    \item Birds and insects use wings to generate lift and control direction.
+    \item These appendages must endure loads without breaking or deforming uncontrollably.
+\end{itemize}
+
+\section*{Slide 4: Gliding Ray and Lift Distribution}
+This figure shows a gliding ray:
+\begin{itemize}
+    \item It uses its fins to glide, generating lift like a bird's wing.
+    \item The figure on the right simplifies this concept using a twisted wing.
+    \item This introduces the idea of lift distribution across a span.
+\end{itemize}
+
+\section*{Slide 5: 3D Effects – Root and Tip Vortices}
+\begin{itemize}
+    \item Real wings are not infinite.
+    \item At the root and tip, 3D effects become important.
+    \item Vortices form at the tips and alter lift distribution.
+    \item Prandtl’s lifting-line theory helps model this behavior mathematically.
+\end{itemize}
+
+\section*{Slide 6: Bio-Inspired Propulsion}
+This slide shows wings of a samara and a bio-inspired propeller blade:
+\begin{itemize}
+    \item Both are broken into 2D slices for analysis.
+    \item The inflow velocity and rotation define how much force each slice feels.
+\end{itemize}
+
+\section*{Slide 7: Modeling Structural Forces}
+We simplify by analyzing cross sections:
+\begin{itemize}
+    \item Forces include lift ($C_L$), drag ($C_D$), normal ($C_N$), and axial ($C_X$).
+    \item Moments are bending in two directions and twisting (torsion).
+\end{itemize}
+
+\section*{Slide 8: Force Components on a Section}
+This airfoil diagram helps explain the forces:
+\begin{itemize}
+    \item Lift acts upward, drag backward.
+    \item From these we compute the normal and axial components that matter for structure.
+\end{itemize}
+
+\section*{Slide 9: Albatross Takeoff Scenario}
+Let’s move into a real-world case:
+\begin{itemize}
+    \item The albatross takes off at a 30° angle with 15 m/s speed.
+    \item Its wingspan and geometry are known.
+    \item We analyze the forces and structural moments involved at the moment of lift-off.
+\end{itemize}
+
+\section*{Slide 10: Takeoff Modeling Example}
+We model the wing using:
+\begin{itemize}
+    \item An elliptical planform
+    \item Given angle of attack and velocity
+    \item Using simple aerodynamic formulas, we compute:
+    \begin{itemize}
+        \item Lift and drag coefficients
+        \item Resulting force components
+        \item Flapwise, edgewise, and torsional moments
+    \end{itemize}
+\end{itemize}
+
+\textbf{Conclusion:} These simplified models give us insight into how wings bear loads, showing the balance between aerodynamic efficiency and structural integrity.
+
+\end{document}

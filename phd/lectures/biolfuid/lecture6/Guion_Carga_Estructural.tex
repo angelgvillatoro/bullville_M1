@@ -1,0 +1,105 @@
+
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{caption}
+\usepackage{color}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\title{Guión de Clase: Carga Estructural en Apendices Propulsivos}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Objetivo de la clase}
+Comprender cómo las fuerzas aerodinámicas inducen momentos estructurales en alas y apéndices propulsivos, desarrollando modelos matemáticos que permitan estimar estos efectos en condiciones reales como el despegue de un albatros.
+
+\section{Introducción (15 minutos)}
+\begin{itemize}
+    \item Introducción a apéndices propulsivos en la naturaleza (delfines, albatros, samaras).
+    \item Analogía entre alas, hélices y estructuras naturales.
+    \item Presentación del caso del albatros: ¿Por qué el despegue es crítico?
+    \item Visualización: Fig. 5.38 y Fig. 5.42.
+\end{itemize}
+
+\section{Desarrollo teórico (30 minutos)}
+\subsection{Fuerzas aerodinámicas locales}
+\begin{itemize}
+    \item Definición de fuerzas: $C_L$, $C_D$, $C_R$, $C_N$, $C_X$.
+    \item Ángulo de ataque efectivo: $\alpha_{eff}$.
+\end{itemize}
+
+\subsection{Momentos estructurales}
+\begin{itemize}
+    \item Momento flapwise:
+    \[
+    M_F = \int_0^R \left( \frac{1}{2} \rho U_{\text{eff}}^2 c \right) C_N z \, dz
+    \]
+    \item Momento edgewise:
+    \[
+    M_E = \int_0^R \left( \frac{1}{2} \rho U_{\text{eff}}^2 c \right) C_X z \, dz
+    \]
+    \item Momento torsional:
+    \[
+    M_T = \int_0^R \left( \frac{1}{2} \rho U_{\text{eff}}^2 c \right) C_R (x_{EA} - x_{AC}) \, dz
+    \]
+\end{itemize}
+
+\subsection{Modelos de deformación 2D}
+\begin{itemize}
+    \item Plunge (movimiento en $y$): Fig. 5.40 izquierda.
+    \item Pitch (rotación $\alpha$): Fig. 5.40 derecha.
+    \item Inestabilidad de torsión (flutter).
+\end{itemize}
+
+\subsection{Torsión y rigidez}
+\[
+T = JG \frac{d\alpha}{dz}, \quad \alpha = \int_0^{z_1} \frac{T}{JG} dz
+\]
+
+\section{Ejemplo práctico: despegue del albatros (40 minutos)}
+\begin{itemize}
+    \item Datos:
+    \begin{itemize}
+        \item $b/2 = 1$ m, $c_r = 0.2$ m
+        \item $U_\infty = 15$ m/s, $\alpha = 10^\circ$
+        \item $C_D = 0.04$, $C_L = 2\pi\alpha$
+    \end{itemize}
+    \item Distribución elíptica de cuerda:
+    \[
+    c(z) = c_r \sqrt{1 - 4 \left( \frac{z}{b} \right)^2 }
+    \]
+    \item Cálculo de $C_R$, $C_N$, $C_X$:
+    \[
+    C_R = \sqrt{C_L^2 + C_D^2}, \quad C_N = C_L \cos\alpha - C_D \sin\alpha, \quad C_X = C_L \sin\alpha + C_D \cos\alpha
+    \]
+    \item Momentos:
+    \[
+    M_F = \frac{c_r b^2}{24} \rho U_\infty^2 C_N \approx 9.839 \text{ Nm}
+    \]
+    \[
+    M_E = \frac{c_r b^2}{24} \rho U_\infty^2 C_X \approx 2.104 \text{ Nm}
+    \]
+    \[
+    M_T = \frac{\pi c_r b}{16} \rho U_\infty^2 C_R (x_{EA} - x_{AC}) \approx 3.554 \text{ Nm}
+    \]
+\end{itemize}
+
+\section{Cierre y reflexión (5 minutos)}
+\begin{itemize}
+    \item Conclusiones del caso del albatros.
+    \item Importancia de los modelos 2D para analizar estructuras complejas.
+    \item Introducción a posibles extensiones: flapping, no linealidades, acoplamiento fluido-estructura.
+\end{itemize}
+
+\end{document}
