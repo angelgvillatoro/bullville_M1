@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation,FFMpegWriter
 from IPython.display import HTML
 
-
 @njit(parallel=True, fastmath=True)
 def actualizar_campos(presion_adversa, u_old, v_old, p_old, T_old, u_star, v_star, p_star, T_star,
                       Re, Pr, Ec, Eu, dt_star, dx_star, dy_star, nx, ny):
@@ -133,6 +132,8 @@ def run_simulation_separacion(nx=25, ny=25, guardar_en_disco=False, folder='sim_
                 np.save(os.path.join(frame_folder, f"u_{n:05d}.npy"), u_star)
                 np.save(os.path.join(frame_folder, f"v_{n:05d}.npy"), v_star)
                 np.save(os.path.join(frame_folder, f"p_{n:05d}.npy"), p_star)
+                np.save(os.path.join(frame_folder, f"T_{n:05d}.npy"), T_star)
+                np.save(os.path.join(frame_folder, f"tau_{n:05d}.npy"), tau)
             else:
                 u_hist.append(u_star.copy())
                 v_hist.append(v_star.copy())
@@ -150,12 +151,88 @@ def run_simulation_separacion(nx=25, ny=25, guardar_en_disco=False, folder='sim_
         "tau_history": tau_hist,
         "params": {
             "nx": nx, "ny": ny, "dt_star": dt_star, "nt": nt,
-            "presion_adversa": presion_adversa  # <--- aquí
+            "presion_adversa": presion_adversa
         },
         "X_star": X_star,
         "Y_star": Y_star,
         "frame_folder": frame_folder if guardar_en_disco else None,
     }
+
+def reconstruir_sim_data(folder_base, resolucion, destino_pkl, plantilla_params=None):
+    frame_folder = os.path.join(folder_base, f"{resolucion}x{resolucion}_frames")
+    if not os.path.isdir(frame_folder):
+        raise FileNotFoundError(f"No se encontró la carpeta de frames: {frame_folder}")
+
+    print(f"📂 Cargando frames desde: {frame_folder}")
+
+    # Detectar todos los archivos u_*.npy
+    archivos = sorted([f for f in os.listdir(frame_folder) if f.startswith("u_") and f.endswith(".npy")])
+    n_frames = len(archivos)
+    if n_frames == 0:
+        raise ValueError("No se encontraron archivos u_*.npy")
+
+    u_history = []
+    v_history = []
+    p_history = []
+    T_history = []
+    tau_history = []
+
+    for archivo_u in archivos:
+        n = int(archivo_u.split('_')[1].split('.')[0])
+        archivo_v = f"v_{n:05d}.npy"
+        archivo_p = f"p_{n:05d}.npy"
+        
+        u = np.load(os.path.join(frame_folder, archivo_u))
+        v = np.load(os.path.join(frame_folder, archivo_v))
+        p = np.load(os.path.join(frame_folder, archivo_p))
+        
+        # Inicializa campos constantes
+        if len(u_history) == 0:
+            ny, nx = u.shape
+            x_star = np.linspace(0, 1.0, nx)
+            y_star = np.linspace(0, 1.0, ny)
+            X_star, Y_star = np.meshgrid(x_star, y_star)
+            T = np.ones_like(u)
+            tau = np.zeros_like(u)
+        
+        u_history.append(u)
+        v_history.append(v)
+        p_history.append(p)
+        T_history.append(T.copy())
+        tau_history.append(tau.copy())
+
+    # Parámetros estimados o copiados
+    if plantilla_params:
+        with open(plantilla_params, 'rb') as f:
+            base_params = pickle.load(f)["params"]
+        dt_star = base_params["dt_star"]
+        presion_adversa = base_params.get("presion_adversa", 0.3)
+    else:
+        dt_star = 1.0 / (n_frames - 1)
+        presion_adversa = 0.2
+
+    sim_data = {
+        "u_history": u_history,
+        "v_history": v_history,
+        "p_history": p_history,
+        "T_history": T_history,
+        "tau_history": tau_history,
+        "params": {
+            "nx": nx, "ny": ny, "dt_star": dt_star, "nt": n_frames,
+            "presion_adversa": presion_adversa
+        },
+        "X_star": X_star,
+        "Y_star": Y_star,
+        "frame_folder": frame_folder
+    }
+
+    # Guardar .pkl final
+    os.makedirs(destino_pkl, exist_ok=True)
+    archivo_pkl = os.path.join(destino_pkl, f"{resolucion}x{resolucion}.pkl")
+    with open(archivo_pkl, 'wb') as f:
+        pickle.dump(sim_data, f)
+
+    print(f"✅ Archivo .pkl creado: {archivo_pkl}")
 
 
 # --- ANIMACIÓN DE RESULTADOS ---
@@ -163,11 +240,7 @@ def run_simulation_separacion(nx=25, ny=25, guardar_en_disco=False, folder='sim_
 # velocidad, temperatura, presión y esfuerzo cortante (tau)
 # Destaca contornos de líneas de corriente y temperatura clave para analizar separación
 
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-import numpy as np
-
-def animar_resultados_linea(sim_data, vel_level=0.9, temp_level=0.01, alpha_stream=0.4):
+def animar_resultados(sim_data):
     X_star = sim_data["X_star"]
     Y_star = sim_data["Y_star"]
     u_hist = sim_data["u_history"]
@@ -175,107 +248,68 @@ def animar_resultados_linea(sim_data, vel_level=0.9, temp_level=0.01, alpha_stre
     p_hist = sim_data["p_history"]
     T_hist = sim_data["T_history"]
     tau_hist = sim_data["tau_history"]
-    dt_star = sim_data["params"]["dt_star"]
+    resolucion = X_star.shape[1]
     presion_adversa = sim_data["params"].get("presion_adversa", "N/A")
 
-    dt_star_visual = 1.0 / len(u_hist)
-    fig, axs = plt.subplots(3, 2, figsize=(12, 12))
-    ax1, ax2, ax3, ax4, ax5, ax6 = axs.flatten()
+    fig, axs_grid = plt.subplots(3, 2, figsize=(12, 12))
+    axs = axs_grid.flatten()
 
-    text1 = ax1.text(0.02, 0.95, '', transform=ax1.transAxes, fontsize=9, color='white',
-                     bbox=dict(facecolor='black', alpha=0.5))
-    text2 = ax2.text(0.02, 0.95, '', transform=ax2.transAxes, fontsize=9, color='white',
-                     bbox=dict(facecolor='black', alpha=0.5))
+    titles = [
+        'Velocidad |u*|',
+        'Temperatura T*',
+        'Presión p*',
+        'Esfuerzo cortante τ*',
+        'Componente u*',
+        'Componente v*'
+    ]
+    cmaps = ['jet', 'jet', 'viridis', 'coolwarm', 'plasma', 'plasma']
 
-    linea_temp_plot, = ax2.plot([], [], 'k', linewidth=1.5)
-    stream_container = []
+    # Primer frame
+    datasets = [
+        np.sqrt(u_hist[0]**2 + v_hist[0]**2),
+        T_hist[0],
+        p_hist[0],
+        tau_hist[0],
+        u_hist[0],
+        v_hist[0]
+    ]
+
+    for ax, title, cmap, data in zip(axs, titles, cmaps, datasets):
+        cf = ax.contourf(X_star, Y_star, data, levels=20, cmap=cmap)
+        ax.set_title(title)
+        ax.set_xlabel("x*")
+        ax.set_ylabel("y*")
+        plt.colorbar(cf, ax=ax)
+
+    t_star_0 = 0.0
+    fig.suptitle(f"Resolución {resolucion}x{resolucion} | presión_adversa = {presion_adversa} | t* = {t_star_0:.2f}", fontsize=14)
+    plt.tight_layout()
 
     def update(frame):
-        speed = np.sqrt(u_hist[frame]**2 + v_hist[frame]**2)
+        t_star = frame / (len(u_hist) - 1)
+        updated_data = [
+            np.sqrt(u_hist[frame]**2 + v_hist[frame]**2),
+            T_hist[frame],
+            p_hist[frame],
+            tau_hist[frame],
+            u_hist[frame],
+            v_hist[frame]
+        ]
+        for ax, data, cmap in zip(axs, updated_data, cmaps):
+            for coll in list(ax.collections):
+                coll.remove()
+            ax.contourf(X_star, Y_star, data, levels=20, cmap=cmap)
 
-        for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:
-            while ax.collections:
-                ax.collections[-1].remove()
+        fig.suptitle(f"Resolución {resolucion}x{resolucion} | presión_adversa = {presion_adversa} | t* = {t_star:.2f}", fontsize=14)
 
-        # Subplot 1: velocidad con streamlines
-        cs1 = ax1.contourf(X_star, Y_star, speed, levels=20, cmap='jet')
-        ax1.contour(X_star, Y_star, speed, levels=[vel_level], colors='k', linewidths=1.5)
-        if stream_container:
-            try:
-                stream_container[0].lines.remove()
-            except ValueError:
-                pass
-            stream_container.clear()
-
-        stream = ax1.streamplot(X_star, Y_star, u_hist[frame], v_hist[frame],
-                        color='white', density=1.2, linewidth=0.8, arrowsize=1)
-        stream.lines.set_alpha(alpha_stream)
-        stream_container.append(stream)
-
-        # Subplot 2: temperatura
-        cs2 = ax2.contour(X_star, Y_star, T_hist[frame], levels=[temp_level], colors='k', linewidths=1.5)
-        selected_line = None
-        if cs2.allsegs and len(cs2.allsegs[0]) > 0:
-            selected_line = np.concatenate(cs2.allsegs[0])
-            linea_temp_plot.set_data(selected_line[:, 0], selected_line[:, 1])
-        else:
-            linea_temp_plot.set_data([], [])
-        ax2.contourf(X_star, Y_star, T_hist[frame], levels=20, cmap='jet')
-
-        # Subplot 3: presión
-        ax3.contourf(X_star, Y_star, p_hist[frame], levels=20, cmap='viridis')
-
-        # Subplot 4: esfuerzo cortante
-        ax4.contourf(X_star, Y_star, tau_hist[frame], levels=20, cmap='coolwarm')
-
-        # Subplot 5: u*
-        ax5.contourf(X_star, Y_star, u_hist[frame], levels=20, cmap='plasma')
-
-        # Subplot 6: v*
-        ax6.contourf(X_star, Y_star, v_hist[frame], levels=20, cmap='plasma')
-
-        # Textos y títulos
-        t_star = frame * dt_star_visual
-        ax1.set_title(f'Velocidad |u*| (t*={t_star:.2f})')
-        ax2.set_title(f'Temperatura T* (t*={t_star:.2f})')
-        ax3.set_title(f'Presión p* (t*={t_star:.2f})')
-        ax4.set_title(f'Shear stress τ* (t*={t_star:.2f})')
-        ax5.set_title(f'Componente u* (t*={t_star:.2f})')
-        ax6.set_title(f'Componente v* (t*={t_star:.2f})')
-
-        text1.set_text(f'|u*|={vel_level} @ x=1\npresión_adversa={presion_adversa}')
-
-        return ax1.collections + ax2.collections + ax3.collections + ax4.collections + ax5.collections + ax6.collections + [text1, text2, linea_temp_plot]
-
-    # --- PRIMER FRAME Y BARRAS DE COLOR ---
-    speed0 = np.sqrt(u_hist[0]**2 + v_hist[0]**2)
-    cs1 = ax1.contourf(X_star, Y_star, speed0, levels=20, cmap='jet')
-    ax1.contour(X_star, Y_star, speed0, levels=[vel_level], colors='k', linewidths=1.5)
-    plt.colorbar(cs1, ax=ax1, orientation='vertical', label='|u*|')
-
-    cs2 = ax2.contourf(X_star, Y_star, T_hist[0], levels=20, cmap='jet')
-    plt.colorbar(cs2, ax=ax2, orientation='vertical', label='T*')
-
-    cs3 = ax3.contourf(X_star, Y_star, p_hist[0], levels=20, cmap='viridis')
-    plt.colorbar(cs3, ax=ax3, orientation='vertical', label='p*')
-
-    cs4 = ax4.contourf(X_star, Y_star, tau_hist[0], levels=20, cmap='coolwarm')
-    plt.colorbar(cs4, ax=ax4, orientation='vertical', label='τ*')
-
-    cs5 = ax5.contourf(X_star, Y_star, u_hist[0], levels=20, cmap='plasma')
-    plt.colorbar(cs5, ax=ax5, orientation='vertical', label='u*')
-
-    cs6 = ax6.contourf(X_star, Y_star, v_hist[0], levels=20, cmap='plasma')
-    plt.colorbar(cs6, ax=ax6, orientation='vertical', label='v*')
-
-    fig.suptitle(f"Resolución {X_star.shape[1]}x{Y_star.shape[0]} | presión_adversa = {presion_adversa}", fontsize=14)
-    plt.tight_layout()
+        return axs
 
     anim = FuncAnimation(fig, update, frames=len(u_hist), interval=100, blit=False)
     return anim, fig
 
+
 # --- GUARDADO DE RESULTADOS ---
-def guardar_resultado(sim_data, nx, ny, folder='sim_separacion'):
+def guardar_resultado(sim_data, nx, ny, folder):
     os.makedirs(folder, exist_ok=True)
     archivo = os.path.join(folder, f"{nx}x{ny}.pkl")
     with open(archivo, 'wb') as f:
@@ -283,43 +317,59 @@ def guardar_resultado(sim_data, nx, ny, folder='sim_separacion'):
     print(f"📁 Resultado guardado en {archivo}")
 
 
-# --- CICLO DE SIMULACIONES ---
-resoluciones = [25, 50, 100, 200, 400, 800, 1600]  # Resoluciones a simular
-coef_presion = 0.2  # Presión adversa constante
+from matplotlib.animation import FFMpegWriter
+import os
+import pickle
+
+resoluciones = [800, 1600]
+coef_presion = 0.2
+carpeta_sim = 'sim_separacion'
+carpeta_anim = "anim_sep_bubble"
+plantilla_param = os.path.join(carpeta_sim, "400x400.pkl")  # base para dt_star y p_adversa
 
 if __name__ == "__main__":
+    os.makedirs(carpeta_sim, exist_ok=True)
+    os.makedirs(carpeta_anim, exist_ok=True)
+
     for size in resoluciones:
-        print(f"🔄 Ejecutando simulación para {size}x{size}...")
-        guardar_disco = size >= 800
-        sim = run_simulation_separacion(size, size, guardar_en_disco=guardar_disco, presion_adversa = coef_presion)
-        if not guardar_disco:
-            guardar_resultado(sim, size, size)
-'''
-# --- EXPORTACIÓN A VIDEO ---
-output_folder_linea = 'anim_separacion'
-os.makedirs(output_folder_linea, exist_ok=True)
+        print(f"🔄 Procesando resolución {size}x{size}...")
 
-carpeta = 'sim_separacion'
+        if size < 800:
+            # --- Resoluciones bajas: simular y guardar directamente ---
+            sim = run_simulation_separacion(
+                size, size,
+                guardar_en_disco=False,
+                presion_adversa=coef_presion
+            )
+            guardar_resultado(sim, size, size, carpeta_sim)
 
-for size in resoluciones:
-    nombre = f"{size}x{size}"
-    archivo = os.path.join(carpeta, f"{nombre}.pkl")
-    if not os.path.exists(archivo):
-        print(f"❌ No se encontró: {archivo}")
-        continue
+        else:
+            # --- Resoluciones altas: simular guardando frames, luego reconstruir ---
+            sim = run_simulation_separacion(
+                size, size,
+                guardar_en_disco=True,
+                presion_adversa=coef_presion
+            )
+            # Reconstruir el .pkl desde los .npy
+            reconstruir_sim_data(
+                carpeta_sim,
+                size,
+                carpeta_sim,
+                plantilla_params=plantilla_param
+            )
 
-    with open(archivo, 'rb') as f:
-        sim = pickle.load(f)
+            # Cargar el .pkl recién creado
+            archivo_pkl = os.path.join(carpeta_sim, f"{size}x{size}.pkl")
+            with open(archivo_pkl, 'rb') as f:
+                sim = pickle.load(f)
 
-    # --- Animación principal con línea de velocidad, streamlines, etc.
-    print(f"🎞️ Generando animación de resultados para {nombre}...")
-    try:
-        anim, fig = animar_resultados_linea(sim, alpha_stream=0.3)
-        salida_mp4 = os.path.join(output_folder_linea, f"{nombre}.mp4")
+        # --- Generar animación ---
+        print(f"🎞️ Generando animación para {size}x{size}...")
+        anim, fig = animar_resultados(sim)
 
-        writer = FFMpegWriter(fps=10, metadata={"title": nombre})
-        anim.save(salida_mp4, writer=writer)
+        salida = os.path.join(carpeta_anim, f"{size}x{size}.mp4")
+        writer = FFMpegWriter(fps=30)
+        anim.save(salida, writer=writer)
         plt.close(fig)
-        print(f"✅ Guardado: {salida_mp4}")
-    except Exception as e:
-        print(f"⚠️ Error al animar resultados línea {nombre}: {e}")'''
+
+        print(f"✅ Animación guardada en: {salida}")
