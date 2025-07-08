@@ -158,6 +158,8 @@ def run_simulation_separacion(nx=25, ny=25, guardar_en_disco=False, folder='sim_
         "frame_folder": frame_folder if guardar_en_disco else None,
     }
 
+#============================================================================================================
+
 def reconstruir_sim_data(folder_base, resolucion, destino_pkl, plantilla_params=None):
     frame_folder = os.path.join(folder_base, f"{resolucion}x{resolucion}_frames")
     if not os.path.isdir(frame_folder):
@@ -321,7 +323,7 @@ from matplotlib.animation import FFMpegWriter
 import os
 import pickle
 
-resoluciones = [800, 1600]
+resoluciones = [25]
 coef_presion = 0.2
 carpeta_sim = 'sim_separacion'
 carpeta_anim = "anim_sep_bubble"
@@ -334,7 +336,7 @@ if __name__ == "__main__":
     for size in resoluciones:
         print(f"🔄 Procesando resolución {size}x{size}...")
 
-        if size < 800:
+        if size < 2000:
             # --- Resoluciones bajas: simular y guardar directamente ---
             sim = run_simulation_separacion(
                 size, size,
