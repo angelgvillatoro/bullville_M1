@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 import os
 import pickle
+import numpy as np
 
 def actualizar_campos_gpu(presion_adversa, u, v, p, T, Re, Pr, Ec, Eu, dt_star, dx_star, dy_star):
     ny, nx = u.shape
