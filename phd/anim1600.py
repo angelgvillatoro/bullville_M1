@@ -79,10 +79,10 @@ def animar_resultados(sim_data):
     anim = FuncAnimation(fig, update, frames=len(u_hist), interval=100, blit=False)
     return anim, fig
 
-resoluciones = [1600]
+resoluciones = [25,50, 100, 200, 400, 800]
 coef_presion = 0.2
-carpeta_sim = 'sim_sep_chunks_1600'
-carpeta_anim = "anim_sep_chunks"
+carpeta_sim = 'sim_separacion'
+carpeta_anim = "anim_sep_2"
 
 if __name__ == "__main__":
     os.makedirs(carpeta_sim, exist_ok=True)
