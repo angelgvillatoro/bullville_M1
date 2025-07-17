@@ -1,0 +1,47 @@
+% \section*{Unendliches Gitter (12 Punkte)}\sectionmark{\\ Aufgabe 3}
+
+\begingroup
+\clearpage% Manually insert \clearpage
+\let\clearpage\relax% Remove \clearpage functionality
+\vspace*{-2cm}% Insert needed vertical retraction
+\section*{Couette Flow (12 points \hl{-2 points})}\sectionmark{\\ Problem 4}
+\endgroup
+
+\noindent A Newtonian fluid of dynamic viscosity $\mu$ and density $\rho$ fills the space between two parallel plates of infinite length and distance $h$, as shown in the figure below. Both plates have a width $b$ into the page, where $b\gg h$. The upper plate moves parallel to the lower plate at a constant speed of $2U$ to the right, while the lower plate moves at a constant speed of $U$ to the left. The velocity profile $u(y)$ and other flow properties are to be determined. \\
+\noindent\textbf{Assumptions:} The flow between the plates is assumed to be steady, two-dimensional, incompressible, laminar, fully developed, and unaffected by gravity or pressure gradients.
+
+%---------------------------------------------
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{figures/A4/task4.png}
+\end{figure}
+
+\vspace{0.3cm}
+Given governing equations for two-dimensional flow:
+\begin{equation*}
+\frac{\partial \rho}{\partial t} + \frac{\partial (\rho u)}{\partial x} + \frac{\partial (\rho v)}{\partial y}  = 0
+\end{equation*}%
+\begin{equation*}
+\rho \left(\frac{\partial u}{\partial t} + u\frac{\partial u }{\partial x} + v\frac{\partial u}{\partial y} \right) = -\frac{\partial p}{\partial x} + \mu\left(\frac{\partial^2 u}{\partial x^2}+\frac{\partial^2 u}{\partial y^2}\right) %+ \rho g_x
+\end{equation*}%
+\begin{equation*}
+\rho \left(\frac{\partial v}{\partial t} + u\frac{\partial v }{\partial x} + v\frac{\partial v}{\partial y} \right) = -\frac{\partial p}{\partial y} + \mu\left(\frac{\partial^2 v}{\partial x^2}+\frac{\partial^2 v}{\partial y^2}\right)  %+ \rho g_y
+\end{equation*}
+\vspace{0.3cm}
+
+\begin{enumerate}[a)]
+\item Simplify the given governing equations as far as possible for the present flow case and the assumptions described above, and clearly define the relevant boundary conditions for the velocity profile $u(y)$. \textbf{[3P]}
+\item Derive the velocity distribution $u(y)$ between these two plates using the boundary conditions and simplified equations from question a). \textbf{[3P]}
+\item Determine the vertical position at which the velocity reverses its direction in the flow and use this information to sketch the corresponding velocity profile in the figure. \textbf{[2P]}
+%\item Determine the shear stress in the fluid as a function of the distance $h$ between the plates. Does the shear stress vary along the $y$-axis? How does shear stress change with different distance $h$ between the two plates? \textbf{[2P]}
+\item  What is the total mass flow rate $\dot{m}_\text{tot}$ of the flow between the plates? \textbf{[2P\hl{-2P}]}
+\item At what velocity would the upper plate have to move for $\dot{m}_\text{tot}$ to be exactly zero? \textbf{[2P]}
+
+
+%\item Consider a small object positioned in the middle of the flow, with a length of L and a thickness of T. Determine the relationship that governs the moment at the center of the object. \textbf{[1.5P]}
+%\item Imagine that lower plate is heated  \textbf{[1.5P]}
+
+
+\end{enumerate}
+
+%---------------------------------------------
