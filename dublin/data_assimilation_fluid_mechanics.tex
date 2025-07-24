@@ -1,0 +1,52 @@
+
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+\title{State of the Art: Data Assimilation in Fluid Mechanics and CFD}
+\author{ScholarGPT}
+\date{2025}
+
+\begin{document}
+
+\maketitle
+
+\section*{Resumen General}
+
+La asimilación de datos (data assimilation, DA) en la mecánica de fluidos y la dinámica de fluidos computacional (CFD) ha evolucionado rápidamente gracias a técnicas que integran observaciones experimentales con modelos numéricos, con el objetivo de mejorar la precisión, estabilidad y eficiencia computacional. Las técnicas más destacadas incluyen métodos estadísticos como los filtros de Kalman, enfoques variacionales, y recientemente, redes neuronales profundas como \textit{physics-informed neural networks} (PINNs) y \textit{Fourier Neural Operators} (FNO). Además, se ha ampliado su aplicación desde flujos turbulentos hasta predicciones en entornos urbanos, procesos industriales, y simulaciones cardiovasculares.
+
+\section*{Trabajos Relevantes}
+
+\begin{enumerate}
+  \item Yang et al. (2025), \textit{STROM: A Spatial-Temporal Reduced-Order Model for Zinc Fluidized Bed Roaster Temperature Field Prediction}. \href{https://www.sciencedirect.com/science/article/pii/S209580992500236X}{Enlace al artículo}.
+
+  \item Cruz-González et al. (2025), \textit{Enhanced Vascular Flow Simulations in Aortic Aneurysm via Physics-Informed Neural Networks and Deep Operator Networks}. \href{https://arxiv.org/pdf/2503.17402}{Enlace al artículo}.
+
+  \item Xie et al. (2025), \textit{A Boundary-Assimilation Fourier Neural Operator for Predicting Initial Fields of Flow around Structures}. \href{https://pubs.aip.org/aip/pof/article/37/2/027148/3335812}{Enlace al artículo}.
+
+  \item Quattromini et al. (2024), \textit{Graph Neural Networks and Differential Equations: A Hybrid Approach for Data Assimilation of Fluid Flows}. \href{https://arxiv.org/pdf/2411.09476?}{Enlace al artículo}.
+
+  \item Chen et al. (2024), \textit{Wind Tunnel Wall Interference Correction for Transonic Airfoils with Data-Reduced Ensemble Kalman Filter}. \href{https://www.researchgate.net/profile/Gang-Wang-29/publication/384719324_Wind_tunnel_wall_interference_correction_for_transonic_airfoils_with_data-reduced_ensemble_Kalman_filter/links/6704f2d47d49be5c483dc5cf/Wind-tunnel-wall-interference-correction-for-transonic-airfoils-with-data-reduced-ensemble-Kalman-filter.pdf}{Enlace al artículo}.
+
+  \item Bidar (2024), \textit{Data-driven Augmentation of Turbulence Models for Complex Fluid Flows}. \href{https://etheses.whiterose.ac.uk/id/oai_id/oai:etheses.whiterose.ac.uk:35649}{Enlace al artículo}.
+
+  \item Zhou (2024), \textit{Neural Operators for Learning Complex Nonlocal Mappings in Fluid Dynamics}. \href{https://vtechworks.lib.vt.edu/bitstreams/4b7a3daf-d527-4574-8899-1d05dcd1171d/download}{Enlace al artículo}.
+
+  \item Fan et al. (2025), \textit{Diff-FlowFSI: A GPU-Optimized Differentiable CFD Platform}. \href{https://arxiv.org/pdf/2505.23940}{Enlace al artículo}.
+
+  \item Ohira et al. (2025), \textit{State Estimation Inside Injection Molds Using Data Assimilation and CFD}. \href{https://www.jstage.jst.go.jp/article/ijat/19/3/19_304/_pdf}{Enlace al artículo}.
+
+  \item Bae et al. (2025), \textit{CFD-quality Nowcasting for Urban Air Mobility with a Deep Learning-Based Emulator}. \href{https://iopscience.iop.org/article/10.1088/1748-9326/addc84/pdf}{Enlace al artículo}.
+\end{enumerate}
+
+\section*{Tendencias y Perspectivas}
+
+\begin{itemize}
+  \item \textbf{Integración IA + CFD:} redes neuronales (PINNs, FNO, GNN) que respetan leyes físicas.
+  \item \textbf{Reducción de Costos:} modelos de orden reducido y DA híbrida.
+  \item \textbf{Geometrías Irregulares:} DA con operadores no locales y redes diferenciales.
+  \item \textbf{Aplicaciones Multiescala:} flujos biomédicos y urbanos en tiempo real.
+\end{itemize}
+
+\end{document}
