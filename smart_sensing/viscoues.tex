@@ -12,7 +12,7 @@
 \usepackage{float}
 \usepackage{caption}
 
-\title{Ejercicios de Flujo Viscoso - Enunciados Traducidos}
+\title{4-Year Strategic Research Roadmap: Real-Time Aerodynamic State Estimation Using Surface Sensors and Data Assimilation}
 \author{}
 \date{}
 
@@ -20,71 +20,171 @@
 
 \maketitle
 
-\section*{Ejercicio 1: Transporte de Combustible (SS2018 - Aufgabe 2)}
+\textbf{Overall Vision}
 
-Una tubería horizontal de acero comercial, de \textbf{longitud 563{,}27 km} y \textbf{diámetro 0{,}3048 m}, se utiliza para transportar combustible a razón de \textbf{0{,}0531 m³/s} desde una refinería hacia un puerto marítimo.
+Develop and experimentally validate a real-time data assimilation framework capable of predicting separated and dynamically stalled aerodynamic flows using only surface pressure/temperature sensors.
+The project culminates in a high-speed wind tunnel demonstration—directly relevant to aerospace applications such as maneuvering aircraft, aeroelastic stability, and flow control.
 
-El combustible tiene una viscosidad dinámica de \textbf{0{,}002 kg/(m·s)} y una densidad de \textbf{730 kg/m³}.
+\section{PHASE 1 (Year 1): Foundational Development + Canonical Validation}
 
-El \textbf{mínimo de presión admisible} en la línea es de \textbf{55\,158 Pa}, para evitar la vaporización del fluido. En la entrada de la tubería (refinería), la presión es de \textbf{758\,420 Pa}.
+\textbf{Goals}
 
-\begin{enumerate}[label=\alph*)]
-    \item Calcule la \textbf{velocidad media} del combustible en la tubería.
-    \item Determine si el flujo es \textbf{laminar o turbulento}.
-    \item Calcule el \textbf{coeficiente de pérdida por fricción} \( \lambda \), según el tipo de flujo.
-    \item Si la presión de entrada es \( p_1 = 758\,420 \, \mathrm{Pa} \), ¿a qué distancia \( x_1 \) debe instalarse la \textbf{primera bomba} para no caer por debajo de \( p_{\text{min}} \)?
-    \item ¿Cuántas \textbf{bombas adicionales} deben instalarse en el resto de la tubería, con separación uniforme \( x_2 \), si no debe superarse la \textbf{presión máxima} de \( p_{\text{max}} = 827\,370 \, \mathrm{Pa} \)?
+\begin{itemize}
+    \item Build the complete data assimilation (DA) pipeline end-to-end.
+    \item Validate the approach on controlled, canonical flows before moving to complex airfoil dynamics.
+\end{itemize}
+
+\textbf{Key Actions}
+
+\begin{enumerate}
+    \item Develop Minimal Viable DA Framework
+    \begin{itemize}
+        \item Implement fast-enough ROM + EnKF/UKF/hybrid filter.
+        \item Demonstrate real-time update capability using synthetic data.
+    \end{itemize}
+    \item Experimental Validation on Cylinder Flow
+    \begin{itemize}
+        \item Use surface pressure/temperature sensors to reconstruct vortex shedding dynamics.
+        \item Assess latency, robustness, noise handling.
+        \item Benchmark predictions vs. reference (PIV or CFD).
+    \end{itemize}
 \end{enumerate}
 
-\section*{Ejercicio 2: Pérdida de presión en un inyector (SS2018 - Aufgabe 4)}
+\textbf{Deliverables}
 
-Un inyector de motor diésel está diseñado para introducir un volumen de combustible \( V \) desde una presión elevada \( p_1 \) hacia una cámara de combustión de menor presión \( p_3 \).
+\begin{itemize}
+    \item Working DA pipeline (ROM + filter + real-time interface).
+    \item Journal/Conference Paper: “Real-time estimation of vortex shedding dynamics from surface sensors using data assimilation.”
+\end{itemize}
 
-Durante el breve tiempo de inyección \( t \), se genera un flujo \textbf{laminar entre placas paralelas}, entre la aguja y el cuerpo del inyector. Se desprecian los efectos gravitacionales. Este flujo puede considerarse una \textbf{corriente plana viscosa entre placas paralelas}.
+\section{PHASE 2 (Year 2): Main Contribution — Airfoil With Dynamic Stall}
 
-\begin{enumerate}[label=\alph*)]
-    \item Simplifique las ecuaciones de continuidad y momento para un flujo incompresible y estacionario, justificando cada paso.
-    \item Determine el perfil de velocidad \( u(y) \) entre la aguja y el cuerpo del inyector.
-    \item Calcule la \textbf{pérdida de presión} \( \Delta p_{1-2} \), usando el perfil obtenido o, si no fue posible, partiendo de la expresión:
-    \[ u(y) = \frac{1}{2\mu} \frac{dp}{dx}(y^2 - hy) \]
+\textbf{Goals}
 
-    \textbf{Datos para c):}
+\begin{itemize}
+    \item Demonstrate robust real-time prediction of a dynamically changing aerodynamic state (stall onset, separation, reattachment, force coefficients).
+    \item Produce the core results of the PhD.
+\end{itemize}
+
+\textbf{Key Actions}
+
+\begin{enumerate}
+    \item Design and Execute Dynamic Stall Experiments.
     \begin{itemize}
-        \item Volumen inyectado: \( V = 30 \, \mathrm{mm^3} \)
-        \item Presión de entrada: \( p_1 = 2000 \times 10^5 \, \mathrm{Pa} \)
-        \item Presión de salida: \( p_3 = 50 \times 10^5 \, \mathrm{Pa} \)
-        \item Diámetros: \( d_N = 5 \, \mathrm{mm} \), \( d_K = 5{,}2 \, \mathrm{mm} \)
-        \item Longitud: \( l = 20 \, \mathrm{mm} \)
-        \item Densidad: \( \rho = 840 \, \mathrm{kg/m^3} \)
-        \item Viscosidad: \( \mu = 0{,}0017 \, \mathrm{Pa\cdot s} \)
-        \item Tiempo: \( t = 1 \, \mathrm{ms} \)
+        \item Airfoil with controlled pitch ramps or oscillations.
+        \item Distributed surface pressure/temperature sensors.
+        \item Measurements of forces, possibly PIV/Schlieren for validation.
+    \end{itemize}
+    \item Real-Time State Estimation
+    \begin{itemize}
+        \item Predict:
+        \begin{itemize}
+            \item lift and moment in real time
+            \item flow regime (attached → pre-stall → stall → reattachment)
+            \item approximate separation location
+        \end{itemize}
+        \item  Evaluate latency vs. characteristic flow timescales.
+    \end{itemize}
+    \item Model Refinement
+    \begin{itemize}
+        \item Improve ROM structure (SPOD/DMD-based, nonlinear ROMs, hybrid ML-physics if beneficial).
+        \item Enhance DA stability under strongly nonlinear transitions.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Deliverables}
+
+\begin{itemize}
+    \item Core PhD dataset and results (airfoil dynamic stall).
+    \item High-quality journal paper.
+    \item 80–90\% of thesis chapters drafted by end of year.
+\end{itemize}
+
+\section{PHASE 3 (Year 3): Transition to High-Speed Wind Tunnel Demonstration}
+\textbf{Goals}
+
+\begin{itemize}
+    \item Adapt the method for compressible/high-Re conditions.
+    \item Conduct first campaigns in the high-speed tunnel using simplified conditions.
+\end{itemize}
+
+\textbf{Key Actions}
+
+\begin{enumerate}
+    \item Method Adaptation
+    \begin{itemize}
+        \item Incorporate compressibility effects into the ROM, if necessary.
+        \item Sensor calibration for high-speed environment.
+        \item Robustness testing under increased noise and harsh conditions.
+    \end{itemize}
+    \item Experimental Campaign 1 in High-Speed Tunnel
+    \begin{itemize}
+        \item Reproduce a simplified separated flow configuration (steady or mildly dynamic).
+        \item Validate real-time state estimation with surface sensors only.
     \end{itemize}
 \end{enumerate}
 
 
-\section*{Ejercicio R21: Efecto de la rugosidad en la velocidad y potencia del barco}
+\textbf{Deliverables}
+\begin{itemize}
+    \item High-impact journal paper (AIAA Journal / Journal of Fluids Engineering).
+    \item Proof-of-concept demonstration in relevant aerospace conditions.
+\end{itemize}
 
-Un barco de carga de \textbf{longitud $l = 100\,\mathrm{m}$} y \textbf{calado $t = 5\,\mathrm{m}$} está equipado con un motor diésel de \textbf{potencia $P = 5100\,\mathrm{kW}$}. La eficiencia de la hélice del barco es \( \eta_S = 0{,}8 \). El barco alcanza una velocidad máxima de \( v_0 = 10 \, \mathrm{m/s} \).
+\section{PHASE 4 (Year 4): Final Demonstration + High-Speed Dynamic Stall / Buffet}
+\textbf{Goals}
 
-\begin{enumerate}[label=\alph*)]
-    \item ¿Cuál es la \textbf{rugosidad media} de las paredes del casco si la resistencia por fricción y la resistencia por ondas son iguales?
-    \item Después de varios años, la velocidad máxima ha disminuido a \( v = 9{,}5 \, \mathrm{m/s} \). Calcule el \textbf{incremento de rugosidad} de la superficie debido al crecimiento biológico, suponiendo que el coeficiente de resistencia por ondas \( c_{WW} = \frac{WW}{\frac{1}{2} \rho v^2 l t} \) no depende del número de Reynolds.
-    \item ¿Qué \textbf{potencia del motor} sería necesaria para mantener la velocidad máxima original, aún con el aumento de rugosidad? 
+\begin{itemize}
+    \item Execute an ambitious high-speed experiment showcasing the full capabilities of the method.
+    \item Deliver the “flagship" result connecting DA + real-time + separated compressible flow.
+\end{itemize}
+
+\textbf{Key Actions}
+
+\begin{enumerate}
+    \item Full-Scale Demonstration
+    \begin{itemize}
+        \item Airfoil with dynamic stall or moderate transonic buffet.
+        \item Real-time prediction of aerodynamic forces and flow regime transitions.
+        \item Demonstrate applicability to aerospace-relevant unsteady phenomena.
+    \end{itemize}
+    \item Final Synthesis
+    \begin{itemize}
+        \item Integrate all components into a generalizable DA framework.
+        \item Produce final thesis and final set of publications.
+    \end{itemize}
 \end{enumerate}
 
-\textbf{Nota:} Cada lado del barco se aproxima como una placa plana mojada por un lado de área \( l \times t \). Utilice la fórmula de \textbf{Prandtl/Schlichting} para paredes completamente rugosas.
+\textbf{Deliverables}
 
-\section*{Ejercicio R24: Escalado de resistencia y potencia entre modelos de barco}
+\begin{itemize}
+    \item Final PhD thesis.
+    \item “Capstone” publication: “Real-time aerodynamic state estimation in high-speed separated flows using surface sensors and data assimilation.”
+    \item Dataset + software framework for future research.
+\end{itemize}
 
-Un barco de \textbf{longitud $L_1 = 90\,\mathrm{m}$}, con un área mojada de \( A_1 = 800\,\mathrm{m^2} \) y desplazamiento de \( V_1 = 3000\,\mathrm{m^3} \), está impulsado por un motor diésel de \textbf{$P_1 = 2350\,\mathrm{PS}$} y se mueve a \textbf{26 km/h} con eficiencia de hélice \( \eta_S = 0{,}76 \).
+\section{Expected Impact}
+\subsection*{Scientific}
 
-\begin{enumerate}[label=\alph*)]
-    \item ¿Cuáles son la \textbf{resistencia por ondas $WW_1$} y \textbf{resistencia por fricción $WR_1$}, si ambas son iguales y constituyen la mitad de la resistencia total $W_1$?
-    \item Se construirá un barco \textbf{geométricamente similar} con desplazamiento \( V_2 = 9000\,\mathrm{m^3} \). ¿Cuál será su \textbf{velocidad} si se cumple la \textbf{ley de similitud de Froude}?
-    \item ¿Cuál será la \textbf{resistencia por ondas} del barco grande ($WW_2$)?
-    \item ¿Cuál será la \textbf{resistencia por fricción $WR_2$}, si la superficie tiene una \textbf{rugosidad} de \( k_S = 5\,\mathrm{mm} \) y se considera totalmente rugosa?
-    \item ¿Cuál será la \textbf{resistencia total $W_2$} y la \textbf{potencia del motor $P_2$} requerida para el barco nuevo, con la misma eficiencia de hélice?
-\end{enumerate}
+\begin{itemize}
+    \item Advances experimental data assimilation for highly nonlinear, unsteady aerodynamic flows.
+    \item Provides a framework for real-time flow state reconstruction using minimal sensing.
+\end{itemize}
+
+\subsection*{Technological / Aerospace}
+
+Enables applications in:
+
+\begin{itemize}
+    \item maneuver load prediction
+    \item stall/buffet detection
+    \item aeroelastic monitoring
+    \item closed-loop flow control.
+\end{itemize}
+
+\subsection*{Strategic}
+
+Establishes the group as a leader in real-time experimental DA for aerodynamic systems.
 
 
 \end{document}

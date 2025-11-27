@@ -1,0 +1,28 @@
+\begin{thebibliography}{1}
+
+\bibitem{bae2025nowcasting}
+J.~Bae, Y.~Lee, J.H. Rho, G.~Kang, and J.J. Kim.
+\newblock Cfd-quality nowcasting for urban air mobility with a deep learning-based emulator.
+\newblock {\em Environmental Research Letters}, 2025.
+
+\bibitem{chen2024kalman}
+X.~Chen, G.~Wang, and Z.~Ye.
+\newblock Wind tunnel wall interference correction for transonic airfoils with data-reduced ensemble kalman filter.
+\newblock {\em Physics of Fluids}, 2024.
+
+\bibitem{cruz2025vascular}
+O.L. Cruz-González, V.~Deplano, and B.~Ghattas.
+\newblock Enhanced vascular flow simulations in aortic aneurysm via physics-informed neural networks and deep operator networks.
+\newblock {\em arXiv preprint arXiv:2503.17402}, 2025.
+
+\bibitem{xie2025fno}
+Y.~Xie, B.~Deng, C.~Jiang, and C.~Lv.
+\newblock A boundary-assimilation fourier neural operator for predicting initial fields of flow around structures.
+\newblock {\em Physics of Fluids}, 2025.
+
+\bibitem{yang2025strom}
+Y.~Zhang, C.~Yang, K.~Huang, T.~Huang, and W.~Gui.
+\newblock Strom: A spatial-temporal reduced-order model for zinc fluidized bed roaster temperature field prediction.
+\newblock {\em Engineering}, 2025.
+
+\end{thebibliography}
