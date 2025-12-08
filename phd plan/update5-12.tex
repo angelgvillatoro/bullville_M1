@@ -1,0 +1,132 @@
+% Summary document for supervisor (concise) -- Overleaf-ready
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, graphicx, bm, geometry}
+\geometry{margin=1in}
+
+\title{\textbf{Summary of PhD Framework and Initial Experimental Plan}}
+\author{PhD Candidate: [Your Name] \\ Supervisor: [Supervisor Name] \\ Institution: [Institution]}
+\date{\today}
+
+\begin{document}
+%\maketitle
+
+\section{Overview of the PhD Direction}
+This PhD aims to develop a unified and practical framework for \textbf{real-time aerodynamic state estimation and prediction} for bluff bodies, ranging from canonical geometries to simplified human-body postures. Classical CFD provides high-fidelity flow fields, but it is too computationally expensive for real-time applications and cannot be directly integrated with sparse experimental sensors.
+
+The thesis therefore proposes a \textbf{reduced-order aerodynamic state model}, informed by coherent structures, equipped with:
+\begin{itemize}
+    \item a low-dimensional \textbf{state representation},
+    \item a \textbf{predictive model} of state evolution,
+    \item a \textbf{measurement operator} linking state to sparse sensor outputs, and
+    \item a \textbf{corrector} based on data assimilation to ensure physical consistency.
+\end{itemize}
+
+This architecture remains the same across increasingly complex cases; only the specific modal basis, model parameters, and sensor configurations change.
+
+\section{Research Goal}
+To determine whether aerodynamic forces---especially drag---can be reconstructed and predicted in real time using only a small number of pressure sensors, and to establish a modelling strategy that generalises from simple to complex geometries.
+
+\section{Three-Stage Progressive Validation}
+The work proceeds through three validation stages:
+
+\subsection*{1. Cylinder (Proof of Concept)}
+A cylinder facing a wind wall is instrumented with four pressure sensors (front, rear, and two lateral positions). Measurements are collected at three flow velocities.
+
+Objectives:
+\begin{itemize}
+    \item Determine whether sparse pressure measurements contain enough information to reconstruct the drag coefficient.
+    \item Build and compare:
+    \begin{itemize}
+        \item a direct regression model (baseline),
+        \item a reduced-order model (modal or latent representation),
+        \item a data-driven \textbf{state map} via clustering and transition probabilities.
+    \end{itemize}
+    \item Evaluate robustness across the three velocities (e.g., train on two, test on the third).
+    \item Identify whether coherent aerodynamic ``states'' emerge from the pressure/drag signals.
+\end{itemize}
+
+Criteria for success:
+\begin{itemize}
+    \item Accurate reconstruction of drag (target: mean error $<5$--$10\%$).
+    \item Consistent pressure-to-drag mapping across velocities.
+    \item Interpretable states or modes representing dominant flow structures.
+\end{itemize}
+
+If the method fails at this stage, the approach must be revised before proceeding.
+
+\subsection*{2. Simplified 3D Dummy}
+A simplified human-like geometry is instrumented with sensors at selected locations (e.g., hands, knees, chest). Only a restricted set of posture variations is considered.
+
+Goals:
+\begin{itemize}
+    \item Extend the modelling framework beyond canonical flows.
+    \item Characterise how posture changes affect aerodynamic state and forces.
+    \item Validate the ability of the predictor--corrector system to track changes in posture.
+\end{itemize}
+
+\subsection*{3. Human Body with Limited Degrees of Freedom}
+The final stage focuses on realistic aerodynamic behaviour of a human subject with a small number of controlled posture changes.
+
+Goals:
+\begin{itemize}
+    \item Build a reduced-order model for a low-dimensional posture space.
+    \item Predict drag in real time.
+    \item Demonstrate the ability to suggest transitions toward lower-drag states.
+\end{itemize}
+
+\section{Mathematical Foundation (Concise)}
+The high-dimensional flow field $\mathbf{q}(\mathbf{x}, t)$ is approximated using a reduced state:
+\[
+  \mathbf{q}(t) \approx \bar{\mathbf{q}} + \sum_{i=1}^r x_i(t)\,\boldsymbol{\phi}_i,
+\]
+where $\boldsymbol{\phi}_i$ are POD/SPOD modes or latent vectors.
+
+A reduced-order dynamic model governs state evolution:
+\[
+  \mathbf{x}_{k+1} = f(\mathbf{x}_k; \theta) + \boldsymbol{\xi}_k.
+\]
+
+Pressure sensors provide measurements through:
+\[
+  \mathbf{y}_k = h(\mathbf{x}_k; \phi) + \boldsymbol{\eta}_k.
+\]
+
+Drag is estimated from the reduced state via a mapping $g$:
+\[
+  \hat{C}_D(k) = g(\mathbf{x}_k; \psi).
+\]
+
+Data assimilation (EKF/EnKF) combines predictions and pressure data to form a real-time estimator.
+
+\section{Initial Experimental Plan: Cylinder Test}
+\subsection*{Experimental Setup}
+\begin{itemize}
+    \item Wind wall with a fixed circular cylinder.
+    \item Three flow velocities: $U_1$, $U_2$, $U_3$.
+    \item Four pressure sensors located at:
+    \begin{itemize}
+        \item front stagnation region,
+        \item rear base region,
+        \item left and right sides.
+    \end{itemize}
+    \item Force balance to measure drag $C_D(t)$.
+\end{itemize}
+
+\subsection*{What We Aim to Validate}
+\begin{enumerate}
+    \item Whether pressure signals alone can reconstruct the drag coefficient reliably.
+    \item Whether a low-dimensional latent or modal state emerges naturally from the data.
+    \item Whether clustering reveals meaningful aerodynamic states and transitions.
+    \item Whether models trained at certain velocities generalise to others.
+    \item Whether the predictor--corrector formulation stabilises drag estimation.
+\end{enumerate}
+
+\subsection*{Success Criteria}
+\begin{itemize}
+    \item Drag prediction error below $5$--$10\%$.
+    \item Stable performance across all three velocities.
+    \item Identification of coherent aerodynamic signatures.
+    \item Clear evidence that the modelling architecture is viable beyond canonical flows.
+\end{itemize}
+
+\end{document}
