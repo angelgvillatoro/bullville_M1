@@ -260,40 +260,75 @@ void log_mac(const char *prefix, const uint8_t *mac) {
 
 // Add a peer device
 esp_err_t add_peer(const uint8_t *mac, bool encrypt) {
-    // Check if peer already exists
+    // ¿Es multicast/broadcast? (bit 0 del primer byte = 1)
+    bool is_multicast = (mac[0] & 0x01);
+
+    // Para multicast/broadcast: nunca cifrado y no lo guardamos en peers[]
+    if (is_multicast) {
+        esp_now_peer_info_t peer_info = {0};
+        memcpy(peer_info.peer_addr, mac, 6);
+        peer_info.channel = 1;
+        peer_info.encrypt = false;   // ¡obligatorio!
+
+        esp_err_t ret = esp_now_add_peer(&peer_info);
+        if (ret == ESP_ERR_ESPNOW_EXIST) {
+            ret = ESP_OK;
+        }
+
+        if (ret == ESP_OK) {
+            log_mac("Broadcast/multicast peer configured:", mac);
+        } else {
+            log_mac("Failed to add broadcast/multicast peer:", mac);
+        }
+        // No lo metemos en peers[] ni le aplicamos lógica de timeouts
+        return ret;
+    }
+
+    // A partir de aquí: solo unicast
+    if (encrypt) {
+        // Opcional: aquí podrías hacer checks extra
+    }
+
+    // ¿Ya existe?
     for (int i = 0; i < peer_count; i++) {
         if (memcmp(peers[i].mac, mac, 6) == 0) {
             ESP_LOGW(TAG, "Peer already exists");
-            return ESP_OK; // Peer already exists
+            return ESP_OK;
         }
     }
-    // Check if we have space for more peers
+
     if (peer_count >= 10) {
         ESP_LOGE(TAG, "Peer list full");
         return ESP_ERR_NO_MEM;
     }
-    esp_now_peer_info_t peer_info = {
-        .channel = 1,
-        .encrypt = encrypt
-    };
+
+    esp_now_peer_info_t peer_info = {0};
     memcpy(peer_info.peer_addr, mac, 6);
+    peer_info.channel = 1;
+    peer_info.encrypt = encrypt;
     if (encrypt) {
         memcpy(peer_info.lmk, LMK, 16);
     }
+
     esp_err_t ret = esp_now_add_peer(&peer_info);
+    if (ret == ESP_ERR_ESPNOW_EXIST) {
+        ret = ESP_OK;
+    }
+
     if (ret == ESP_OK) {
-        // Add to our peer list
         memcpy(peers[peer_count].mac, mac, 6);
-        peers[peer_count].paired = !encrypt; // If encrypted, not paired until response
+        peers[peer_count].paired = !encrypt ? true : false; // o tu lógica de pairing
         peer_count++;
         log_mac("Peer added:", mac);
-        set_led_color(0, 32, 0, 200, 100); // Green flash for new peer
+        set_led_color(0, 32, 0, 200, 100); // Verde flash
     } else {
         log_mac("Failed to add peer:", mac);
-        set_led_color(32, 0, 0, 200, 100); // Red flash for error
+        set_led_color(32, 0, 0, 200, 100); // Rojo
     }
+
     return ret;
 }
+
 
 // Function to remove a peer
 esp_err_t remove_peer(const uint8_t *mac) {
@@ -2020,33 +2055,26 @@ void app_main(void){
 
     while (1) {
         vTaskDelay(5000 / portTICK_PERIOD_MS);
-        // Only send if we have paired peers
+
         for (int i = 0; i < peer_count; i++) {
-            if (peers[i].paired && (xTaskGetTickCount() * portTICK_PERIOD_MS - last_peer_activity[i] > PEER_TIMEOUT_MS)) {
+            // Seguridad extra: si algún día entra un multicast, lo ignoramos aquí
+            if (peers[i].mac[0] & 0x01) {
+                continue;
+            }
+
+            if (peers[i].paired &&
+                (xTaskGetTickCount() * portTICK_PERIOD_MS - last_peer_activity[i] > PEER_TIMEOUT_MS)) {
+
                 ESP_LOGW(TAG, "Peer timeout: " MACSTR, MAC2STR(peers[i].mac));
-                
-                // Instead of removing, try to re-establish connection
+
                 uint8_t mac[6];
                 memcpy(mac, peers[i].mac, 6);
                 remove_peer(peers[i].mac);
-                add_peer(mac, true);  // Try to reconnect
+                add_peer(mac, true);  // solo unicast llega aquí
                 last_peer_activity[i] = xTaskGetTickCount() * portTICK_PERIOD_MS;
             }
         }
-        if (peer_count > 0) {
-            char data[50];
-            snprintf(data, sizeof(data), "Hello from ESP32! Count: %d", counter++);
-            
-            for (int i = 0; i < peer_count; i++) {
-                if (peers[i].paired) {
-                    send_message(peers[i].mac, MSG_DATA, data, strlen(data) + 1);
-                }
-            }
-        } else {
-            // If no peers, try to reinitialize known peers
-            ESP_LOGW(TAG, "No peers connected, reinitializing...");
-            init_known_peers();
-            set_led_color(32, 16, 0, 500, 500); // Orange flash for discovery
-        }
     }
+
 }
+
