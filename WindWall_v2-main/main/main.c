@@ -352,7 +352,7 @@ void send_message(const uint8_t *mac, message_type_t type, const void *data, siz
 // Add this to your peer management section
 static const char *known_macs[] = {
     "A0:85:E3:E8:00:EC", // Master
-    // "ff:ff:ff:ff:ff:ff", // for broadcasting
+    "ff:ff:ff:ff:ff:ff", // for broadcasting
     "F0:9E:9E:1E:4A:84",
     "F0:9E:9E:1E:4A:E4",
     "F0:9E:9E:21:E2:70",
