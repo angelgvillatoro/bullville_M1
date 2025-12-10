@@ -1,0 +1,80 @@
+% Thesis Proposal in LaTeX (English)
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, graphicx, physics, bm, geometry}
+\geometry{margin=1in}
+
+\title{\textbf{Thesis Proposal: A Reduced-Order Aerodynamic State Modeling Framework for Real-Time Prediction and Control Using Sparse Sensors}}
+\author{PhD Candidate: [Your Name] \\ Supervisor: [Supervisor Name] \\ Institution: [Institution]}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Motivation}
+Accurate aerodynamic characterization of bluff bodies---such as cylinders, simplified mannequins, and human athletes---is essential for performance optimization and control. Computational Fluid Dynamics (CFD) provides high-fidelity predictions for fixed geometries and controlled conditions, yet it remains computationally prohibitive for real-time applications, dynamic postures, and feedback-driven control. Furthermore, CFD cannot be directly integrated with noisy experimental sensor data in operational settings.
+
+To address these gaps, this thesis proposes a unified, physics-informed Reduced-Order Modeling (ROM) and data-assimilation framework capable of predicting aerodynamic forces in real time using sparse pressure measurements. The goal is to develop a systematic modeling architecture applicable across a sequence of increasingly complex cases, from canonical flows to human posture aerodynamics.
+
+\section{Research Question}
+Can a coherent-structure-based reduced-order aerodynamic state model, equipped with a dynamic predictor and sensor-based corrector, be constructed to estimate and predict aerodynamic forces of bluff bodies in real time, and can this framework be extended across cases of increasing geometric and flow complexity?
+
+\section{Hypotheses}
+\begin{itemize}
+    \item \textbf{H1 (Coherent Structures):} Bluff-body wakes exhibit dominant coherent structures that can be captured in a low-dimensional modal or latent space.
+    \item \textbf{H2 (Reduced Dynamics):} The temporal evolution of these structures can be represented by a reduced-order dynamic system preserving the relationship between state and aerodynamic forces.
+    \item \textbf{H3 (Sensor-State Mapping):} Sparse pressure sensors contain sufficient information to estimate the reduced aerodynamic state and reconstruct drag in real time.
+    \item \textbf{H4 (Framework Extensibility):} A common modeling architecture---state representation, predictor, and corrector---can be adapted to progressively complex cases with minimal structural modifications.
+\end{itemize}
+
+\section{Objectives}
+\subsection*{Primary Objectives}
+\begin{enumerate}
+    \item Develop a reduced aerodynamic state representation using modal decomposition (POD/SPOD) or nonlinear latent embeddings.
+    \item Construct a dynamic predictor (e.g., Galerkin ROM, operator inference, Koopman model, or neural ODE) governing state evolution.
+    \item Design a measurement operator and data-assimilation corrector (EKF/EnKF/variational methods) to estimate aerodynamic state from sparse sensors.
+    \item Develop a data-driven state map (clustering + transition model) as an alternative predictor for drag reconstruction.
+    \item Validate extensibility across three stages: cylinder, simplified 3D dummy, and human body with limited degrees of freedom.
+\end{enumerate}
+
+\section{Methodology}
+\subsection{Phase 1: Cylinder Flow (Proof of Concept)}
+\begin{itemize}
+    \item Acquire experimental data for three flow velocities using four pressure sensors.
+    \item Extract coherent structures (POD/SPOD) and construct low-dimensional states.
+    \item Train ROM and clustering-based state-transition models.
+    \item Evaluate drag reconstruction accuracy and cross-velocity generalization.
+\end{itemize}
+
+\subsection{Phase 2: Simplified 3D Dummy}
+\begin{itemize}
+    \item Instrument dummy with sparse sensors at aerodynamically relevant locations.
+    \item Construct geometry-specific state representation and dynamic model.
+    \item Validate relationships between posture variation, state signatures, and aerodynamic forces.
+\end{itemize}
+
+\subsection{Phase 3: Human Body with Restricted Posture Space}
+\begin{itemize}
+    \item Define a limited set of posture degrees of freedom.
+    \item Build a reduced-order predictive model for drag and lateral forces.
+    \item Demonstrate potential for posture optimisation toward reduced drag.
+\end{itemize}
+
+\section{Expected Contributions}
+\begin{itemize}
+    \item A general aerodynamic state modeling framework based on coherent structures.
+    \item A real-time predictor--corrector system for estimating drag using sparse sensors.
+    \item A data-driven aerodynamic state map applicable as an alternative to physics-based ROM.
+    \item Multi-level validation from canonical to biomechanically relevant scenarios.
+    \item Foundations for real-time aerodynamic optimisation for sports and human-in-the-loop control.
+\end{itemize}
+
+\section{Timeline}
+\begin{enumerate}
+    \item Year 1: \begin{itemize}
+                        \item Cylinder experiments, ROM design, sensor-state mapping.
+                        \item Dummy experiments, model extension, data assimilation.
+                    \end{itemize}
+    \item Year 2: Human posture modelling, optimisation layer, thesis consolidation.
+\end{enumerate}
+
+\end{document}

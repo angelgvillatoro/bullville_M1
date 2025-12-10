@@ -1,0 +1,101 @@
+
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usetheme{Madrid}
+\title{Data Assimilation in Fluid Dynamics: Evaluation and Analysis}
+\author{Autor: Tu Nombre}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% INTRODUCCIÓN
+\begin{frame}{Motivation}
+\begin{itemize}
+    \item CFD simulations are accurate but computationally expensive.
+    \item Low-resolution models are cheaper but less precise.
+    \item Can we use sparse observations to correct coarse simulations?
+    \item Data assimilation (DA) provides a formal solution.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{State of the Art}
+\begin{itemize}
+    \item DA integrates observational data into CFD simulations \cite{yang2025strom, chen2024kalman}.
+    \item Methods: Kalman filters, variational approaches, neural models like PINNs and FNOs \cite{cruz2025vascular, xie2025fno}.
+    \item Applied to turbulent flows, biomedical modeling, and urban prediction \cite{bae2025nowcasting}.
+\end{itemize}
+\includegraphics[width=0.5\textwidth]{example-image} % Reemplazar con figura de estado del arte
+\end{frame}
+
+% METODOLOGÍA
+\begin{frame}{Model Overview}
+\begin{itemize}
+    \item Base simulation: 2D advection-diffusion on a $25 \times 25$ grid.
+    \item High-resolution reference: $800 \times 800$ grid (truth field).
+    \item Comparison via RMSE between coarse and true fields.
+\end{itemize}
+\includegraphics[width=0.55\textwidth]{example-image} % Agregar visualización del dominio y mallas
+\end{frame}
+
+\begin{frame}{Data Assimilation Methods}
+\begin{itemize}
+    \item \textbf{Nudging}: simple feedback toward observations.
+    \item \textbf{KF}: linear filter optimal for Gaussian noise.
+    \item \textbf{EnKF}: ensemble-based approximation.
+    \item \textbf{4DVar}: optimization-based over time window.
+\end{itemize}
+\includegraphics[width=0.45\textwidth]{example-image} % Imagen tipo de cada método o esquema general
+\end{frame}
+
+\begin{frame}{DA Implementation}
+\begin{itemize}
+    \item Observations added every 70, 150, or 300 timesteps.
+    \item Variables: $T$, $p$, $\tau$ (alone or combined).
+    \item Sensors: 5, 10, or 20 randomly distributed.
+    \item Output: simulations stored as .pkl and analyzed offline.
+\end{itemize}
+\includegraphics[width=0.5\textwidth]{example-image} % Mapa de sensores o esquema de DA
+\end{frame}
+
+\begin{frame}{Evaluation Pipeline}
+\begin{itemize}
+    \item Interpolation of reference to $25 \times 25$ grid.
+    \item Global normalization of variables $T$ and $p$.
+    \item RMSE computed per frame and averaged.
+    \item Best simulations: lowest RMSE and lowest computation time.
+\end{itemize}
+\includegraphics[width=0.55\textwidth]{example-image} % Diagrama de flujo del pipeline
+\end{frame}
+
+% RESULTADOS Y CONCLUSIONES
+\begin{frame}{Key Results}
+\begin{itemize}
+    \item \textbf{Best accuracy:} EnKF with full observation set ($T,p,\tau$) and high frequency.
+    \item \textbf{Best speed:} Nudging with fewer sensors.
+    \item More sensors $\Rightarrow$ better performance, but diminishing returns.
+    \item Variable combinations improve results significantly.
+\end{itemize}
+\includegraphics[width=0.55\textwidth]{example-image} % Heatmap o resumen de resultados
+\end{frame}
+
+\begin{frame}{Conclusions \& Next Steps}
+\begin{itemize}
+    \item DA improves coarse CFD simulations using sparse data.
+    \item Trade-off: accuracy vs computation time.
+    \item Next: explore hybrid neural-DA schemes (PINNs, FNO).
+    \item Real-time integration and 3D generalization as future goals.
+\end{itemize}
+\includegraphics[width=0.5\textwidth]{example-image} % Diagrama de futuro trabajo
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+\bibliographystyle{plain}
+\bibliography{data_assimilation_references}
+\end{frame}
+
+\end{document}

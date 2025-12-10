@@ -1,0 +1,2 @@
+archivo,metodo,n_sensores,frecuencia,variables,rmse_T,rmse_p,rmse_tau,rmse_total,tiempo
+nudging_25_obs_5_freq_70_var_p.pkl,nudging,5,70,p,0.0880073527135349,0.0404583730870096,0.2637280191857336,0.1307312483287594,0.0008602142333984

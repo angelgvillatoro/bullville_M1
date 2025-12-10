@@ -1,0 +1,2 @@
+archivo,metodo,n_sensores,frecuencia,variables,rmse_T,rmse_p,rmse_tau,rmse_total,tiempo
+4dvar_25_obs_20_freq_300_var_pt.pkl,4dvar,20,300,pt,0.0629175483856282,0.0403785569187372,0.2637284576213507,0.1223415209752387,22.082921028137207

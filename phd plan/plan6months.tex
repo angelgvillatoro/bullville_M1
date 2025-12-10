@@ -1,0 +1,68 @@
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{geometry}x
+\geometry{margin=2.5cm}
+\usepackage{float}
+\usepackage{caption}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+
+\section*{Six-Month Research Plan}
+\subsection*{Overview}
+This document outlines a detailed six-month plan for developing a real-time data assimilation (DA) pipeline, performing initial experimental validation, and transitioning toward airfoil testing.
+
+\subsection*{Montsh 1: Pipeline Skeleton}
+\begin{itemize}
+\item Create full pipeline structure (sensors → preprocessing → ROM → DA → prediction).
+\item Build basic POD-based ROM with synthetic cylinder or airfoil.
+\item Integrate EnKF/UKF prototype into ROM.
+\item Achieve latency $<50$ ms on synthetic data.
+\end{itemize}
+
+\subsection*{Month 2: ROM Improvement and Stability}
+\begin{itemize}
+\item Implement SPOD/DMD ROM variants.
+\item Add nonlinearity in ROM (Galerkin terms or closure).
+\item Perform robustness tests (noise, desynchronization).
+\item Reduce latency to $<20$ ms.
+\end{itemize}
+
+\subsection*{Month 3: First Experimental Run (Cylinder)}
+\begin{itemize}
+\item Build cylinder setup with minimal sensors.
+\item Acquire real data (pressure/temperature).
+\item Feed dataset into pipeline; identify failures.
+\end{itemize}
+
+\subsection*{Month 4: Real-Time DA on Cylinder}
+\begin{itemize}
+\item Adapt ROM to experimental data.
+\item Predict shedding frequency and amplitude.
+\item Validate via spectra/correlations or reference data.
+\end{itemize}
+
+\subsection*{Month 5: Transition to Airfoil (Static)}
+\begin{itemize}
+\item Prepare airfoil with surface sensors.
+\item Run static tests (attached or mild separation).
+\item Integrate airfoil dataset into ROM and DA pipeline.
+\end{itemize}
+
+\subsection*{Month 6: Lightly Unsteady Airfoil}
+\begin{itemize}
+\item Introduce small pitch oscillations.
+\item Train ROM on unsteady regime.
+\item Optimize Kalman gains and stability.
+\end{itemize}
+
+\end{document}

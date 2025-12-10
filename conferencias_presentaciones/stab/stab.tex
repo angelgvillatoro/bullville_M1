@@ -1,0 +1,45 @@
+\documentclass[10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{authblk}
+
+\title{Bridging measurements and simulations: A data assimilation approach to real time analysis}
+\author{\underline{Ángel González Villatoro}, Mariachiara Gallia, David Rival}
+\affil{Institut für Strömungsmechanik, Technische Universität Braunschweig, Germany }
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Accurate reconstruction of wall-bounded flows from sparse measurements depends not 
+only on the assimilation method and measured variables, but also critically on the 
+spatial distribution of sensors. While previous data assimilation (DA) studies have 
+successfully combined numerical simulations with experimental observations to improve 
+reconstruction accuracy (Hayase \& Hayashi, 1997; Neeteson \& Rival, 2020), the question 
+of where sensors should be placed remains central. Optimal sensor positioning has been 
+shown to significantly enhance estimation quality while reducing instrumentation 
+requirements (Mons \& Marquet, 2021).
+
+In this work, we extend our previous analysis of variable selection by investigating 
+the influence of sensor placement along the surface of a flat plate undergoing a sudden 
+acceleration boundary-layer transition. High-resolution simulations provide the reference 
+dataset, from which synthetic wall observations (temperature, pressure, shear stress) 
+are sampled according to different spatial distributions. Strategies tested include 
+uniform spacing, localized clustering near flow features, and adaptive placement based 
+on wall-gradient indicators. These observations are assimilated into coarse-resolution 
+simulations using lightweight DA schemes such as nudging and Kalman-based filters.
+
+Performance is assessed in terms of reconstruction accuracy (RMSE), assimilation cost, 
+and robustness to sparse configurations. Results show that sensors placed near the 
+leading edge and in regions of strong shear provide the highest gains in reconstruction 
+quality. Uniform distributions yield balanced improvements, while adaptive gradient-based 
+placement achieves the best trade-off between accuracy and sensor economy.
+
+These findings highlight the importance of optimized sensor placement for DA in 
+wall-bounded flows, providing guidelines for integrating surface-based measurements into 
+computational fluid dynamics workflows with minimal instrumentation requirements.
+\end{abstract}
+
+\end{document}
+
