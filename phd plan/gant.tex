@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{pgfgantt}
+
+\begin{document}
+
+\section*{Research Plan Gantt Chart (Jan–Feb 2026)}
+
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    time slot format=isodate-yearmonthday,
+    compress calendar,
+    x unit=0.8cm,
+    y unit chart=0.8cm,
+    title height=1,
+    bar height=0.6
+  ]{2026-01-12}{2026-02-20}
+
+  \gantttitlecalendar{year, month=shortname, day} \\
+
+  \ganttbar{Define Research Question}{2026-01-12}{2026-01-16} \\
+  \ganttbar{Review + Surface Sensor Study}{2026-01-19}{2026-01-23} \\
+  \ganttbar{Define Hypothesis}{2026-01-26}{2026-01-30} \\
+  \ganttbar{Experimental Design}{2026-02-02}{2026-02-06} \\
+  \ganttbar{Experimental Campaign}{2026-02-09}{2026-02-13} \\
+  \ganttbar{Data Analysis}{2026-02-16}{2026-02-20}
+
+\end{ganttchart}
+
+\end{document}
