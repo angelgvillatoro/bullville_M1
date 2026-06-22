@@ -509,15 +509,40 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone }) {
       {/* Day selector */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
         {DAYS.map((d, i) => (
-          <button key={i} onClick={() => saveDay(i)} style={{
+          <button key={i} onClick={() => setDayIdx(i)} style={{
             padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
             whiteSpace: 'nowrap', fontSize: 13, fontWeight: 600,
             background: i === dayIdx ? '#f8fafc' : '#1e293b',
             color: i === dayIdx ? '#0f172a' : '#94a3b8',
           }}>
-            {d.emoji} {d.name}
+            {completed[`W${weekIdx+1}-${d.name}`] ? '✅' : d.emoji} {d.name}
           </button>
         ))}
+      </div>
+
+      {/* Day prev/next buttons */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <button
+          onClick={() => setDayIdx(Math.max(0, dayIdx - 1))}
+          disabled={dayIdx === 0}
+          style={{
+            padding: '8px 20px', borderRadius: 8, border: 'none', cursor: dayIdx === 0 ? 'default' : 'pointer',
+            background: dayIdx === 0 ? '#1e293b' : '#334155',
+            color: dayIdx === 0 ? '#334155' : '#f8fafc',
+            fontWeight: 700, fontSize: 18, transition: 'all 0.15s'
+          }}>‹ Anterior</button>
+        <span style={{ color: '#64748b', fontSize: 13 }}>
+          {dayIdx + 1} / {DAYS.length}
+        </span>
+        <button
+          onClick={() => setDayIdx(Math.min(DAYS.length - 1, dayIdx + 1))}
+          disabled={dayIdx === DAYS.length - 1}
+          style={{
+            padding: '8px 20px', borderRadius: 8, border: 'none', cursor: dayIdx === DAYS.length - 1 ? 'default' : 'pointer',
+            background: dayIdx === DAYS.length - 1 ? '#1e293b' : '#334155',
+            color: dayIdx === DAYS.length - 1 ? '#334155' : '#f8fafc',
+            fontWeight: 700, fontSize: 18, transition: 'all 0.15s'
+          }}>Siguiente ›</button>
       </div>
 
       {/* Day header */}
