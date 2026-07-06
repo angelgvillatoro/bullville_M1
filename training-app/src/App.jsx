@@ -362,6 +362,221 @@ const SHOPPING = [
   },
 ];
 
+// ─── VACATION PLAN (sin material) ────────────────────────────────────────────
+const VACATION_DAYS = [
+  {
+    id: 'A', label: 'Día A', name: 'Empuje superior + Core', emoji: '💪',
+    exercises: [
+      { name: 'Push-ups',                    sets: 4, reps: 'Máx',         tempo: '3-0-1', rest: '90s' },
+      { name: 'Pike push-ups (hombro)',       sets: 3, reps: '8-12',        tempo: '2-0-1', rest: '75s' },
+      { name: 'Dips en silla/sofá',           sets: 3, reps: 'Máx',         tempo: '3-0-1', rest: '75s' },
+      { name: 'Shoulder taps en plancha',     sets: 3, reps: '10/lado',     tempo: 'Ctrl',  rest: '60s' },
+      { name: 'Dead bug',                     sets: 3, reps: '8/lado',      tempo: 'Lento', rest: '45s' },
+      { name: 'Hollow body hold',             sets: 3, reps: '30s',         tempo: '—',     rest: '45s' },
+    ],
+    progression: '≥15 reps push-ups → elevar pies (decline). ≥12 pike → pausa 2s en fondo.',
+  },
+  {
+    id: 'B', label: 'Día B', name: 'Inferior + Core', emoji: '🦵',
+    exercises: [
+      { name: 'Sentadilla bodyweight',        sets: 4, reps: '15-20',       tempo: '4-1-2', rest: '90s' },
+      { name: 'Split squat',                  sets: 3, reps: '10-12/pierna',tempo: '3-0-1', rest: '75s', note: 'Mano en pared si necesario' },
+      { name: 'Hip thrust bodyweight',        sets: 4, reps: '20-25',       tempo: '2-2-1', rest: '75s', note: 'Espalda en sofá' },
+      { name: 'Nordic curl excéntrico',       sets: 3, reps: '5-8',         tempo: '5s exc',rest: '90s', note: 'Pies bajo sofá/cama. Molestia → curl isométrico contra pared' },
+      { name: 'Glute bridge isométrico',      sets: 3, reps: '45s',         tempo: '—',     rest: '45s' },
+      { name: 'Plank',                        sets: 3, reps: '60s',         tempo: '—',     rest: '45s' },
+    ],
+    progression: 'Tempo nórdico: 5s → 6s → 7s. Mochila en split squat e hip thrust cuando llegues a máximo.',
+  },
+  {
+    id: 'C', label: 'Día C', name: 'Tirón superior + Empuje + Core', emoji: '🔙',
+    exercises: [
+      { name: 'Table rows',                   sets: 4, reps: 'Máx',         tempo: '3-0-1', rest: '90s', note: 'Boca arriba bajo mesa, tira el pecho hacia el borde' },
+      { name: 'Decline push-ups',             sets: 4, reps: 'Máx',         tempo: '3-0-1', rest: '75s', note: 'Pies en silla' },
+      { name: 'Curl de bíceps con mochila',   sets: 3, reps: '10-15',       tempo: '3-0-1', rest: '60s', note: 'Libros/botellas para ajustar peso' },
+      { name: 'Extensión tríceps en silla',   sets: 3, reps: 'Máx',         tempo: '3-0-1', rest: '60s', note: 'Manos en borde del asiento, similar a dips' },
+      { name: 'Side plank',                   sets: 3, reps: '40s/lado',    tempo: '—',     rest: '45s' },
+      { name: 'RKC plank',                    sets: 3, reps: '20-30s',      tempo: '—',     rest: '45s' },
+    ],
+    progression: 'Si hay barra: añadir al inicio 4×Máx dominadas ancho + 3×Máx dominadas supino.',
+  },
+];
+
+const VAC_PROG = [
+  { week: 1, note: 'Semana 1 — Anotar reps máximas en cada ejercicio (baseline)' },
+  { week: 2, note: 'Semana 2 — +2-3 reps en ejercicios donde llegaste al máximo' },
+  { week: 3, note: 'Semana 3 — Reducir descanso 15s en ejercicios de empuje' },
+  { week: 4, note: 'Semana 4+ — Añadir peso con mochila o elevar pies en empuje' },
+];
+
+const VAC_WELLNESS = [
+  '🚿 Ducha fría 5 min diarios (sustituye baño frío)',
+  '🔥 Sauna: si el hotel tiene, mantener 3 rondas Mié/Sáb/Dom',
+  '💧 3L agua mínimo — +500ml en clima cálido',
+  '☀️ Sol directo 20-30 min = cubre vitamina D (si no hay sol, continuar D3+K2)',
+  '🦵 Movilidad de rodilla — mantener rutina matutina sin falta',
+];
+
+function VacacionesTab() {
+  const [dayId, setDayId]           = useState('A');
+  const [vacWeek, setVacWeek]       = useState(1);
+  const [barAvail, setBarAvail]     = useState(false);
+
+  const day = VACATION_DAYS.find(d => d.id === dayId);
+  const progNote = VAC_PROG.find(p => p.week === Math.min(vacWeek, 4));
+
+  return (
+    <div>
+      {/* Header info */}
+      <div style={{
+        background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+        borderLeft: '3px solid #38bdf8'
+      }}>
+        <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 4 }}>🏖 Mantenimiento sin material</div>
+        <div style={{ color: '#94a3b8', fontSize: 13 }}>3 días/semana · No consecutivos (Lun/Mié/Vie) · 40-50 min/sesión</div>
+        <div style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>Sin impacto · Sin saltos · Sin correr — rodilla derecha ✓</div>
+      </div>
+
+      {/* Vacation week counter */}
+      <div style={{
+        background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+      }}>
+        <div>
+          <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 2 }}>Semana de vacaciones</div>
+          <div style={{ color: '#38bdf8', fontSize: 13, fontWeight: 500 }}>{progNote.note.split(' — ')[1]}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button onClick={() => setVacWeek(Math.max(1, vacWeek - 1))} style={{
+            width: 30, height: 30, borderRadius: 6, border: 'none', cursor: 'pointer',
+            background: '#334155', color: '#f8fafc', fontSize: 18, fontWeight: 700, lineHeight: 1
+          }}>−</button>
+          <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 20, minWidth: 20, textAlign: 'center' }}>{vacWeek}</span>
+          <button onClick={() => setVacWeek(vacWeek + 1)} style={{
+            width: 30, height: 30, borderRadius: 6, border: 'none', cursor: 'pointer',
+            background: '#334155', color: '#f8fafc', fontSize: 18, fontWeight: 700, lineHeight: 1
+          }}>+</button>
+        </div>
+      </div>
+
+      {/* Day selector */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {VACATION_DAYS.map(d => (
+          <button key={d.id} onClick={() => setDayId(d.id)} style={{
+            flex: 1, padding: '10px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            fontWeight: 700, fontSize: 13,
+            background: d.id === dayId ? '#f8fafc' : '#1e293b',
+            color: d.id === dayId ? '#0f172a' : '#64748b'
+          }}>
+            {d.emoji} {d.label}
+            <div style={{ fontSize: 11, fontWeight: 400, marginTop: 2, opacity: 0.7 }}>{d.id === dayId ? d.name.split(' + ')[0] : ''}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Day header */}
+      <div style={{
+        background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 14
+      }}>
+        <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16 }}>{day.emoji} {day.label} — {day.name}</div>
+      </div>
+
+      {/* Exercise list */}
+      {day.exercises.map((ex, i) => (
+        <div key={i} style={{
+          background: '#1e293b', borderRadius: 8, padding: '11px 14px', marginBottom: 7
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: ex.note ? 4 : 0 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600 }}>{ex.name}</div>
+              {ex.note && (
+                <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{ex.note}</div>
+              )}
+            </div>
+            <div style={{ textAlign: 'right', marginLeft: 12, flexShrink: 0 }}>
+              <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 16 }}>{ex.sets}×{ex.reps}</div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Tempo {ex.tempo} · {ex.rest}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Pull-up bonus (Día C only) */}
+      {day.id === 'C' && (
+        <div style={{ marginTop: 16 }}>
+          <button onClick={() => setBarAvail(!barAvail)} style={{
+            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+            background: barAvail ? '#0f3a2a' : '#1e293b', borderRadius: 8,
+            border: `1px solid ${barAvail ? '#22C55E55' : '#334155'}`,
+            padding: '10px 14px', cursor: 'pointer', marginBottom: barAvail ? 10 : 0
+          }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: 4, border: `2px solid ${barAvail ? '#22C55E' : '#475569'}`,
+              background: barAvail ? '#22C55E' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              {barAvail && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>Hay barra de dominadas / playground</div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Activa los ejercicios extra del Día C</div>
+            </div>
+          </button>
+          {barAvail && (
+            <div>
+              {[
+                { name: 'Dominadas (agarre ancho)',  sets: 4, reps: 'Máx', rest: '2 min' },
+                { name: 'Dominadas (agarre supino)', sets: 3, reps: 'Máx', rest: '90s' },
+              ].map((ex, i) => (
+                <div key={i} style={{
+                  background: '#0f3a2a', border: '1px solid #22C55E33',
+                  borderRadius: 8, padding: '11px 14px', marginBottom: 7,
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                  <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600 }}>{ex.name}</div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>{ex.sets}×{ex.reps}</div>
+                    <div style={{ color: '#64748b', fontSize: 12 }}>{ex.rest}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Progression note */}
+      <div style={{
+        background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginTop: 16,
+        borderLeft: '3px solid #F59E0B'
+      }}>
+        <div style={{ color: '#F59E0B', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>PROGRESIÓN</div>
+        <div style={{ color: '#94a3b8', fontSize: 13 }}>{day.progression}</div>
+      </div>
+
+      {/* Wellness */}
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '14px 16px', marginTop: 16 }}>
+        <div style={{ color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+          Bienestar en vacaciones
+        </div>
+        {VAC_WELLNESS.map((w, i) => (
+          <div key={i} style={{ color: '#94a3b8', fontSize: 13, marginBottom: 5 }}>{w}</div>
+        ))}
+      </div>
+
+      {/* Return note */}
+      <div style={{
+        background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginTop: 12,
+        borderLeft: '3px solid #64748b'
+      }}>
+        <div style={{ color: '#64748b', fontSize: 12 }}>
+          <b style={{ color: '#94a3b8' }}>Al volver al gimnasio:</b> retomar en la semana del plan donde lo dejaste, reduciendo un 10% los pesos la primera sesión.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── WELLNESS PROTOCOL ───────────────────────────────────────────────────────
 const WELLNESS = [
   { day: 'Lun · Mar · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
@@ -931,9 +1146,9 @@ function SupplementsTab() {
 }
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
-// Current week: W10 (Jun 9–15, 2026). Today is Sunday Jun 14 → day index 6
-const CURRENT_WEEK = 9;   // 0-indexed = W10
-const CURRENT_DAY  = 6;   // 0-indexed = Sunday
+// Current week: W13 (Jun 30–Jul 6, 2026). Today is Monday Jul 6 → day index 0
+const CURRENT_WEEK = 12;  // 0-indexed = W13
+const CURRENT_DAY  = 0;   // 0-indexed = Lunes
 
 export default function App() {
   const [weekIdx, setWeekIdx] = useState(() => {
@@ -965,10 +1180,11 @@ export default function App() {
   const saveDay  = (d) => { setDayIdx(d);  try { localStorage.setItem('ta_day',  d); } catch {} };
 
   const tabs = [
-    { id: 'training',  label: '🏋️ Entreno' },
-    { id: 'nutrition', label: '🍽 Nutrición' },
-    { id: 'supps',     label: '💊 Suplementos' },
-    { id: 'shopping',  label: '🛒 Compra' },
+    { id: 'training',   label: '🏋️ Entreno' },
+    { id: 'nutrition',  label: '🍽 Nutrición' },
+    { id: 'supps',      label: '💊 Suplementos' },
+    { id: 'shopping',   label: '🛒 Compra' },
+    { id: 'vacaciones', label: '🏖 Vacaciones' },
   ];
 
   return (
@@ -1029,10 +1245,11 @@ export default function App() {
       </div>
 
       {/* Content */}
-      {tab === 'training'  && <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} />}
-      {tab === 'nutrition' && <NutritionTab />}
-      {tab === 'supps'     && <SupplementsTab />}
-      {tab === 'shopping'  && <ShoppingTab />}
+      {tab === 'training'   && <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} />}
+      {tab === 'nutrition'  && <NutritionTab />}
+      {tab === 'supps'      && <SupplementsTab />}
+      {tab === 'shopping'   && <ShoppingTab />}
+      {tab === 'vacaciones' && <VacacionesTab />}
     </div>
   );
 }
