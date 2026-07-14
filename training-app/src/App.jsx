@@ -577,6 +577,313 @@ function VacacionesTab() {
   );
 }
 
+
+
+// ─── EXTRAS TAB ──────────────────────────────────────────────────────────────
+function ExtrasTab() {
+  const [section, setSection] = useState('vacaciones');
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {[
+          { id: 'vacaciones', label: '🏖 Vacaciones' },
+          { id: 'basketball', label: '🏀 Basket' },
+        ].map(s => (
+          <button key={s.id} onClick={() => setSection(s.id)} style={{
+            flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            fontWeight: 700, fontSize: 14,
+            background: section === s.id ? '#f8fafc' : '#1e293b',
+            color: section === s.id ? '#0f172a' : '#64748b',
+          }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+      {section === 'vacaciones' && <VacacionesTab />}
+      {section === 'basketball' && <BasketballTab />}
+    </div>
+  );
+}
+
+// ─── BASKETBALL SESSION DATA ─────────────────────────────────────────────────
+const BBALL_BLOCKS = [
+  {
+    id: 'warm',
+    title: 'Calentamiento',
+    duration: '8 min',
+    color: '#38bdf8',
+    emoji: '🔥',
+    sections: [
+      {
+        name: 'Activación dinámica — sin balón',
+        duration: '4 min',
+        items: [
+          'Movilidad tobillo y cadera',
+          'Skipping',
+          'Carioca',
+          'Sprints cortos al 60%',
+        ]
+      },
+      {
+        name: 'Manejo de balón dinámico',
+        duration: '4 min',
+        items: [
+          'Dribble bajo moviéndose por la pista',
+          'Cambios de mano entre piernas y espalda',
+          'Sin parar',
+        ]
+      }
+    ]
+  },
+  {
+    id: 'b1',
+    title: 'Bloque 1 — Full Court Dribble Sprints',
+    duration: '12 min',
+    color: '#EF4444',
+    emoji: '🏃',
+    intensity: '85–90% FC máx',
+    sections: [
+      {
+        name: '6 series × pista completa (28m ida y vuelta)',
+        duration: '20 seg pausa entre series',
+        items: [
+          'Sprint a canasta contraria con balón',
+          'Bandeja — si fallas, rebote y sigue inmediatamente',
+          'Recoge y vuelve driblando',
+          'Ritmo máximo o casi — sin parar',
+        ]
+      }
+    ]
+  },
+  {
+    id: 'b2',
+    title: 'Bloque 2 — Mamba Drill',
+    duration: '15 min',
+    color: '#F59E0B',
+    emoji: '🏀',
+    intensity: '85–90% FC máx',
+    note: 'Drill clásico de Kobe. Alta demanda metabólica.',
+    sections: [
+      {
+        name: '5 rondas · 10 spots · 45 seg descanso entre rondas',
+        duration: '5 spots por lado = 10 total',
+        items: [
+          'Spots: esquina · lateral · frontal 45° · lateral · esquina (×2 lados)',
+          'Tira desde un spot → sprint a recoger tu rebote → dribla al siguiente → tira',
+          'Sin parar entre spots',
+          'Si el ritmo baja mucho: reduce a 6 spots pero mantén la intensidad',
+        ]
+      }
+    ]
+  },
+  {
+    id: 'b3',
+    title: 'Bloque 3 — Suicide con Tiro',
+    duration: '10 min',
+    color: '#a78bfa',
+    emoji: '💀',
+    intensity: '85–90% FC máx',
+    sections: [
+      {
+        name: '6 suicides · tiro al final de cada uno',
+        duration: 'Pausa = tiempo de ir a por el rebote',
+        items: [
+          'Suicide estándar: líneas a 5m, 10m, 15m, pista completa',
+          'Al llegar al final: tiro libre o mid-range',
+          'Si fallas el tiro → 5 sentadillas antes del siguiente suicide',
+          'Foco: mantener el tiro bajo fatiga — no buscar técnica perfecta',
+        ]
+      }
+    ]
+  },
+  {
+    id: 'b4',
+    title: 'Bloque 4 — Tabata con Balón',
+    duration: '8 min',
+    color: '#22C55E',
+    emoji: '⚡',
+    intensity: 'Límite FC máx',
+    note: '4 ejercicios × 2 rondas · 20 seg trabajo / 10 seg transición · 1 min pausa entre rondas',
+    sections: [
+      {
+        name: '4 ejercicios en bucle',
+        duration: '20s trabajo / 10s transición',
+        items: [
+          '1. Dribble alternado explosivo en el sitio — lo más rápido posible',
+          '2. Squat jump con balón por encima de la cabeza',
+          '3. Dribble lateral cruzando la pintura de punta a punta',
+          '4. Burpee con balón — el balón toca el suelo en cada repetición',
+        ]
+      }
+    ]
+  },
+  {
+    id: 'cool',
+    title: 'Vuelta a la Calma',
+    duration: '7 min',
+    color: '#64748b',
+    emoji: '🧘',
+    sections: [
+      {
+        name: 'Recuperación activa',
+        duration: '2 min',
+        items: [
+          'Tiros libres a ritmo propio',
+          'Respiración controlada',
+        ]
+      },
+      {
+        name: 'Estiramientos estáticos',
+        duration: '5 min',
+        items: [
+          'Isquiotibiales',
+          'Cuádriceps',
+          'Cadera',
+          'Hombros',
+        ]
+      }
+    ]
+  },
+];
+
+function BasketballTab() {
+  const [openBlock, setOpenBlock] = useState('b1');
+
+  const totalMin = BBALL_BLOCKS.reduce((s, b) => s + parseInt(b.duration), 0);
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{
+        background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 16,
+        borderLeft: '3px solid #F59E0B'
+      }}>
+        <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+          🏀 Sesión Individual — Cardio/Físico
+        </div>
+        <div style={{ color: '#94a3b8', fontSize: 13 }}>
+          1 hora · Semi-pro · ~85–90% FC máx sostenida en bloques 1–3
+        </div>
+        <div style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>
+          Si el tiro se vuelve incontrolable → reduce velocidad de desplazamiento, no el esfuerzo del tiro
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, alignItems: 'stretch' }}>
+        {BBALL_BLOCKS.map((b, i) => (
+          <div key={b.id} style={{ flex: parseInt(b.duration), position: 'relative' }}>
+            <div style={{
+              height: 6, background: b.color, borderRadius: 3,
+              opacity: openBlock === b.id ? 1 : 0.3
+            }} />
+            <div style={{
+              color: '#64748b', fontSize: 9, marginTop: 3, textAlign: 'center',
+              display: parseInt(b.duration) >= 8 ? 'block' : 'none'
+            }}>
+              {b.duration}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Blocks */}
+      {BBALL_BLOCKS.map((block) => (
+        <div key={block.id} style={{ marginBottom: 10 }}>
+          <button
+            onClick={() => setOpenBlock(openBlock === block.id ? null : block.id)}
+            style={{
+              width: '100%', padding: '12px 16px', borderRadius: openBlock === block.id ? '10px 10px 0 0' : 10,
+              border: 'none', cursor: 'pointer', textAlign: 'left',
+              background: openBlock === block.id ? block.color : '#1e293b',
+              transition: 'all 0.15s'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: 16 }}>{block.emoji}</span>
+                <span style={{
+                  color: openBlock === block.id ? '#0f172a' : '#f8fafc',
+                  fontWeight: 700, fontSize: 14, marginLeft: 8
+                }}>
+                  {block.title}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {block.intensity && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 600,
+                    background: 'rgba(0,0,0,0.2)',
+                    color: openBlock === block.id ? '#0f172a' : block.color,
+                    padding: '2px 8px', borderRadius: 999
+                  }}>
+                    {block.intensity}
+                  </span>
+                )}
+                <span style={{
+                  color: openBlock === block.id ? '#0f172a' : '#64748b',
+                  fontSize: 13, fontWeight: 600
+                }}>
+                  {block.duration}
+                </span>
+                <span style={{ color: openBlock === block.id ? '#0f172a99' : '#475569', fontSize: 12 }}>
+                  {openBlock === block.id ? '▲' : '▼'}
+                </span>
+              </div>
+            </div>
+          </button>
+
+          {openBlock === block.id && (
+            <div style={{
+              background: '#1e293b', borderRadius: '0 0 10px 10px',
+              padding: '14px 16px', borderTop: `2px solid ${block.color}33`
+            }}>
+              {block.note && (
+                <div style={{
+                  background: '#0f172a', borderRadius: 6, padding: '8px 12px',
+                  color: '#94a3b8', fontSize: 12, marginBottom: 12,
+                  borderLeft: `3px solid ${block.color}`
+                }}>
+                  💡 {block.note}
+                </div>
+              )}
+              {block.sections.map((sec, si) => (
+                <div key={si} style={{ marginBottom: si < block.sections.length - 1 ? 16 : 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                    <span style={{ color: block.color, fontWeight: 700, fontSize: 13 }}>{sec.name}</span>
+                    <span style={{ color: '#64748b', fontSize: 12 }}>{sec.duration}</span>
+                  </div>
+                  {sec.items.map((item, ii) => (
+                    <div key={ii} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 8,
+                      padding: '7px 0',
+                      borderBottom: ii < sec.items.length - 1 ? '1px solid #0f172a' : 'none'
+                    }}>
+                      <span style={{ color: block.color, fontSize: 14, flexShrink: 0, marginTop: 1 }}>•</span>
+                      <span style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Footer note */}
+      <div style={{
+        background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginTop: 8,
+        borderLeft: '3px solid #64748b'
+      }}>
+        <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6 }}>
+          <b style={{ color: '#94a3b8' }}>Carga total estimada:</b> ~85–90% FC máx sostenida en bloques 1–3.
+          El bloque 4 lleva al límite. Es duro incluso para nivel semi-pro.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── WELLNESS PROTOCOL ───────────────────────────────────────────────────────
 const WELLNESS = [
   { day: 'Lun · Mar · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
@@ -873,7 +1180,6 @@ function merged(dA, dB) {
 }
 
 function ShoppingTab() {
-  const [view, setView]       = useState('semana');
   const [daysA, setDaysA]     = useState(3);
   const [daysB, setDaysB]     = useState(2);
   const [checked, setChecked] = useState({});
@@ -974,61 +1280,35 @@ function ShoppingTab() {
 
   return (
     <div>
-      {/* Sub-tab toggle */}
-      <div style={{display:'flex', gap:6, marginBottom:20}}>
-        {[['semana','📅 Entre semana'],['custom','⚙️ Personalizado']].map(([id, label]) => (
-          <button key={id} onClick={() => setView(id)} style={{
-            flex:1, padding:'10px', borderRadius:8, border:'none', cursor:'pointer',
-            fontWeight:600, fontSize:13,
-            background: view===id ? '#f8fafc' : '#1e293b',
-            color: view===id ? '#0f172a' : '#64748b'
-          }}>{label}</button>
+      {/* Day selectors */}
+      <div style={{display:'flex', gap:10, marginBottom:20}}>
+        {[['Plan A', daysA, setDaysA, '#3B82F6'], ['Plan B', daysB, setDaysB, '#F59E0B']].map(([label, val, setter, color]) => (
+          <div key={label} style={{flex:1, background:'#1e293b', borderRadius:10, padding:'14px', textAlign:'center'}}>
+            <div style={{color, fontWeight:700, marginBottom:10}}>{label}</div>
+            <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:14}}>
+              <button onClick={() => setter(Math.max(0, val-1))} style={{
+                width:32, height:32, borderRadius:6, border:'none', cursor:'pointer',
+                background:'#334155', color:'#f8fafc', fontSize:20, fontWeight:700, lineHeight:1
+              }}>−</button>
+              <span style={{color:'#f8fafc', fontWeight:700, fontSize:24, minWidth:28}}>{val}</span>
+              <button onClick={() => setter(Math.min(7, val+1))} style={{
+                width:32, height:32, borderRadius:6, border:'none', cursor:'pointer',
+                background:'#334155', color:'#f8fafc', fontSize:20, fontWeight:700, lineHeight:1
+              }}>+</button>
+            </div>
+            <div style={{color:'#64748b', fontSize:12, marginTop:6}}>días</div>
+          </div>
         ))}
       </div>
 
-      {view === 'semana' && (
-        <div>
-          <Block title="Lunes · Martes · Miércoles" subtitle="Plan A × 3 días"
-            items={scaled(PA, 3)} prefix="lmx" accent="#3B82F6" />
-          <Block title="Jueves · Viernes" subtitle="Plan B × 2 días"
-            items={scaled(PB, 2)} prefix="jv" accent="#F59E0B" />
-          <Suppls />
-        </div>
+      {totalDays > 0 ? (
+        Object.entries(merged(daysA, daysB)).map(([cat, items]) =>
+          <CatGroup key={cat} catName={cat} items={items} prefix={`c${daysA}${daysB}`} />
+        )
+      ) : (
+        <div style={{color:'#64748b', textAlign:'center', padding:32}}>Selecciona al menos 1 día</div>
       )}
-
-      {view === 'custom' && (
-        <div>
-          {/* Day selectors */}
-          <div style={{display:'flex', gap:10, marginBottom:20}}>
-            {[['Plan A', daysA, setDaysA, '#3B82F6'], ['Plan B', daysB, setDaysB, '#F59E0B']].map(([label, val, setter, color]) => (
-              <div key={label} style={{flex:1, background:'#1e293b', borderRadius:10, padding:'14px', textAlign:'center'}}>
-                <div style={{color, fontWeight:700, marginBottom:10}}>{label}</div>
-                <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:14}}>
-                  <button onClick={() => setter(Math.max(0, val-1))} style={{
-                    width:32, height:32, borderRadius:6, border:'none', cursor:'pointer',
-                    background:'#334155', color:'#f8fafc', fontSize:20, fontWeight:700, lineHeight:1
-                  }}>−</button>
-                  <span style={{color:'#f8fafc', fontWeight:700, fontSize:24, minWidth:28}}>{val}</span>
-                  <button onClick={() => setter(Math.min(7, val+1))} style={{
-                    width:32, height:32, borderRadius:6, border:'none', cursor:'pointer',
-                    background:'#334155', color:'#f8fafc', fontSize:20, fontWeight:700, lineHeight:1
-                  }}>+</button>
-                </div>
-                <div style={{color:'#64748b', fontSize:12, marginTop:6}}>días</div>
-              </div>
-            ))}
-          </div>
-
-          {totalDays > 0 ? (
-            Object.entries(merged(daysA, daysB)).map(([cat, items]) =>
-              <CatGroup key={cat} catName={cat} items={items} prefix={`c${daysA}${daysB}`} />
-            )
-          ) : (
-            <div style={{color:'#64748b', textAlign:'center', padding:32}}>Selecciona al menos 1 día</div>
-          )}
-          <Suppls />
-        </div>
-      )}
+      <Suppls />
     </div>
   );
 }
@@ -1180,11 +1460,11 @@ export default function App() {
   const saveDay  = (d) => { setDayIdx(d);  try { localStorage.setItem('ta_day',  d); } catch {} };
 
   const tabs = [
-    { id: 'training',   label: '🏋️ Entreno' },
-    { id: 'nutrition',  label: '🍽 Nutrición' },
-    { id: 'supps',      label: '💊 Suplementos' },
-    { id: 'shopping',   label: '🛒 Compra' },
-    { id: 'vacaciones', label: '🏖 Vacaciones' },
+    { id: 'training',  label: '🏋️ Entreno' },
+    { id: 'nutrition', label: '🍽 Nutrición' },
+    { id: 'supps',     label: '💊 Suplementos' },
+    { id: 'shopping',  label: '🛒 Compra' },
+    { id: 'extras',    label: '⭐ Extras' },
   ];
 
   return (
@@ -1245,11 +1525,11 @@ export default function App() {
       </div>
 
       {/* Content */}
-      {tab === 'training'   && <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} />}
-      {tab === 'nutrition'  && <NutritionTab />}
-      {tab === 'supps'      && <SupplementsTab />}
-      {tab === 'shopping'   && <ShoppingTab />}
-      {tab === 'vacaciones' && <VacacionesTab />}
+      {tab === 'training'  && <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} />}
+      {tab === 'nutrition' && <NutritionTab />}
+      {tab === 'supps'     && <SupplementsTab />}
+      {tab === 'shopping'  && <ShoppingTab />}
+      {tab === 'extras'    && <ExtrasTab />}
     </div>
   );
 }
