@@ -156,6 +156,34 @@ const DIPS_REPS = {
   'Peak':       [14, 8, 8, 8],
 };
 
+// ─── CORE: añadido solo el Sábado, tras sentadilla/peso muerto ──────────────
+// Sentadilla, peso muerto y olímpicos entrenan el core como estabilizador
+// isométrico, pero no entrenan directamente la resistencia a la rotación ni a
+// la extensión de tronco — son los dos patrones que más protegen la zona
+// lumbar cuando sube la carga en esos mismos levantamientos. Se descarta el
+// crunch en polea (flexión de tronco cargada) porque no aporta el mismo
+// traspaso a la sentadilla/peso muerto, que exigen resistir la EXTENSIÓN, no
+// la flexión — y ya hay más que suficiente flexión de columna en el trabajo
+// diario sin necesidad de cargarla más. Ambos ejercicios usan material que ya
+// tienes en el gimnasio (polea de cable y un disco), cero impacto en rodilla.
+// Isométrico (aguante estático en extensión) en vez de repeticiones de
+// empuje-vuelta: en sentadilla/peso muerto el tronco no se mueve, aguanta
+// rígido mientras se mueven las extremidades — el hold estático se parece más
+// a esa demanda real que una repetición dinámica, y de paso queda coherente
+// con la plancha (mismo formato: carga + tiempo aguantado).
+const PALLOF_SECONDS = {  // segundos aguantados por lado, 3 series — anti-rotación en polea
+  'Base':       [20, 20, 20],
+  'Transición': [25, 22, 20],
+  'Intensidad': [30, 25, 22],
+  'Peak':       [35, 30, 25],
+};
+const PLANK_SECONDS = {  // segundos por serie, 3 series — plancha con disco sobre la espalda (anti-extensión)
+  'Base':       [30, 30, 30],
+  'Transición': [40, 35, 30],
+  'Intensidad': [45, 40, 35],
+  'Peak':       [50, 45, 40],
+};
+
 // ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
 // type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
 // testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
@@ -219,6 +247,18 @@ const DAYS = [
       { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'ladder' },
       { name: 'Nordic curl',        rm: 65,  unit: 'kg', testMethod: 'ladder' },
       { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
+        equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado',
+        note: 'De pie, perpendicular a la polea. Extiende los brazos al frente y AGUANTA ahí quieto sin dejar que la cadera gire — es un aguante estático, no repeticiones de empuje y vuelta. Repite el hold en cada serie, cambia de lado al terminar las 3 series.',
+        rm: 15, unit: 'kg', testMethod: 'coreload',
+        testTarget: '35s/lado por serie (objetivo de fase Peak, el más exigente de las 4)',
+        formCue: 'la cadera gire' },
+      { name: 'Weighted plank (disco en la espalda)', type: 'bw', repsByPhase: PLANK_SECONDS,
+        equipLabel: 'Anti-extensión · con disco', unitSuffix: 's',
+        note: 'Empieza con 5-10kg sobre la zona lumbar-alta. Si aguantas el tiempo objetivo con técnica limpia (sin que caiga la cadera), sube el disco de peso antes de subir el tiempo.',
+        rm: 7.5, unit: 'kg', testMethod: 'coreload',
+        testTarget: '50s por serie (objetivo de fase Peak, el más exigente de las 4)',
+        formCue: 'caiga la cadera' },
     ]
   },
   {
@@ -244,7 +284,7 @@ function buildTestPlan() {
     const day = DAYS.find(d => d.name === dayName);
     const list = [];
     (day.exercises || []).forEach(ex => {
-      if (ex.type === 'bw') return;      // ej. Dips — ya progresa por reps, sin test
+      if (!ex.testMethod) return;         // ej. Dips — progresa solo por reps, sin carga que testear
       if (seen.has(ex.name)) return;      // evita testear dos veces el mismo ejercicio
       seen.add(ex.name);
       list.push(ex);
@@ -477,25 +517,29 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   );
 }
 
-function BWRow({ ex, weekIdx }) {
+function BWRow({ ex, weekIdx, rmStore }) {
   const phase = PROG[weekIdx].phase;
   const reps = ex.repsByPhase[phase];
+  const equipLabel = ex.equipLabel || 'Peso corporal';
+  const unitSuffix = ex.unitSuffix || '';
+  const note = ex.note || 'Objetivo por serie, no un número plano — respeta la caída de fatiga real entre series.';
+  const loadLabel = ex.testMethod ? `${equipLabel} · ${effectiveRM(ex, rmStore || {})}kg` : equipLabel;
   return (
     <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>Peso corporal</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>{loadLabel}</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${reps.length}, 1fr)`, gap: 6 }}>
         {reps.map((r, i) => (
           <div key={i} style={{ background: '#0f172a', borderRadius: 6, padding: '8px 10px', textAlign: 'center' }}>
             <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 3 }}>Serie {i+1}</div>
-            <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 16 }}>{r}</div>
+            <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 16 }}>{r}{unitSuffix}</div>
           </div>
         ))}
       </div>
       <div style={{ color: '#64748b', fontSize: 11, marginTop: 6 }}>
-        Objetivo por serie, no un número plano — respeta la caída de fatiga real entre series.
+        {note}
       </div>
     </div>
   );
@@ -525,7 +569,7 @@ function DayWorkout({ day, weekIdx, rmStore }) {
     <div>
       {day.exercises.map((ex, i) => {
         if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
-        if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} />;
+        if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
         return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
       })}
     </div>
@@ -720,6 +764,7 @@ const CONDITIONING = {
 const pxDist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
+  const [ladderFallback, setLadderFallback] = useState(false);
   const [plateDiameter, setPlateDiameter] = useState(45); // cm — estándar IWF discos bumper 10-25kg
   const personalMVT = mvtStore ? mvtStore[ex.name] : null;
   const [mvt, setMvt] = useState(effectiveMVT(ex, mvtStore || {}));
@@ -792,148 +837,160 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
         <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🎥 {ex.name}</span>
         <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)}kg</span>
       </div>
-      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
-        Calibra con el disco (diámetro conocido) una vez por vídeo, luego marca inicio/fin de la fase concéntrica de cada serie sobre el propio fotograma — la app mide el desplazamiento real de la barra y calcula la velocidad. Con ≥3 series se ajusta la recta carga-velocidad y se extrapola el RM a la velocidad mínima (MVT).
-      </div>
-
-      <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-        <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
-          Diámetro del disco (cm)
-          <input type="number" value={plateDiameter} onChange={e => setPlateDiameter(Number(e.target.value))}
-            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
-        </label>
-        <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
-          MVT (m/s)
-          <input type="number" step="0.01" value={mvt} onChange={e => setMvt(Number(e.target.value))}
-            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
-        </label>
-      </div>
-
-      <div style={{ color: '#64748b', fontSize: 11, marginTop: -6, marginBottom: 10 }}>
-        {personalMVT
-          ? <>MVT personal guardado el {new Date(personalMVT.date).toLocaleDateString()} ({personalMVT.value} m/s).{' '}
-              <span onClick={() => { clearMVT(ex.name); setMvt(ex.mvt); }} style={{ color: '#EF4444', cursor: 'pointer' }}>
-                volver al valor de literatura ({ex.mvt} m/s)
-              </span>
-            </>
-          : <>Usando MVT de literatura ({ex.mvt} m/s). Márcalo como personal desde una serie a carga cercana a tu límite real.</>}
-      </div>
-
-      <input type="file" accept="video/*" onChange={e => {
-        const f = e.target.files[0];
-        if (f) {
-          setVideoUrl(URL.createObjectURL(f));
-          setCalibP1(null); setCalibP2(null); setStartClick(null); setEndClick(null); setMode(null);
-        }
-      }} style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8 }} />
-
-      {videoUrl && (
-        <div style={{ position: 'relative', marginBottom: 8 }}>
-          <video ref={videoRef} src={videoUrl} controls style={{ width: '100%', borderRadius: 8, display: 'block' }} />
-          <div onClick={handleOverlayClick} style={{
-            position: 'absolute', inset: 0, cursor: mode ? 'crosshair' : 'default'
-          }}>
-            {calibP1 && <div style={{ position: 'absolute', left: calibP1.x-5, top: calibP1.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.calib, border: '2px solid #fff' }} />}
-            {calibP2 && <div style={{ position: 'absolute', left: calibP2.x-5, top: calibP2.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.calib, border: '2px solid #fff' }} />}
-            {startClick && <div style={{ position: 'absolute', left: startClick.x-5, top: startClick.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.start, border: '2px solid #fff' }} />}
-            {endClick && <div style={{ position: 'absolute', left: endClick.x-5, top: endClick.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.end, border: '2px solid #fff' }} />}
+      {ladderFallback ? (
+        <>
+          <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
+            Sin vídeo hoy — registro directo con la escalera de carga. Menos preciso que la velocidad (no detecta cambios finos de forma), pero válido para no perder el test.{' '}
+            <span onClick={() => setLadderFallback(false)} style={{ color: '#3B82F6', cursor: 'pointer' }}>volver a vídeo</span>
           </div>
-        </div>
-      )}
+          <LadderBody ex={ex} rmStore={rmStore} saveRM={saveRM} />
+        </>
+      ) : (
+        <>
+          <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
+            Calibra con el disco (diámetro conocido) una vez por vídeo, luego marca inicio/fin de la fase concéntrica de cada serie sobre el propio fotograma — la app mide el desplazamiento real de la barra y calcula la velocidad. Con ≥3 series se ajusta la recta carga-velocidad y se extrapola el RM a la velocidad mínima (MVT).{' '}
+            <span onClick={() => setLadderFallback(true)} style={{ color: '#F59E0B', cursor: 'pointer' }}>no puedo grabar hoy — usar escalera directa</span>
+          </div>
 
-      {mode && (
-        <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8 }}>
-          {mode === 'calib1' && 'Haz clic en un extremo del disco'}
-          {mode === 'calib2' && 'Haz clic en el extremo opuesto del disco (el diámetro)'}
-          {mode === 'start' && 'Haz clic sobre la barra en el fotograma actual (inicio)'}
-          {mode === 'end' && 'Haz clic sobre la barra en el fotograma actual (fin)'}
-        </div>
-      )}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
+              Diámetro del disco (cm)
+              <input type="number" value={plateDiameter} onChange={e => setPlateDiameter(Number(e.target.value))}
+                style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+            </label>
+            <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
+              MVT (m/s)
+              <input type="number" step="0.01" value={mvt} onChange={e => setMvt(Number(e.target.value))}
+                style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+            </label>
+          </div>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-        <button onClick={beginCalibration} disabled={!videoUrl}
-          style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: videoUrl ? 'pointer' : 'default',
-            background: '#334155', color: '#f8fafc', fontSize: 13 }}>📏 Calibrar disco</button>
-        <span style={{ color: '#64748b', fontSize: 12 }}>
-          {scale ? `Escala: ${scale.toFixed(3)} cm/px` : 'Sin calibrar'}
-        </span>
-      </div>
+          <div style={{ color: '#64748b', fontSize: 11, marginTop: -6, marginBottom: 10 }}>
+            {personalMVT
+              ? <>MVT personal guardado el {new Date(personalMVT.date).toLocaleDateString()} ({personalMVT.value} m/s).{' '}
+                  <span onClick={() => { clearMVT(ex.name); setMvt(ex.mvt); }} style={{ color: '#EF4444', cursor: 'pointer' }}>
+                    volver al valor de literatura ({ex.mvt} m/s)
+                  </span>
+                </>
+              : <>Usando MVT de literatura ({ex.mvt} m/s). Márcalo como personal desde una serie a carga cercana a tu límite real.</>}
+          </div>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-        <button onClick={() => beginMark('start')} disabled={!videoUrl || !scale}
-          style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: (videoUrl && scale) ? 'pointer' : 'default',
-            background: '#334155', color: '#f8fafc', fontSize: 13 }}>Marcar inicio</button>
-        <button onClick={() => beginMark('end')} disabled={!videoUrl || !scale}
-          style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: (videoUrl && scale) ? 'pointer' : 'default',
-            background: '#334155', color: '#f8fafc', fontSize: 13 }}>Marcar fin</button>
-        <span style={{ color: '#64748b', fontSize: 12 }}>
-          {duration != null ? `Duración: ${duration.toFixed(2)}s` : 'Sin marcar'}
-          {velocity != null && ` · desplazamiento ${dispCm.toFixed(1)}cm · v = ${velocity.toFixed(3)} m/s`}
-        </span>
-      </div>
+          <input type="file" accept="video/*" onChange={e => {
+            const f = e.target.files[0];
+            if (f) {
+              setVideoUrl(URL.createObjectURL(f));
+              setCalibP1(null); setCalibP2(null); setStartClick(null); setEndClick(null); setMode(null);
+            }
+          }} style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8 }} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-        <input type="number" placeholder="Carga (kg)" value={load} onChange={e => setLoad(e.target.value)}
-          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
-        <button onClick={addPoint} disabled={!load || !velocity}
-          style={{ padding: '8px 14px', borderRadius: 6, border: 'none', cursor: (!load || !velocity) ? 'default' : 'pointer',
-            background: (!load || !velocity) ? '#334155' : '#2563EB', color: '#fff', fontSize: 13, fontWeight: 600 }}>
-          + Añadir serie
-        </button>
-      </div>
-
-      {points.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
-          {points.map((p, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: 12, padding: '4px 0' }}>
-              <span>{p.load}kg · {p.v} m/s</span>
-              <span style={{ display: 'flex', gap: 10 }}>
-                <span
-                  onClick={() => { saveMVT(ex.name, p.v); setMvt(p.v); }}
-                  title="Marca esta serie como tu carga límite real y guarda su velocidad como tu MVT personal"
-                  style={{ cursor: 'pointer', color: '#22C55E' }}>
-                  usar como mi MVT
-                </span>
-                <span onClick={() => removePoint(i)} style={{ cursor: 'pointer', color: '#EF4444' }}>eliminar</span>
-              </span>
+          {videoUrl && (
+            <div style={{ position: 'relative', marginBottom: 8 }}>
+              <video ref={videoRef} src={videoUrl} controls style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+              <div onClick={handleOverlayClick} style={{
+                position: 'absolute', inset: 0, cursor: mode ? 'crosshair' : 'default'
+              }}>
+                {calibP1 && <div style={{ position: 'absolute', left: calibP1.x-5, top: calibP1.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.calib, border: '2px solid #fff' }} />}
+                {calibP2 && <div style={{ position: 'absolute', left: calibP2.x-5, top: calibP2.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.calib, border: '2px solid #fff' }} />}
+                {startClick && <div style={{ position: 'absolute', left: startClick.x-5, top: startClick.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.start, border: '2px solid #fff' }} />}
+                {endClick && <div style={{ position: 'absolute', left: endClick.x-5, top: endClick.y-5, width: 10, height: 10, borderRadius: 5, background: markerColor.end, border: '2px solid #fff' }} />}
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {estRM && (
-        <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
-          <span style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>RM estimado: {estRM.toFixed(1)} kg</span>
-        </div>
-      )}
-      {points.length > 0 && points.length < 3 && (
-        <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 10 }}>Añade al menos 3 series para ajustar la recta.</div>
-      )}
+          {mode && (
+            <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8 }}>
+              {mode === 'calib1' && 'Haz clic en un extremo del disco'}
+              {mode === 'calib2' && 'Haz clic en el extremo opuesto del disco (el diámetro)'}
+              {mode === 'start' && 'Haz clic sobre la barra en el fotograma actual (inicio)'}
+              {mode === 'end' && 'Haz clic sobre la barra en el fotograma actual (fin)'}
+            </div>
+          )}
 
-      <button
-        disabled={!estRM}
-        onClick={() => saveRM(ex.name, Math.round(estRM * 2) / 2, ex.unit, 'video', { points, plateDiameter, mvt })}
-        style={{
-          width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: estRM ? 'pointer' : 'default',
-          background: estRM ? '#14532d' : '#1e293b', color: estRM ? '#86efac' : '#475569', fontWeight: 700, fontSize: 13
-        }}>
-        {current ? `✓ Guardado (${current.rm}kg) — actualizar` : 'Guardar como nuevo RM'}
-      </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+            <button onClick={beginCalibration} disabled={!videoUrl}
+              style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: videoUrl ? 'pointer' : 'default',
+                background: '#334155', color: '#f8fafc', fontSize: 13 }}>📏 Calibrar disco</button>
+            <span style={{ color: '#64748b', fontSize: 12 }}>
+              {scale ? `Escala: ${scale.toFixed(3)} cm/px` : 'Sin calibrar'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => beginMark('start')} disabled={!videoUrl || !scale}
+              style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: (videoUrl && scale) ? 'pointer' : 'default',
+                background: '#334155', color: '#f8fafc', fontSize: 13 }}>Marcar inicio</button>
+            <button onClick={() => beginMark('end')} disabled={!videoUrl || !scale}
+              style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: (videoUrl && scale) ? 'pointer' : 'default',
+                background: '#334155', color: '#f8fafc', fontSize: 13 }}>Marcar fin</button>
+            <span style={{ color: '#64748b', fontSize: 12 }}>
+              {duration != null ? `Duración: ${duration.toFixed(2)}s` : 'Sin marcar'}
+              {velocity != null && ` · desplazamiento ${dispCm.toFixed(1)}cm · v = ${velocity.toFixed(3)} m/s`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <input type="number" placeholder="Carga (kg)" value={load} onChange={e => setLoad(e.target.value)}
+              style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+            <button onClick={addPoint} disabled={!load || !velocity}
+              style={{ padding: '8px 14px', borderRadius: 6, border: 'none', cursor: (!load || !velocity) ? 'default' : 'pointer',
+                background: (!load || !velocity) ? '#334155' : '#2563EB', color: '#fff', fontSize: 13, fontWeight: 600 }}>
+              + Añadir serie
+            </button>
+          </div>
+
+          {points.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              {points.map((p, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: 12, padding: '4px 0' }}>
+                  <span>{p.load}kg · {p.v} m/s</span>
+                  <span style={{ display: 'flex', gap: 10 }}>
+                    <span
+                      onClick={() => { saveMVT(ex.name, p.v); setMvt(p.v); }}
+                      title="Marca esta serie como tu carga límite real y guarda su velocidad como tu MVT personal"
+                      style={{ cursor: 'pointer', color: '#22C55E' }}>
+                      usar como mi MVT
+                    </span>
+                    <span onClick={() => removePoint(i)} style={{ cursor: 'pointer', color: '#EF4444' }}>eliminar</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {estRM && (
+            <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
+              <span style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>RM estimado: {estRM.toFixed(1)} kg</span>
+            </div>
+          )}
+          {points.length > 0 && points.length < 3 && (
+            <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 10 }}>Añade al menos 3 series para ajustar la recta.</div>
+          )}
+
+          <button
+            disabled={!estRM}
+            onClick={() => saveRM(ex.name, Math.round(estRM * 2) / 2, ex.unit, 'video', { points, plateDiameter, mvt })}
+            style={{
+              width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: estRM ? 'pointer' : 'default',
+              background: estRM ? '#14532d' : '#1e293b', color: estRM ? '#86efac' : '#475569', fontWeight: 700, fontSize: 13
+            }}>
+            {current ? `✓ Guardado (${current.rm}kg) — actualizar` : 'Guardar como nuevo RM'}
+          </button>
+        </>
+      )}
     </div>
   );
 }
 
-function LadderTestCard({ ex, rmStore, saveRM }) {
+// Cuerpo reutilizable del test de escalera de carga (registro directo), sin la
+// caja/cabecera propias — así lo puede reutilizar tanto LadderTestCard como el
+// fallback "no puedo grabar hoy" dentro de VideoTestCard.
+function LadderBody({ ex, rmStore, saveRM }) {
   const [value, setValue] = useState('');
   const current = rmStore[ex.name];
   const baseRM = effectiveRM(ex, rmStore);
   const ladder = [0.60,0.70,0.80,0.90,0.95,1.00,1.05].map(pct => Math.round(baseRM*pct/2.5)*2.5);
   return (
-    <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>📋 {ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {baseRM}{ex.unit === 'kg/arm' ? ' kg/arm' : ' kg'}</span>
-      </div>
+    <>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
         Escalera de referencia (60→105% del RM actual): {ladder.join(' · ')} kg. Sube de carga hasta que la técnica se rompa y anota abajo el peso más alto conseguido limpio.
       </div>
@@ -943,6 +1000,52 @@ function LadderTestCard({ ex, rmStore, saveRM }) {
         <button
           disabled={!value}
           onClick={() => saveRM(ex.name, Number(value), ex.unit, 'ladder', {})}
+          style={{ padding: '8px 14px', borderRadius: 8, border: 'none', cursor: value ? 'pointer' : 'default',
+            background: value ? '#14532d' : '#334155', color: value ? '#86efac' : '#64748b', fontWeight: 700, fontSize: 13 }}>
+          Guardar
+        </button>
+      </div>
+      {current && <div style={{ color: '#22C55E', fontSize: 12, marginTop: 6 }}>✓ Guardado: {current.rm} {ex.unit}</div>}
+    </>
+  );
+}
+
+function LadderTestCard({ ex, rmStore, saveRM }) {
+  const baseRM = effectiveRM(ex, rmStore);
+  return (
+    <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>📋 {ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {baseRM}{ex.unit === 'kg/arm' ? ' kg/arm' : ' kg'}</span>
+      </div>
+      <LadderBody ex={ex} rmStore={rmStore} saveRM={saveRM} />
+    </div>
+  );
+}
+
+// Test para ejercicios de core cargado (Pallof press, plancha con disco): no
+// buscan un 1RM de una repetición — buscan la carga más pesada con la que
+// completas el objetivo de reps/tiempo de la fase Peak manteniendo la técnica
+// limpia. Esa carga es el punto de partida de todo el ciclo siguiente.
+function CoreLoadTestCard({ ex, rmStore, saveRM }) {
+  const [value, setValue] = useState('');
+  const current = rmStore[ex.name];
+  const baseRM = effectiveRM(ex, rmStore);
+  return (
+    <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🧱 {ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>Carga actual: {baseRM}{ex.unit}</span>
+      </div>
+      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
+        No es un test de 1 repetición máxima — sube la carga en series sucesivas hasta encontrar el peso más alto con el que completas el objetivo de la fase Peak ({ex.testTarget}) sin que {ex.formCue}. Anota ese peso, es tu carga de partida para todo el ciclo.
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input type="number" step="0.5" placeholder={`Carga conseguida (${ex.unit})`} value={value} onChange={e => setValue(e.target.value)}
+          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+        <button
+          disabled={!value}
+          onClick={() => saveRM(ex.name, Number(value), ex.unit, 'coreload', {})}
           style={{ padding: '8px 14px', borderRadius: 8, border: 'none', cursor: value ? 'pointer' : 'default',
             background: value ? '#14532d' : '#334155', color: value ? '#86efac' : '#64748b', fontWeight: 700, fontSize: 13 }}>
           Guardar
@@ -1014,8 +1117,9 @@ function TestTab({ rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
             <div style={{ color: '#475569', fontSize: 13 }}>Sin ejercicios nuevos que testear este día.</div>
           )}
           {plan[dayName].map((ex, i) => {
-            if (ex.testMethod === 'video')  return <VideoTestCard  key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} />;
-            if (ex.testMethod === 'repmax') return <RepMaxTestCard key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
+            if (ex.testMethod === 'video')    return <VideoTestCard    key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} />;
+            if (ex.testMethod === 'repmax')   return <RepMaxTestCard   key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
+            if (ex.testMethod === 'coreload') return <CoreLoadTestCard key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
             return <LadderTestCard key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
           })}
         </div>
