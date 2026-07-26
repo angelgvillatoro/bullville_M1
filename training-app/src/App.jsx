@@ -128,6 +128,19 @@ const DL = [
   [110,1,115,1,117.5,1,125,1],      // W15
 ];
 
+// ─── DIPS: reps por serie y por fase ─────────────────────────────────────────
+// Antes subía linealmente (8+semana, tope 15) sin mirar el rendimiento real.
+// Reporte real en Peak: 14/8/8/8 — gran caída entre la serie 1 y las demás.
+// En vez de un número plano igual en las 4 series, cada fase tiene su propio
+// perfil de 4 series que respeta esa caída de fatiga, y solo sube de fase en
+// fase (igual que fuerza y nutrición), no semana a semana.
+const DIPS_REPS = {
+  'Base':       [10, 7, 6, 6],
+  'Transición': [12, 7, 7, 6],
+  'Intensidad': [13, 8, 7, 7],
+  'Peak':       [14, 8, 8, 8],
+};
+
 // ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
 // type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
 // testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
@@ -168,7 +181,7 @@ const DAYS = [
       { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', rom: 40, mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
       { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'ladder' },
-      { name: 'Dips',                              type: 'bw', startReps: 8, maxReps: 15 },
+      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
       { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'ladder' },
       { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'ladder' },
     ]
@@ -199,7 +212,7 @@ const DAYS = [
       { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', rom: 40, mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
       { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'ladder' },
-      { name: 'Dips',                              type: 'bw', startReps: 8, maxReps: 15 },
+      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
       { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'ladder' },
       { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'ladder' },
     ]
@@ -450,19 +463,24 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
 }
 
 function BWRow({ ex, weekIdx }) {
-  const reps = Math.min(ex.startReps + weekIdx, ex.maxReps);
+  const phase = PROG[weekIdx].phase;
+  const reps = ex.repsByPhase[phase];
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '10px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 6
-    }}>
-      <div>
-        <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
-        <div style={{ color: '#64748b', fontSize: 12 }}>Peso corporal</div>
+    <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>Peso corporal</span>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 18 }}>BW</div>
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>4 × {reps} reps</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+        {reps.map((r, i) => (
+          <div key={i} style={{ background: '#0f172a', borderRadius: 6, padding: '8px 10px', textAlign: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 3 }}>Serie {i+1}</div>
+            <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 16 }}>{r}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ color: '#64748b', fontSize: 11, marginTop: 6 }}>
+        Objetivo por serie, no un número plano — respeta la caída de fatiga real entre series.
       </div>
     </div>
   );
