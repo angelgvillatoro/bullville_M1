@@ -5,9 +5,23 @@ import { useState, useRef } from "react";
 // a partir de la fecha real, en vez de una constante fija que había que
 // recordar actualizar a mano cada semana.
 const CYCLE_START = new Date('2026-04-07T00:00:00');
+// Al terminar el test de Semana 16 se guarda aquí la fecha de inicio del ciclo
+// siguiente (día del último test guardado), sustituyendo la constante fija de
+// arriba — así no hace falta tocar el código cada 15-16 semanas.
+function loadCycleStart() {
+  try {
+    const s = localStorage.getItem('ta_cycle_start');
+    if (s) return new Date(s + 'T00:00:00');
+  } catch {}
+  return CYCLE_START;
+}
+function persistCycleStart(dateStr) {
+  try { localStorage.setItem('ta_cycle_start', dateStr); } catch {}
+}
 function computeDefaultWeekDay() {
+  const start = loadCycleStart();
   const today = new Date();
-  const diffDays = Math.floor((today - CYCLE_START) / 86400000);
+  const diffDays = Math.floor((today - start) / 86400000);
   let weekIdx = Math.floor(diffDays / 7);
   weekIdx = Math.max(0, Math.min(14, weekIdx));
   const jsDay = today.getDay(); // 0=domingo..6=sábado
@@ -1098,14 +1112,15 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
   );
 }
 
-function TestTab({ rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
+function TestTab({ rmStore, saveRM, mvtStore, saveMVT, clearMVT, lastTestDate, startNewCycle }) {
+  const [confirming, setConfirming] = useState(false);
   const plan = buildTestPlan();
   return (
     <div>
       <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
         <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 4 }}>Test Semana 16</div>
         <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
-          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 3 métodos según el ejercicio: vídeo con velocidad (sentadilla, press banca), registro directo de la escalera (olímpicos, peso muerto y accesorios de barra/cable), y test de reps con fórmula (ejercicios de mancuerna).
+          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 4 métodos según el ejercicio: vídeo con velocidad (sentadilla, press banca), registro directo de la escalera (olímpicos, peso muerto y accesorios de barra/cable), test de reps con fórmula (ejercicios de mancuerna) y test de carga por objetivo (Pallof press, plancha con disco).
         </div>
       </div>
       {TEST_DAY_NAMES.map(dayName => (
@@ -1124,6 +1139,46 @@ function TestTab({ rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
           })}
         </div>
       ))}
+
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '14px 16px', border: '1px solid #22C55E33' }}>
+        <div style={{ color: '#22C55E', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          Ciclo nuevo
+        </div>
+        {lastTestDate ? (
+          <>
+            <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 10 }}>
+              Último test guardado: {lastTestDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}. La Semana 1 del ciclo nuevo arranca ese día (no el día en que pulses el botón), y se borran las casillas de sesión completada del ciclo anterior. Los RM ya guardados no se tocan.
+            </div>
+            {!confirming ? (
+              <button onClick={() => setConfirming(true)}
+                style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: '#14532d', color: '#86efac', fontWeight: 700, fontSize: 13 }}>
+                Iniciar ciclo nuevo
+              </button>
+            ) : (
+              <div>
+                <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8 }}>
+                  ¿Seguro? Esto pone la Semana en 1 y borra las sesiones marcadas como hechas del ciclo anterior.
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => { startNewCycle(); setConfirming(false); }}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#14532d', color: '#86efac', fontWeight: 700, fontSize: 13 }}>
+                    Sí, iniciar
+                  </button>
+                  <button onClick={() => setConfirming(false)}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: '#334155', color: '#94a3b8', fontWeight: 700, fontSize: 13 }}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ color: '#64748b', fontSize: 13 }}>Guarda al menos un test para poder iniciar el ciclo nuevo.</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1529,6 +1584,26 @@ export default function App() {
   const saveWeek = (w) => { setWeekIdx(w); try { localStorage.setItem('ta_week', w); } catch {} };
   const saveDay  = (d) => { setDayIdx(d);  try { localStorage.setItem('ta_day',  d); } catch {} };
 
+  // Fecha del último test guardado (el más reciente de todos los RM en
+  // rmStore) — es la que se usa como inicio del ciclo nuevo, no la fecha en
+  // la que se pulsa el botón, para que cuadre aunque tardes unos días en
+  // arrancar la Semana 1 después de terminar los tests.
+  const lastTestDate = (() => {
+    const dates = Object.values(rmStore).map(o => new Date(o.date).getTime()).filter(t => !isNaN(t));
+    return dates.length ? new Date(Math.max(...dates)) : null;
+  })();
+
+  const startNewCycle = () => {
+    if (!lastTestDate) return;
+    const iso = lastTestDate.toISOString().slice(0, 10); // YYYY-MM-DD
+    persistCycleStart(iso);
+    try { localStorage.removeItem('ta_completed'); } catch {}
+    setCompleted({});
+    const next = computeDefaultWeekDay();
+    saveWeek(next.weekIdx);
+    saveDay(next.dayIdx);
+  };
+
   const currentSection = SECTIONS.find(s => s.id === section);
 
   return (
@@ -1607,7 +1682,7 @@ export default function App() {
         <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} />
       )}
       {section === 'entrenamiento' && sub === 'test' && (
-        <TestTab rmStore={rmStore} saveRM={saveRM} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} />
+        <TestTab rmStore={rmStore} saveRM={saveRM} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} lastTestDate={lastTestDate} startNewCycle={startNewCycle} />
       )}
       {section === 'alimentacion' && sub === 'compra' && <ShoppingTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'nutricion' && <NutritionTab weekIdx={weekIdx} />}
