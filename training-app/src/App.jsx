@@ -1,4 +1,19 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+
+// ─── CYCLE DATES ──────────────────────────────────────────────────────────────
+// W1 empezó el martes 7 abril 2026. Semana/día por defecto se calculan solos
+// a partir de la fecha real, en vez de una constante fija que había que
+// recordar actualizar a mano cada semana.
+const CYCLE_START = new Date('2026-04-07T00:00:00');
+function computeDefaultWeekDay() {
+  const today = new Date();
+  const diffDays = Math.floor((today - CYCLE_START) / 86400000);
+  let weekIdx = Math.floor(diffDays / 7);
+  weekIdx = Math.max(0, Math.min(14, weekIdx));
+  const jsDay = today.getDay(); // 0=domingo..6=sábado
+  const dayIdx = jsDay === 0 ? 6 : jsDay - 1; // Lunes=0..Domingo=6
+  return { weekIdx, dayIdx };
+}
 
 // ─── PROGRESSION TABLE (15 weeks, 0-indexed) ─────────────────────────────────
 const PROG = [
@@ -21,6 +36,42 @@ const PROG = [
 
 // Weight rounded up to nearest 2.5kg
 const wt = (rm, pct) => Math.ceil(rm * pct / 2.5) * 2.5;
+
+// ─── MANCUERNAS REALES ────────────────────────────────────────────────────────
+// ⚠️ Ajusta este array a las mancuernas que tienes de verdad en el gimnasio.
+const DUMBBELL_WEIGHTS = [4, 6, 8, 12, 16, 20, 24, 28, 32];
+function nearestDumbbell(target) {
+  const avail = DUMBBELL_WEIGHTS.filter(w => w <= target);
+  if (avail.length === 0) return DUMBBELL_WEIGHTS[0];
+  return avail[avail.length - 1];
+}
+// Estimación de 1RM a partir de un test de repeticiones (fórmula Epley) —
+// la forma estándar de estimar RM en ejercicios de mancuerna, donde el peso
+// es discreto y no tiene sentido buscar un 1RM real por riesgo/precisión.
+function epley1RM(weight, reps) {
+  return weight * (1 + reps / 30);
+}
+
+// ─── RM: OVERRIDES GUARDADOS TRAS EL TEST (localStorage) ─────────────────────
+function loadRM() {
+  try { const s = localStorage.getItem('ta_rm'); return s ? JSON.parse(s) : {}; }
+  catch { return {}; }
+}
+function persistRM(store) {
+  try { localStorage.setItem('ta_rm', JSON.stringify(store)); } catch {}
+}
+function effectiveRM(ex, rmStore) {
+  const o = rmStore[ex.name];
+  return o ? o.rm : ex.rm;
+}
+// Reescala una tabla de series olímpicas (pensada para un RM concreto) de forma
+// proporcional al nuevo RM real, conservando la estructura de rampa por semana
+// que ya estaba diseñada a mano.
+function scaleOlympicTable(sets, oldRM, newRM) {
+  if (!oldRM || oldRM === newRM) return sets;
+  const ratio = newRM / oldRM;
+  return sets.map(week => week.map((v, i) => (i % 2 === 0 ? Math.round(v * ratio / 2.5) * 2.5 : v)));
+}
 
 // ─── OLYMPIC SETS: [s1w, s1r, s2w, s2r, s3w, s3r, s4w, s4r] per week ────────
 const CJ = [
@@ -79,28 +130,32 @@ const DL = [
 
 // ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
 // type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
+// testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
+// directo del peso máximo con técnica limpia) · 'repmax' (test de reps + fórmula,
+// para ejercicios de mancuerna con pesos disponibles discretos)
 const DAYS = [
   {
     name: 'Lunes', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
     exercises: [
-      { name: 'Triceps stretches cable pull bar', rm: 35,   unit: 'kg' },
-      { name: 'Triceps extension cable pull cord', rm: 30,  unit: 'kg' },
-      { name: 'Triceps extension one-armed cable', rm: 10,  unit: 'kg/arm' },
-      { name: 'Bicep curls cable pull',            rm: 30,  unit: 'kg' },
-      { name: 'Bicep curls sitting dumbbell',      rm: 9,   unit: 'kg/arm' },
-      { name: 'Bicep curls hammer grip seated',    rm: 8,   unit: 'kg/arm' },
-      { name: 'Seated lateral raises dumbbell',    rm: 6,   unit: 'kg/arm' },
-      { name: 'Shoulder press sitting dumbbell',   rm: 15,  unit: 'kg/arm' },
-      { name: 'Butterfly reverse cable pull',      rm: 10,  unit: 'kg/arm' },
+      { name: 'Triceps stretches cable pull bar',  rm: 35, unit: 'kg',     testMethod: 'ladder' },
+      { name: 'Triceps extension cable pull cord', rm: 30, unit: 'kg',     testMethod: 'ladder' },
+      { name: 'Triceps extension one-armed cable', rm: 10, unit: 'kg/arm', testMethod: 'ladder' },
+      { name: 'Bicep curls cable pull',            rm: 30, unit: 'kg',     testMethod: 'ladder' },
+      { name: 'Bicep curls sitting dumbbell',      rm: 9,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated',    rm: 8,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Seated lateral raises dumbbell',    rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Shoulder press sitting dumbbell',   rm: 15, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Butterfly reverse cable pull',      rm: 10, unit: 'kg/arm', testMethod: 'ladder' },
     ]
   },
   {
     name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',          rm: 105, unit: 'kg',     type: 'olympic', sets: CJ },
-      { name: 'Power snatch barbell',           rm: 75,  unit: 'kg',     type: 'olympic', sets: PS },
-      { name: 'Latzug breit (lat pulldown)',    rm: 90,  unit: 'kg' },
-      { name: 'Bicep curls sitting dumbbell',   rm: 9,   unit: 'kg/arm' },
+      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
+      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder' },
+      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
     ]
   },
   {
@@ -110,45 +165,66 @@ const DAYS = [
   {
     name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
-      { name: 'Bench press barbell',              rm: 90,   unit: 'kg' },
-      { name: 'Bench press inclined barbell',     rm: 72.5, unit: 'kg' },
-      { name: 'Flys standing cable pull',         rm: 12.5, unit: 'kg/arm' },
-      { name: 'Dips',                             type: 'bw', startReps: 8, maxReps: 15 },
-      { name: 'Triceps extension cable pull cord', rm: 30,  unit: 'kg' },
-      { name: 'Triceps extension one-armed cable', rm: 10,  unit: 'kg/arm' },
+      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', rom: 40, mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'ladder' },
+      { name: 'Dips',                              type: 'bw', startReps: 8, maxReps: 15 },
+      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'ladder' },
+      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'ladder' },
     ]
   },
   {
     name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',          rm: 105, unit: 'kg',     type: 'olympic', sets: CJ },
-      { name: 'Power snatch barbell',           rm: 75,  unit: 'kg',     type: 'olympic', sets: PS },
-      { name: 'Latzug breit (lat pulldown)',    rm: 90,  unit: 'kg' },
-      { name: 'Bicep curls sitting dumbbell',   rm: 9,   unit: 'kg/arm' },
+      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
+      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder' },
+      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
     ]
   },
   {
     name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
     exercises: [
-      { name: 'Deadlift barbell',            rm: 120, unit: 'kg',     type: 'olympic', sets: DL },
-      { name: 'Squat barbell',               rm: 105, unit: 'kg' },
-      { name: 'Leg curl machine',            rm: 80,  unit: 'kg' },
-      { name: 'Nordic curl',                 rm: 65,  unit: 'kg' },
-      { name: 'Hip thrust machine',          rm: 120, unit: 'kg' },
+      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL, testMethod: 'ladder' },
+      { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', rom: 50, mvt: 0.30 },
+      { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'ladder' },
+      { name: 'Nordic curl',        rm: 65,  unit: 'kg', testMethod: 'ladder' },
+      { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder' },
     ]
   },
   {
     name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Bench press barbell',              rm: 90,   unit: 'kg' },
-      { name: 'Bench press inclined barbell',     rm: 72.5, unit: 'kg' },
-      { name: 'Flys standing cable pull',         rm: 12.5, unit: 'kg/arm' },
-      { name: 'Dips',                             type: 'bw', startReps: 8, maxReps: 15 },
-      { name: 'Triceps extension cable pull cord', rm: 30,  unit: 'kg' },
-      { name: 'Triceps extension one-armed cable', rm: 10,  unit: 'kg/arm' },
+      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', rom: 40, mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'ladder' },
+      { name: 'Dips',                              type: 'bw', startReps: 8, maxReps: 15 },
+      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'ladder' },
+      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'ladder' },
     ]
   },
 ];
+
+// Días de test (semana 16) — Miércoles, Viernes y Domingo quedan como descanso
+// porque repiten ejercicios ya cubiertos en Lunes/Martes/Jueves/Sábado.
+const TEST_DAY_NAMES = ['Lunes', 'Martes', 'Jueves', 'Sábado'];
+function buildTestPlan() {
+  const seen = new Set();
+  const byDay = {};
+  TEST_DAY_NAMES.forEach(dayName => {
+    const day = DAYS.find(d => d.name === dayName);
+    const list = [];
+    (day.exercises || []).forEach(ex => {
+      if (ex.type === 'bw') return;      // ej. Dips — ya progresa por reps, sin test
+      if (seen.has(ex.name)) return;      // evita testear dos veces el mismo ejercicio
+      seen.add(ex.name);
+      list.push(ex);
+    });
+    byDay[dayName] = list;
+  });
+  return byDay;
+}
 
 // ─── WEDNESDAY STRETCHES ─────────────────────────────────────────────────────
 const STRETCHES = [
@@ -201,7 +277,9 @@ const NUTRITION = {
         ]
       }
     ],
-    totals: { kcal: '~1.975', protein: '~205g', fat: '~84g', carbs: '~103g' }
+    totals: { kcal: 1975, protein: 205, fat: 84, carbs: 103 },
+    // qué añadir en el "ajuste de fase" (rico en carbohidrato de este día)
+    carbFood: 'Arroz (cocido)'
   },
   B: {
     label: 'Días B',
@@ -230,9 +308,34 @@ const NUTRITION = {
         ]
       }
     ],
-    totals: { kcal: '~2.030', protein: '~191g', fat: '~97g', carbs: '~98g' }
+    totals: { kcal: 2030, protein: 191, fat: 97, carbs: 98 },
+    carbFood: 'Boniato / Patata (cocidos)'
   }
 };
+
+// ─── FASES DE NUTRICIÓN ──────────────────────────────────────────────────────
+// Mismas 4 fases que ya usa PROG (Base/Transición/Intensidad/Peak) — una sola
+// fuente de verdad de "en qué fase estoy" para fuerza y para nutrición.
+// El extra se añade siempre vía carbohidrato + fruta + aceite (no proteína,
+// que ya está cubierta) para sostener el gasto del condicionamiento nuevo sin
+// tocar las cantidades de pollo/salmón/ternera que ya calibran la proteína.
+const PHASE_ADD = {
+  'Base':       { carbG: 0,   fruitG: 0,   oilMl: 0  },
+  'Transición': { carbG: 40,  fruitG: 100, oilMl: 5  },
+  'Intensidad': { carbG: 80,  fruitG: 150, oilMl: 8  },
+  'Peak':       { carbG: 120, fruitG: 150, oilMl: 12 },
+};
+function phaseAddMacros(p) {
+  const carbKcal = p.carbG * 1.2, carbCarbs = p.carbG * 0.28, carbProt = p.carbG * 0.02;
+  const fruitKcal = p.fruitG * 0.5, fruitCarbs = p.fruitG * 0.13;
+  const oilKcal = p.oilMl * 8.3, oilFat = p.oilMl * 0.92;
+  return {
+    kcal: Math.round(carbKcal + fruitKcal + oilKcal),
+    protein: Math.round(carbProt),
+    fat: Math.round(oilFat),
+    carbs: Math.round(carbCarbs + fruitCarbs),
+  };
+}
 
 // ─── SUPPLEMENTS ─────────────────────────────────────────────────────────────
 const SUPPS = [
@@ -274,625 +377,6 @@ const SUPPS = [
   },
 ];
 
-// ─── SHOPPING LIST ───────────────────────────────────────────────────────────
-// Días A × 5 (Lun/Mar/Mié/Vie/Dom) + Días B × 2 (Jue/Sáb)
-// Huevos: 4 uds/día todos los días = 28/semana
-// Espinacas + parmesano + semillas: solo días A (tortilla compleja)
-// Días B: tortilla simple 4 huevos sin espinacas ni parmesano
-const SHOPPING = [
-  {
-    category: '🥩 Proteínas',
-    color: '#EF4444',
-    items: [
-      { name: 'Pechuga de pollo (cocida)', amount: '1,5 kg', note: '300 g/día × 5 días A' },
-      { name: 'Salmón', amount: '500 g', note: '250 g × 2 días B · fresco o congelado' },
-      { name: 'Ternera', amount: '440 g', note: '220 g × 2 días B' },
-    ]
-  },
-  {
-    category: '🥚 Lácteos y huevos',
-    color: '#F59E0B',
-    items: [
-      { name: 'Arla Skyr 450 g', amount: '7 packs', note: '1 pack/día × 7 días' },
-      { name: 'Huevos', amount: '28 uds', note: '4 huevos/día × 7 días (tortilla compleja días A, simple días B)' },
-      { name: 'Parmesano', amount: '250 g', note: 'Solo tortilla compleja días A' },
-    ]
-  },
-  {
-    category: '🥦 Verduras',
-    color: '#22C55E',
-    items: [
-      { name: 'Brócoli', amount: '1,4 kg', note: '200 g/día × 7 días' },
-      { name: 'Espinacas', amount: '700 g', note: 'Solo días A (tortilla compleja)' },
-      { name: 'Tomate', amount: '~400 g', note: 'Para sofrito (5 raciones)' },
-      { name: 'Pimiento', amount: '~300 g', note: 'Para sofrito' },
-      { name: 'Calabacín', amount: '~250 g', note: 'Para sofrito' },
-      { name: 'Ajo', amount: '1 cabeza', note: 'Sofrito + tortilla' },
-    ]
-  },
-  {
-    category: '🍠 Tubérculos y cereales',
-    color: '#8B5CF6',
-    items: [
-      { name: 'Arroz', amount: '~175 g (seco)', note: '≈ 500 g cocido × 5 días A' },
-      { name: 'Boniato', amount: '200 g', note: '100 g × 2 días B' },
-      { name: 'Patata', amount: '200 g', note: '100 g × 2 días B' },
-    ]
-  },
-  {
-    category: '🍓 Fruta (~2,1 kg/semana · 150g × 2 tomas × 7 días)',
-    color: '#EC4899',
-    items: [
-      { name: '🌸 Fresas',         amount: 'Abr – Jun', note: '32 kcal/100g · bajo IG · vitamina C · mejor fruta del plan' },
-      { name: '🌸 Ruibarbo',       amount: 'Abr – May', note: '21 kcal/100g · muy bajo azúcar · suele venderse con fresas' },
-      { name: '☀️ Frambuesas',     amount: 'Jun – Ago', note: '52 kcal/100g · alto en fibra · antioxidantes' },
-      { name: '☀️ Cerezas',        amount: 'Jun – Jul', note: '63 kcal/100g · antiinflamatorio · melatonina natural' },
-      { name: '☀️ Albaricoques',   amount: 'Jun – Jul', note: '48 kcal/100g · beta-caroteno · potasio' },
-      { name: '☀️ Grosellas rojas',amount: 'Jun – Jul', note: '56 kcal/100g · vitamina C muy alta · ácidas' },
-      { name: '☀️ Arándanos',      amount: 'Jul – Sep', note: '57 kcal/100g · antioxidantes top · bajo IG' },
-      { name: '☀️ Melocotón / Nectarina', amount: 'Jul – Sep', note: '39–44 kcal/100g · vitamina C y A · jugosos' },
-      { name: '🍂 Ciruelas',       amount: 'Ago – Sep', note: '46 kcal/100g · fibra · hierro · abundantes en CZ' },
-      { name: '🍂 Manzana',        amount: 'Sep – Mar', note: '52 kcal/100g · almacenable · opción todo el año' },
-      { name: '🍂 Pera',           amount: 'Sep – Nov', note: '57 kcal/100g · fibra · almacenable' },
-      { name: '🍂 Uvas',           amount: 'Sep – Oct', note: '67 kcal/100g · resveratrol · más azúcar, cantidad moderada' },
-      { name: '🍂 Granada',        amount: 'Oct – Ene', note: '83 kcal/100g · polifenoles · antiinflamatorio' },
-      { name: '❄️ Mandarina / Naranja', amount: 'Nov – Mar', note: '47–53 kcal/100g · vitamina C · pico de importación invernal' },
-      { name: '❄️ Pomelo',         amount: 'Nov – Mar', note: '42 kcal/100g · bajo IG · nota: interacción con algunos fármacos' },
-      { name: '❄️ Kiwi',          amount: 'Nov – Mar', note: '61 kcal/100g · vitamina C altísima · digestión' },
-    ],
-    note: '🌸 Primavera · ☀️ Verano · 🍂 Otoño · ❄️ Invierno'
-  },
-  {
-    category: '🫙 Despensa',
-    color: '#64748b',
-    items: [
-      { name: 'Semillas de calabaza', amount: '125 g', note: '25 g × 5 días A' },
-      { name: 'Aceite de oliva', amount: '~165 ml', note: '25 ml almuerzo × 5 días A + 15 ml almuerzo × 2 días B + 5 ml tortilla × 2 días B' },
-    ]
-  },
-  {
-    category: '💊 Suplementos (reposición)',
-    color: '#38bdf8',
-    items: [
-      { name: 'D3+K2 · Natural Elements', amount: '1 comp/semana consumido', note: 'Pack 240 tabs ≈ 8 meses' },
-      { name: 'Omega-3 · Natural Elements', amount: '21 cáps/semana', note: 'Pack 365 caps ≈ 17 semanas' },
-      { name: 'Magnesio Bisglicinato · Natural Elements', amount: '7 cáps/semana', note: 'Pack 180 caps ≈ 25 semanas' },
-      { name: 'Zinc · Natural Elements', amount: '3,5 comp/semana (½/día)', note: 'Pack 365 tabs ≈ 104 semanas' },
-    ]
-  },
-];
-
-// ─── VACATION PLAN (sin material) ────────────────────────────────────────────
-const VACATION_DAYS = [
-  {
-    id: 'A', label: 'Día A', name: 'Empuje superior + Core', emoji: '💪',
-    exercises: [
-      { name: 'Push-ups',                    sets: 4, reps: 'Máx',         tempo: '3-0-1', rest: '90s' },
-      { name: 'Pike push-ups (hombro)',       sets: 3, reps: '8-12',        tempo: '2-0-1', rest: '75s' },
-      { name: 'Dips en silla/sofá',           sets: 3, reps: 'Máx',         tempo: '3-0-1', rest: '75s' },
-      { name: 'Shoulder taps en plancha',     sets: 3, reps: '10/lado',     tempo: 'Ctrl',  rest: '60s' },
-      { name: 'Dead bug',                     sets: 3, reps: '8/lado',      tempo: 'Lento', rest: '45s' },
-      { name: 'Hollow body hold',             sets: 3, reps: '30s',         tempo: '—',     rest: '45s' },
-    ],
-    progression: '≥15 reps push-ups → elevar pies (decline). ≥12 pike → pausa 2s en fondo.',
-  },
-  {
-    id: 'B', label: 'Día B', name: 'Inferior + Core', emoji: '🦵',
-    exercises: [
-      { name: 'Sentadilla bodyweight',        sets: 4, reps: '15-20',       tempo: '4-1-2', rest: '90s' },
-      { name: 'Split squat',                  sets: 3, reps: '10-12/pierna',tempo: '3-0-1', rest: '75s', note: 'Mano en pared si necesario' },
-      { name: 'Hip thrust bodyweight',        sets: 4, reps: '20-25',       tempo: '2-2-1', rest: '75s', note: 'Espalda en sofá' },
-      { name: 'Nordic curl excéntrico',       sets: 3, reps: '5-8',         tempo: '5s exc',rest: '90s', note: 'Pies bajo sofá/cama. Molestia → curl isométrico contra pared' },
-      { name: 'Glute bridge isométrico',      sets: 3, reps: '45s',         tempo: '—',     rest: '45s' },
-      { name: 'Plank',                        sets: 3, reps: '60s',         tempo: '—',     rest: '45s' },
-    ],
-    progression: 'Tempo nórdico: 5s → 6s → 7s. Mochila en split squat e hip thrust cuando llegues a máximo.',
-  },
-  {
-    id: 'C', label: 'Día C', name: 'Tirón superior + Empuje + Core', emoji: '🔙',
-    exercises: [
-      { name: 'Table rows',                   sets: 4, reps: 'Máx',         tempo: '3-0-1', rest: '90s', note: 'Boca arriba bajo mesa, tira el pecho hacia el borde' },
-      { name: 'Decline push-ups',             sets: 4, reps: 'Máx',         tempo: '3-0-1', rest: '75s', note: 'Pies en silla' },
-      { name: 'Curl de bíceps con mochila',   sets: 3, reps: '10-15',       tempo: '3-0-1', rest: '60s', note: 'Libros/botellas para ajustar peso' },
-      { name: 'Extensión tríceps en silla',   sets: 3, reps: 'Máx',         tempo: '3-0-1', rest: '60s', note: 'Manos en borde del asiento, similar a dips' },
-      { name: 'Side plank',                   sets: 3, reps: '40s/lado',    tempo: '—',     rest: '45s' },
-      { name: 'RKC plank',                    sets: 3, reps: '20-30s',      tempo: '—',     rest: '45s' },
-    ],
-    progression: 'Si hay barra: añadir al inicio 4×Máx dominadas ancho + 3×Máx dominadas supino.',
-  },
-];
-
-const VAC_PROG = [
-  { week: 1, note: 'Semana 1 — Anotar reps máximas en cada ejercicio (baseline)' },
-  { week: 2, note: 'Semana 2 — +2-3 reps en ejercicios donde llegaste al máximo' },
-  { week: 3, note: 'Semana 3 — Reducir descanso 15s en ejercicios de empuje' },
-  { week: 4, note: 'Semana 4+ — Añadir peso con mochila o elevar pies en empuje' },
-];
-
-const VAC_WELLNESS = [
-  '🚿 Ducha fría 5 min diarios (sustituye baño frío)',
-  '🔥 Sauna: si el hotel tiene, mantener 3 rondas Mié/Sáb/Dom',
-  '💧 3L agua mínimo — +500ml en clima cálido',
-  '☀️ Sol directo 20-30 min = cubre vitamina D (si no hay sol, continuar D3+K2)',
-  '🦵 Movilidad de rodilla — mantener rutina matutina sin falta',
-];
-
-function VacacionesTab() {
-  const [dayId, setDayId]           = useState('A');
-  const [vacWeek, setVacWeek]       = useState(1);
-  const [barAvail, setBarAvail]     = useState(false);
-
-  const day = VACATION_DAYS.find(d => d.id === dayId);
-  const progNote = VAC_PROG.find(p => p.week === Math.min(vacWeek, 4));
-
-  return (
-    <div>
-      {/* Header info */}
-      <div style={{
-        background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 16,
-        borderLeft: '3px solid #38bdf8'
-      }}>
-        <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 4 }}>🏖 Mantenimiento sin material</div>
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>3 días/semana · No consecutivos (Lun/Mié/Vie) · 40-50 min/sesión</div>
-        <div style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>Sin impacto · Sin saltos · Sin correr — rodilla derecha ✓</div>
-      </div>
-
-      {/* Vacation week counter */}
-      <div style={{
-        background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 16,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-      }}>
-        <div>
-          <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 2 }}>Semana de vacaciones</div>
-          <div style={{ color: '#38bdf8', fontSize: 13, fontWeight: 500 }}>{progNote.note.split(' — ')[1]}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => setVacWeek(Math.max(1, vacWeek - 1))} style={{
-            width: 30, height: 30, borderRadius: 6, border: 'none', cursor: 'pointer',
-            background: '#334155', color: '#f8fafc', fontSize: 18, fontWeight: 700, lineHeight: 1
-          }}>−</button>
-          <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 20, minWidth: 20, textAlign: 'center' }}>{vacWeek}</span>
-          <button onClick={() => setVacWeek(vacWeek + 1)} style={{
-            width: 30, height: 30, borderRadius: 6, border: 'none', cursor: 'pointer',
-            background: '#334155', color: '#f8fafc', fontSize: 18, fontWeight: 700, lineHeight: 1
-          }}>+</button>
-        </div>
-      </div>
-
-      {/* Day selector */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {VACATION_DAYS.map(d => (
-          <button key={d.id} onClick={() => setDayId(d.id)} style={{
-            flex: 1, padding: '10px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            fontWeight: 700, fontSize: 13,
-            background: d.id === dayId ? '#f8fafc' : '#1e293b',
-            color: d.id === dayId ? '#0f172a' : '#64748b'
-          }}>
-            {d.emoji} {d.label}
-            <div style={{ fontSize: 11, fontWeight: 400, marginTop: 2, opacity: 0.7 }}>{d.id === dayId ? d.name.split(' + ')[0] : ''}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Day header */}
-      <div style={{
-        background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 14
-      }}>
-        <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16 }}>{day.emoji} {day.label} — {day.name}</div>
-      </div>
-
-      {/* Exercise list */}
-      {day.exercises.map((ex, i) => (
-        <div key={i} style={{
-          background: '#1e293b', borderRadius: 8, padding: '11px 14px', marginBottom: 7
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: ex.note ? 4 : 0 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600 }}>{ex.name}</div>
-              {ex.note && (
-                <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{ex.note}</div>
-              )}
-            </div>
-            <div style={{ textAlign: 'right', marginLeft: 12, flexShrink: 0 }}>
-              <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 16 }}>{ex.sets}×{ex.reps}</div>
-              <div style={{ color: '#64748b', fontSize: 12 }}>Tempo {ex.tempo} · {ex.rest}</div>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {/* Pull-up bonus (Día C only) */}
-      {day.id === 'C' && (
-        <div style={{ marginTop: 16 }}>
-          <button onClick={() => setBarAvail(!barAvail)} style={{
-            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-            background: barAvail ? '#0f3a2a' : '#1e293b', borderRadius: 8,
-            border: `1px solid ${barAvail ? '#22C55E55' : '#334155'}`,
-            padding: '10px 14px', cursor: 'pointer', marginBottom: barAvail ? 10 : 0
-          }}>
-            <div style={{
-              width: 20, height: 20, borderRadius: 4, border: `2px solid ${barAvail ? '#22C55E' : '#475569'}`,
-              background: barAvail ? '#22C55E' : 'transparent',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              {barAvail && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>Hay barra de dominadas / playground</div>
-              <div style={{ color: '#64748b', fontSize: 12 }}>Activa los ejercicios extra del Día C</div>
-            </div>
-          </button>
-          {barAvail && (
-            <div>
-              {[
-                { name: 'Dominadas (agarre ancho)',  sets: 4, reps: 'Máx', rest: '2 min' },
-                { name: 'Dominadas (agarre supino)', sets: 3, reps: 'Máx', rest: '90s' },
-              ].map((ex, i) => (
-                <div key={i} style={{
-                  background: '#0f3a2a', border: '1px solid #22C55E33',
-                  borderRadius: 8, padding: '11px 14px', marginBottom: 7,
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                }}>
-                  <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600 }}>{ex.name}</div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>{ex.sets}×{ex.reps}</div>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>{ex.rest}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Progression note */}
-      <div style={{
-        background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginTop: 16,
-        borderLeft: '3px solid #F59E0B'
-      }}>
-        <div style={{ color: '#F59E0B', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>PROGRESIÓN</div>
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>{day.progression}</div>
-      </div>
-
-      {/* Wellness */}
-      <div style={{ background: '#0f172a', borderRadius: 10, padding: '14px 16px', marginTop: 16 }}>
-        <div style={{ color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-          Bienestar en vacaciones
-        </div>
-        {VAC_WELLNESS.map((w, i) => (
-          <div key={i} style={{ color: '#94a3b8', fontSize: 13, marginBottom: 5 }}>{w}</div>
-        ))}
-      </div>
-
-      {/* Return note */}
-      <div style={{
-        background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginTop: 12,
-        borderLeft: '3px solid #64748b'
-      }}>
-        <div style={{ color: '#64748b', fontSize: 12 }}>
-          <b style={{ color: '#94a3b8' }}>Al volver al gimnasio:</b> retomar en la semana del plan donde lo dejaste, reduciendo un 10% los pesos la primera sesión.
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-
-// ─── EXTRAS TAB ──────────────────────────────────────────────────────────────
-function ExtrasTab() {
-  const [section, setSection] = useState('vacaciones');
-  return (
-    <div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {[
-          { id: 'vacaciones', label: '🏖 Vacaciones' },
-          { id: 'basketball', label: '🏀 Basket' },
-        ].map(s => (
-          <button key={s.id} onClick={() => setSection(s.id)} style={{
-            flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            fontWeight: 700, fontSize: 14,
-            background: section === s.id ? '#f8fafc' : '#1e293b',
-            color: section === s.id ? '#0f172a' : '#64748b',
-          }}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-      {section === 'vacaciones' && <VacacionesTab />}
-      {section === 'basketball' && <BasketballTab />}
-    </div>
-  );
-}
-
-// ─── BASKETBALL SESSION DATA ─────────────────────────────────────────────────
-const BBALL_BLOCKS = [
-  {
-    id: 'warm',
-    title: 'Calentamiento',
-    duration: '8 min',
-    color: '#38bdf8',
-    emoji: '🔥',
-    sections: [
-      {
-        name: 'Activación dinámica — sin balón',
-        duration: '4 min',
-        items: [
-          'Movilidad tobillo y cadera',
-          'Skipping',
-          'Carioca',
-          'Sprints cortos al 60%',
-        ]
-      },
-      {
-        name: 'Manejo de balón dinámico',
-        duration: '4 min',
-        items: [
-          'Dribble bajo moviéndose por la pista',
-          'Cambios de mano entre piernas y espalda',
-          'Sin parar',
-        ]
-      }
-    ]
-  },
-  {
-    id: 'b1',
-    title: 'Bloque 1 — Full Court Dribble Sprints',
-    duration: '12 min',
-    color: '#EF4444',
-    emoji: '🏃',
-    intensity: '85–90% FC máx',
-    sections: [
-      {
-        name: '6 series × pista completa (28m ida y vuelta)',
-        duration: '20 seg pausa entre series',
-        items: [
-          'Sprint a canasta contraria con balón',
-          'Bandeja — si fallas, rebote y sigue inmediatamente',
-          'Recoge y vuelve driblando',
-          'Ritmo máximo o casi — sin parar',
-        ]
-      }
-    ]
-  },
-  {
-    id: 'b2',
-    title: 'Bloque 2 — Mamba Drill',
-    duration: '15 min',
-    color: '#F59E0B',
-    emoji: '🏀',
-    intensity: '85–90% FC máx',
-    note: 'Drill clásico de Kobe. Alta demanda metabólica.',
-    sections: [
-      {
-        name: '5 rondas · 10 spots · 45 seg descanso entre rondas',
-        duration: '5 spots por lado = 10 total',
-        items: [
-          'Spots: esquina · lateral · frontal 45° · lateral · esquina (×2 lados)',
-          'Tira desde un spot → sprint a recoger tu rebote → dribla al siguiente → tira',
-          'Sin parar entre spots',
-          'Si el ritmo baja mucho: reduce a 6 spots pero mantén la intensidad',
-        ]
-      }
-    ]
-  },
-  {
-    id: 'b3',
-    title: 'Bloque 3 — Suicide con Tiro',
-    duration: '10 min',
-    color: '#a78bfa',
-    emoji: '💀',
-    intensity: '85–90% FC máx',
-    sections: [
-      {
-        name: '6 suicides · tiro al final de cada uno',
-        duration: 'Pausa = tiempo de ir a por el rebote',
-        items: [
-          'Suicide estándar: líneas a 5m, 10m, 15m, pista completa',
-          'Al llegar al final: tiro libre o mid-range',
-          'Si fallas el tiro → 5 sentadillas antes del siguiente suicide',
-          'Foco: mantener el tiro bajo fatiga — no buscar técnica perfecta',
-        ]
-      }
-    ]
-  },
-  {
-    id: 'b4',
-    title: 'Bloque 4 — Tabata con Balón',
-    duration: '8 min',
-    color: '#22C55E',
-    emoji: '⚡',
-    intensity: 'Límite FC máx',
-    note: '4 ejercicios × 2 rondas · 20 seg trabajo / 10 seg transición · 1 min pausa entre rondas',
-    sections: [
-      {
-        name: '4 ejercicios en bucle',
-        duration: '20s trabajo / 10s transición',
-        items: [
-          '1. Dribble alternado explosivo en el sitio — lo más rápido posible',
-          '2. Squat jump con balón por encima de la cabeza',
-          '3. Dribble lateral cruzando la pintura de punta a punta',
-          '4. Burpee con balón — el balón toca el suelo en cada repetición',
-        ]
-      }
-    ]
-  },
-  {
-    id: 'cool',
-    title: 'Vuelta a la Calma',
-    duration: '7 min',
-    color: '#64748b',
-    emoji: '🧘',
-    sections: [
-      {
-        name: 'Recuperación activa',
-        duration: '2 min',
-        items: [
-          'Tiros libres a ritmo propio',
-          'Respiración controlada',
-        ]
-      },
-      {
-        name: 'Estiramientos estáticos',
-        duration: '5 min',
-        items: [
-          'Isquiotibiales',
-          'Cuádriceps',
-          'Cadera',
-          'Hombros',
-        ]
-      }
-    ]
-  },
-];
-
-function BasketballTab() {
-  const [openBlock, setOpenBlock] = useState('b1');
-
-  const totalMin = BBALL_BLOCKS.reduce((s, b) => s + parseInt(b.duration), 0);
-
-  return (
-    <div>
-      {/* Header */}
-      <div style={{
-        background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 16,
-        borderLeft: '3px solid #F59E0B'
-      }}>
-        <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
-          🏀 Sesión Individual — Cardio/Físico
-        </div>
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>
-          1 hora · Semi-pro · ~85–90% FC máx sostenida en bloques 1–3
-        </div>
-        <div style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>
-          Si el tiro se vuelve incontrolable → reduce velocidad de desplazamiento, no el esfuerzo del tiro
-        </div>
-      </div>
-
-      {/* Timeline */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, alignItems: 'stretch' }}>
-        {BBALL_BLOCKS.map((b, i) => (
-          <div key={b.id} style={{ flex: parseInt(b.duration), position: 'relative' }}>
-            <div style={{
-              height: 6, background: b.color, borderRadius: 3,
-              opacity: openBlock === b.id ? 1 : 0.3
-            }} />
-            <div style={{
-              color: '#64748b', fontSize: 9, marginTop: 3, textAlign: 'center',
-              display: parseInt(b.duration) >= 8 ? 'block' : 'none'
-            }}>
-              {b.duration}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Blocks */}
-      {BBALL_BLOCKS.map((block) => (
-        <div key={block.id} style={{ marginBottom: 10 }}>
-          <button
-            onClick={() => setOpenBlock(openBlock === block.id ? null : block.id)}
-            style={{
-              width: '100%', padding: '12px 16px', borderRadius: openBlock === block.id ? '10px 10px 0 0' : 10,
-              border: 'none', cursor: 'pointer', textAlign: 'left',
-              background: openBlock === block.id ? block.color : '#1e293b',
-              transition: 'all 0.15s'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: 16 }}>{block.emoji}</span>
-                <span style={{
-                  color: openBlock === block.id ? '#0f172a' : '#f8fafc',
-                  fontWeight: 700, fontSize: 14, marginLeft: 8
-                }}>
-                  {block.title}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {block.intensity && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600,
-                    background: 'rgba(0,0,0,0.2)',
-                    color: openBlock === block.id ? '#0f172a' : block.color,
-                    padding: '2px 8px', borderRadius: 999
-                  }}>
-                    {block.intensity}
-                  </span>
-                )}
-                <span style={{
-                  color: openBlock === block.id ? '#0f172a' : '#64748b',
-                  fontSize: 13, fontWeight: 600
-                }}>
-                  {block.duration}
-                </span>
-                <span style={{ color: openBlock === block.id ? '#0f172a99' : '#475569', fontSize: 12 }}>
-                  {openBlock === block.id ? '▲' : '▼'}
-                </span>
-              </div>
-            </div>
-          </button>
-
-          {openBlock === block.id && (
-            <div style={{
-              background: '#1e293b', borderRadius: '0 0 10px 10px',
-              padding: '14px 16px', borderTop: `2px solid ${block.color}33`
-            }}>
-              {block.note && (
-                <div style={{
-                  background: '#0f172a', borderRadius: 6, padding: '8px 12px',
-                  color: '#94a3b8', fontSize: 12, marginBottom: 12,
-                  borderLeft: `3px solid ${block.color}`
-                }}>
-                  💡 {block.note}
-                </div>
-              )}
-              {block.sections.map((sec, si) => (
-                <div key={si} style={{ marginBottom: si < block.sections.length - 1 ? 16 : 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-                    <span style={{ color: block.color, fontWeight: 700, fontSize: 13 }}>{sec.name}</span>
-                    <span style={{ color: '#64748b', fontSize: 12 }}>{sec.duration}</span>
-                  </div>
-                  {sec.items.map((item, ii) => (
-                    <div key={ii} style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 8,
-                      padding: '7px 0',
-                      borderBottom: ii < sec.items.length - 1 ? '1px solid #0f172a' : 'none'
-                    }}>
-                      <span style={{ color: block.color, fontSize: 14, flexShrink: 0, marginTop: 1 }}>•</span>
-                      <span style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-
-      {/* Footer note */}
-      <div style={{
-        background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginTop: 8,
-        borderLeft: '3px solid #64748b'
-      }}>
-        <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6 }}>
-          <b style={{ color: '#94a3b8' }}>Carga total estimada:</b> ~85–90% FC máx sostenida en bloques 1–3.
-          El bloque 4 lleva al límite. Es duro incluso para nivel semi-pro.
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── WELLNESS PROTOCOL ───────────────────────────────────────────────────────
-const WELLNESS = [
-  { day: 'Lun · Mar · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
-  { day: 'Miércoles', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas (10–15min/ronda)' },
-  { day: 'Jueves', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna opcional 1 ronda' },
-  { day: 'Sábado', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas' },
-  { day: 'Domingo', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas · ☀️ UV 10–12min (vitamina D)' },
-];
-
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
 function PhasePill({ weekIdx }) {
@@ -908,13 +392,18 @@ function PhasePill({ weekIdx }) {
   );
 }
 
-function OlympicTable({ ex, weekIdx }) {
-  const sets = ex.sets[weekIdx];
+function OlympicTable({ ex, weekIdx, rmStore }) {
+  const effRM = effectiveRM(ex, rmStore);
+  const overridden = effRM !== ex.rm;
+  const sets = overridden ? scaleOlympicTable(ex.sets, ex.rm, effRM) : ex.sets;
+  const weekSets = sets[weekIdx];
   return (
     <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ color: '#f8fafc', fontWeight: 600, fontSize: 14 }}>🏋️ {ex.name}</span>
-        <span style={{ color: '#94a3b8', fontSize: 12 }}>RM: {ex.rm}kg</span>
+        <span style={{ color: overridden ? '#22C55E' : '#94a3b8', fontSize: 12 }}>
+          RM: {effRM}kg {overridden && '✓ test'}
+        </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
         {[0,1,2,3].map(i => (
@@ -922,8 +411,8 @@ function OlympicTable({ ex, weekIdx }) {
             background: '#0f172a', borderRadius: 6, padding: '8px 10px', textAlign: 'center'
           }}>
             <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 3 }}>Serie {i+1}</div>
-            <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 16 }}>{sets[i*2]}kg</div>
-            <div style={{ color: '#94a3b8', fontSize: 12 }}>×{sets[i*2+1]}</div>
+            <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 16 }}>{weekSets[i*2]}kg</div>
+            <div style={{ color: '#94a3b8', fontSize: 12 }}>×{weekSets[i*2+1]}</div>
           </div>
         ))}
       </div>
@@ -931,9 +420,12 @@ function OlympicTable({ ex, weekIdx }) {
   );
 }
 
-function NonOlympicRow({ ex, weekIdx }) {
+function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const p = PROG[weekIdx];
-  const weight = wt(ex.rm, p.pct);
+  const effRM = effectiveRM(ex, rmStore);
+  const overridden = effRM !== ex.rm;
+  let weight = wt(effRM, p.pct);
+  if (ex.dumbbell) weight = nearestDumbbell(weight);
   const isArm = ex.unit === 'kg/arm';
   return (
     <div style={{
@@ -942,13 +434,16 @@ function NonOlympicRow({ ex, weekIdx }) {
     }}>
       <div>
         <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
-        <div style={{ color: '#64748b', fontSize: 12 }}>RM: {ex.rm} {ex.unit}</div>
+        <div style={{ color: overridden ? '#22C55E' : '#64748b', fontSize: 12 }}>
+          RM: {effRM} {ex.unit} {overridden && '✓ test'}
+        </div>
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
           {weight} {isArm ? 'kg/arm' : 'kg'}
         </div>
         <div style={{ color: '#94a3b8', fontSize: 13 }}>4 × {p.reps} reps</div>
+        {ex.dumbbell && <div style={{ color: '#64748b', fontSize: 11 }}>mancuerna real disponible</div>}
       </div>
     </div>
   );
@@ -973,12 +468,12 @@ function BWRow({ ex, weekIdx }) {
   );
 }
 
-function DayWorkout({ day, weekIdx }) {
+function DayWorkout({ day, weekIdx, rmStore }) {
   if (day.special === 'stretch') {
     return (
       <div>
         <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
-          🏊 Pool Recovery 20 min + 🧘 Estiramientos 45–60 s por serie
+          🏊 Pool Recovery 20 min + 🏊‍♂️ Nado continuo/intervalos 15–20 min + 🧘 Estiramientos 45–60 s por serie
         </div>
         {STRETCHES.map((s, i) => (
           <div key={i} style={{
@@ -996,15 +491,15 @@ function DayWorkout({ day, weekIdx }) {
   return (
     <div>
       {day.exercises.map((ex, i) => {
-        if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} />;
+        if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
         if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} />;
-        return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} />;
+        return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
       })}
     </div>
   );
 }
 
-function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone }) {
+function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore }) {
   const day = DAYS[dayIdx];
   return (
     <div>
@@ -1089,7 +584,22 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone }) {
         </div>
       </div>
 
-      <DayWorkout day={day} weekIdx={weekIdx} />
+      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} />
+
+      {/* Condicionamiento añadido */}
+      {CONDITIONING[day.name] && (
+        <div style={{ marginTop: 18, background: '#0f172a', borderRadius: 10, padding: '12px 16px', border: '1px solid #22C55E33' }}>
+          <div style={{ color: '#22C55E', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            Condicionamiento añadido
+          </div>
+          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
+            {CONDITIONING[day.name].label}
+          </div>
+          <div style={{ color: '#94a3b8', fontSize: 13 }}>
+            {CONDITIONING[day.name].detail}
+          </div>
+        </div>
+      )}
 
       {/* Wellness */}
       {day.name !== 'Miércoles' && (
@@ -1125,6 +635,255 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone }) {
           </div>
         );
       })()}
+    </div>
+  );
+}
+
+const WELLNESS = [
+  { day: 'Lun · Mar · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
+  { day: 'Miércoles', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas (10–15min/ronda)' },
+  { day: 'Jueves', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna opcional 1 ronda' },
+  { day: 'Sábado', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas' },
+  { day: 'Domingo', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas · ☀️ UV 10–12min (vitamina D)' },
+];
+
+// ─── CONDICIONAMIENTO AÑADIDO ────────────────────────────────────────────────
+// Assault bike / Airdyne — mejor relación condicionamiento/kcal de las opciones
+// disponibles en el gimnasio: brazos + piernas a la vez, sin técnica que
+// aprender (a diferencia del remo), resistencia autorregulada por tu propio
+// esfuerzo, sentado y sin impacto. Nunca en Martes/Viernes (oly) ni Sábado
+// (LegDay), que ya cargan la rodilla ese día.
+const CONDITIONING = {
+  'Lunes':   { label: '🚲 Assault bike — intervalos',    detail: '8–10 × (20s esfuerzo máximo / 100s suave) · ~15min total · post-entreno de brazo' },
+  'Jueves':  { label: '🚲 Assault bike — zona 2',         detail: '20–25min ritmo continuo moderado' },
+  'Domingo': { label: '🚲 Assault bike — zona 2 suave',   detail: '15–20min suave · pierna descargada tras el sábado' },
+};
+
+// ─── TEST TAB (Semana 16) ─────────────────────────────────────────────────────
+
+function VideoTestCard({ ex, rmStore, saveRM }) {
+  const [rom, setRom] = useState(ex.rom);
+  const [mvt, setMvt] = useState(ex.mvt);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [load, setLoad] = useState('');
+  const [startT, setStartT] = useState(null);
+  const [endT, setEndT] = useState(null);
+  const [points, setPoints] = useState([]);
+  const videoRef = useRef(null);
+
+  const duration = (startT != null && endT != null) ? (endT - startT) : null;
+  const velocity = (duration && duration > 0) ? (rom / 100) / duration : null;
+
+  function addPoint() {
+    if (!load || !velocity) return;
+    setPoints(p => [...p, { load: Number(load), v: Number(velocity.toFixed(3)) }]);
+    setStartT(null); setEndT(null); setLoad('');
+  }
+  function removePoint(i) {
+    setPoints(p => p.filter((_, idx) => idx !== i));
+  }
+  function linreg(pts) {
+    const n = pts.length;
+    const sumX = pts.reduce((s,p)=>s+p.load,0), sumY = pts.reduce((s,p)=>s+p.v,0);
+    const sumXY = pts.reduce((s,p)=>s+p.load*p.v,0), sumXX = pts.reduce((s,p)=>s+p.load*p.load,0);
+    const denom = (n*sumXX - sumX*sumX);
+    if (denom === 0) return null;
+    const b = (n*sumXY - sumX*sumY) / denom;
+    const a = (sumY - b*sumX) / n;
+    return { a, b };
+  }
+  const fit = points.length >= 3 ? linreg(points) : null;
+  const estRM = (fit && fit.b !== 0) ? (mvt - fit.a) / fit.b : null;
+
+  const current = rmStore[ex.name];
+
+  return (
+    <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🎥 {ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)}kg</span>
+      </div>
+      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
+        Vídeo semi-manual: marca inicio/fin de la fase concéntrica y calculamos la velocidad con el ROM que indiques. Con ≥3 series se ajusta la recta carga-velocidad y se extrapola el RM a la velocidad mínima (MVT).
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+        <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
+          ROM concéntrico (cm)
+          <input type="number" value={rom} onChange={e => setRom(Number(e.target.value))}
+            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+        </label>
+        <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
+          MVT (m/s)
+          <input type="number" step="0.01" value={mvt} onChange={e => setMvt(Number(e.target.value))}
+            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+        </label>
+      </div>
+
+      <input type="file" accept="video/*" onChange={e => {
+        const f = e.target.files[0];
+        if (f) setVideoUrl(URL.createObjectURL(f));
+      }} style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8 }} />
+
+      {videoUrl && (
+        <video ref={videoRef} src={videoUrl} controls style={{ width: '100%', borderRadius: 8, marginBottom: 8 }} />
+      )}
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+        <button onClick={() => videoRef.current && setStartT(videoRef.current.currentTime)}
+          disabled={!videoUrl}
+          style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: videoUrl ? 'pointer' : 'default',
+            background: '#334155', color: '#f8fafc', fontSize: 13 }}>Marcar inicio</button>
+        <button onClick={() => videoRef.current && setEndT(videoRef.current.currentTime)}
+          disabled={!videoUrl}
+          style={{ padding: '8px 12px', borderRadius: 6, border: 'none', cursor: videoUrl ? 'pointer' : 'default',
+            background: '#334155', color: '#f8fafc', fontSize: 13 }}>Marcar fin</button>
+        <span style={{ color: '#64748b', fontSize: 12 }}>
+          {duration != null ? `Duración: ${duration.toFixed(2)}s` : 'Sin marcar'}
+          {velocity != null && ` · v = ${velocity.toFixed(3)} m/s`}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <input type="number" placeholder="Carga (kg)" value={load} onChange={e => setLoad(e.target.value)}
+          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+        <button onClick={addPoint} disabled={!load || !velocity}
+          style={{ padding: '8px 14px', borderRadius: 6, border: 'none', cursor: (!load || !velocity) ? 'default' : 'pointer',
+            background: (!load || !velocity) ? '#334155' : '#2563EB', color: '#fff', fontSize: 13, fontWeight: 600 }}>
+          + Añadir serie
+        </button>
+      </div>
+
+      {points.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          {points.map((p, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: 12, padding: '4px 0' }}>
+              <span>{p.load}kg · {p.v} m/s</span>
+              <span onClick={() => removePoint(i)} style={{ cursor: 'pointer', color: '#EF4444' }}>eliminar</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {estRM && (
+        <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
+          <span style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>RM estimado: {estRM.toFixed(1)} kg</span>
+        </div>
+      )}
+      {points.length > 0 && points.length < 3 && (
+        <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 10 }}>Añade al menos 3 series para ajustar la recta.</div>
+      )}
+
+      <button
+        disabled={!estRM}
+        onClick={() => saveRM(ex.name, Math.round(estRM * 2) / 2, ex.unit, 'video', { points, rom, mvt })}
+        style={{
+          width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: estRM ? 'pointer' : 'default',
+          background: estRM ? '#14532d' : '#1e293b', color: estRM ? '#86efac' : '#475569', fontWeight: 700, fontSize: 13
+        }}>
+        {current ? `✓ Guardado (${current.rm}kg) — actualizar` : 'Guardar como nuevo RM'}
+      </button>
+    </div>
+  );
+}
+
+function LadderTestCard({ ex, rmStore, saveRM }) {
+  const [value, setValue] = useState('');
+  const current = rmStore[ex.name];
+  const baseRM = effectiveRM(ex, rmStore);
+  const ladder = [0.60,0.70,0.80,0.90,0.95,1.00,1.05].map(pct => Math.round(baseRM*pct/2.5)*2.5);
+  return (
+    <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>📋 {ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {baseRM}{ex.unit === 'kg/arm' ? ' kg/arm' : ' kg'}</span>
+      </div>
+      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
+        Escalera de referencia (60→105% del RM actual): {ladder.join(' · ')} kg. Sube de carga hasta que la técnica se rompa y anota abajo el peso más alto conseguido limpio.
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input type="number" placeholder={`Peso conseguido (${ex.unit})`} value={value} onChange={e => setValue(e.target.value)}
+          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+        <button
+          disabled={!value}
+          onClick={() => saveRM(ex.name, Number(value), ex.unit, 'ladder', {})}
+          style={{ padding: '8px 14px', borderRadius: 8, border: 'none', cursor: value ? 'pointer' : 'default',
+            background: value ? '#14532d' : '#334155', color: value ? '#86efac' : '#64748b', fontWeight: 700, fontSize: 13 }}>
+          Guardar
+        </button>
+      </div>
+      {current && <div style={{ color: '#22C55E', fontSize: 12, marginTop: 6 }}>✓ Guardado: {current.rm} {ex.unit}</div>}
+    </div>
+  );
+}
+
+function RepMaxTestCard({ ex, rmStore, saveRM }) {
+  const [weight, setWeight] = useState(DUMBBELL_WEIGHTS[0]);
+  const [reps, setReps] = useState('');
+  const current = rmStore[ex.name];
+  const est = reps ? epley1RM(weight, Number(reps)) : null;
+  return (
+    <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🏋️‍♂️ {ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)} kg/arm</span>
+      </div>
+      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
+        Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. Haz el máximo de reps limpias con la mancuerna más pesada que controles y estimamos el RM con la fórmula de Epley.
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
+          Mancuerna (kg)
+          <select value={weight} onChange={e => setWeight(Number(e.target.value))}
+            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }}>
+            {DUMBBELL_WEIGHTS.map(w => <option key={w} value={w}>{w}kg</option>)}
+          </select>
+        </label>
+        <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
+          Reps limpias
+          <input type="number" value={reps} onChange={e => setReps(e.target.value)}
+            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+        </label>
+      </div>
+      {est && <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>RM estimado: {est.toFixed(1)} kg/arm</div>}
+      <button
+        disabled={!est}
+        onClick={() => saveRM(ex.name, Math.round(est*2)/2, ex.unit, 'repmax', { weight, reps })}
+        style={{
+          width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: est ? 'pointer' : 'default',
+          background: est ? '#14532d' : '#1e293b', color: est ? '#86efac' : '#475569', fontWeight: 700, fontSize: 13
+        }}>
+        {current ? `✓ Guardado (${current.rm}kg/arm) — actualizar` : 'Guardar como nuevo RM'}
+      </button>
+    </div>
+  );
+}
+
+function TestTab({ rmStore, saveRM }) {
+  const plan = buildTestPlan();
+  return (
+    <div>
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+        <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 4 }}>Test Semana 16</div>
+        <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
+          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 3 métodos según el ejercicio: vídeo con velocidad (sentadilla, press banca), registro directo de la escalera (olímpicos, peso muerto y accesorios de barra/cable), y test de reps con fórmula (ejercicios de mancuerna).
+        </div>
+      </div>
+      {TEST_DAY_NAMES.map(dayName => (
+        <div key={dayName} style={{ marginBottom: 20 }}>
+          <div style={{ color: '#64748b', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+            {dayName}
+          </div>
+          {plan[dayName].length === 0 && (
+            <div style={{ color: '#475569', fontSize: 13 }}>Sin ejercicios nuevos que testear este día.</div>
+          )}
+          {plan[dayName].map((ex, i) => {
+            if (ex.testMethod === 'video')  return <VideoTestCard  key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
+            if (ex.testMethod === 'repmax') return <RepMaxTestCard key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
+            return <LadderTestCard key={i} ex={ex} rmStore={rmStore} saveRM={saveRM} />;
+          })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -1179,13 +938,16 @@ function merged(dA, dB) {
   return cats;
 }
 
-function ShoppingTab() {
+function ShoppingTab({ weekIdx }) {
   const [daysA, setDaysA]     = useState(3);
   const [daysB, setDaysB]     = useState(2);
   const [checked, setChecked] = useState({});
   const toggle = k => setChecked(p => ({...p, [k]: !p[k]}));
 
   const totalDays = daysA + daysB;
+  const phase = PROG[weekIdx].phase;
+  const add = PHASE_ADD[phase];
+
   const suppItems = [
     { name:'D3+K2 · Natural Elements',                 qty:totalDays,              unit:'comp' },
     { name:'Omega-3 · Natural Elements',               qty:totalDays * 3,          unit:'cáps' },
@@ -1228,34 +990,6 @@ function ShoppingTab() {
     );
   }
 
-  function Block({ title, subtitle, items, prefix, accent }) {
-    const keys = items.map(i => `${prefix}|${i.name}`);
-    const done = keys.filter(k => checked[k]).length;
-    const cats = {};
-    items.forEach(i => { if (!cats[i.cat]) cats[i.cat]=[]; cats[i.cat].push(i); });
-    return (
-      <div style={{marginBottom:24}}>
-        <div style={{
-          background:'#1e293b', borderRadius:10, padding:'12px 16px', marginBottom:14,
-          borderLeft:`3px solid ${accent}`
-        }}>
-          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-            <div>
-              <div style={{color:'#f8fafc', fontWeight:700}}>{title}</div>
-              <div style={{color:'#64748b', fontSize:12, marginTop:2}}>{subtitle}</div>
-            </div>
-            <span style={{color: done===items.length ? '#22C55E' : '#94a3b8', fontWeight:600, fontSize:13}}>
-              {done}/{items.length} ✓
-            </span>
-          </div>
-        </div>
-        {Object.entries(cats).map(([cat, catItems]) =>
-          <CatGroup key={cat} catName={cat} items={catItems} prefix={prefix} />
-        )}
-      </div>
-    );
-  }
-
   function Suppls() {
     return (
       <div style={{background:'#0f172a', borderRadius:10, padding:'14px 16px', marginTop:8}}>
@@ -1274,6 +1008,18 @@ function ShoppingTab() {
             </div>
           );
         })}
+      </div>
+    );
+  }
+
+  function PhaseAdd() {
+    if (add.carbG === 0 && add.fruitG === 0 && add.oilMl === 0) return null;
+    return (
+      <div style={{background:'#0f172a', borderRadius:10, padding:'14px 16px', marginTop:12}}>
+        <div style={{color:'#22C55E', fontWeight:700, fontSize:13, marginBottom:10}}>⚡ Ajuste de fase — {phase} (extra sobre {totalDays} días)</div>
+        <div style={{color:'#94a3b8', fontSize:13, padding:'4px 0'}}>Arroz / boniato / patata extra: {add.carbG * totalDays}g</div>
+        <div style={{color:'#94a3b8', fontSize:13, padding:'4px 0'}}>Fruta extra: {add.fruitG * totalDays}g</div>
+        <div style={{color:'#94a3b8', fontSize:13, padding:'4px 0'}}>Aceite de oliva extra: {add.oilMl * totalDays}ml</div>
       </div>
     );
   }
@@ -1308,18 +1054,30 @@ function ShoppingTab() {
       ) : (
         <div style={{color:'#64748b', textAlign:'center', padding:32}}>Selecciona al menos 1 día</div>
       )}
+      <PhaseAdd />
       <Suppls />
     </div>
   );
 }
 
-function NutritionTab() {
+function NutritionTab({ weekIdx }) {
   const [view, setView] = useState('A');
   const plan = NUTRITION[view];
+  const phase = PROG[weekIdx].phase;
+  const add = PHASE_ADD[phase];
+  const addMacros = phaseAddMacros(add);
+  const hasAdd = add.carbG > 0 || add.fruitG > 0 || add.oilMl > 0;
+  const totals = hasAdd ? {
+    kcal: plan.totals.kcal + addMacros.kcal,
+    protein: plan.totals.protein + addMacros.protein,
+    fat: plan.totals.fat + addMacros.fat,
+    carbs: plan.totals.carbs + addMacros.carbs,
+  } : plan.totals;
+
   return (
     <div>
       {/* Toggle */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {['A', 'B'].map(v => (
           <button key={v} onClick={() => setView(v)} style={{
             flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
@@ -1332,6 +1090,8 @@ function NutritionTab() {
           </button>
         ))}
       </div>
+
+      <div style={{ marginBottom: 16 }}><PhasePill weekIdx={weekIdx} /></div>
 
       {/* Meals */}
       {plan.meals.map((meal, mi) => (
@@ -1354,16 +1114,49 @@ function NutritionTab() {
         </div>
       ))}
 
+      {/* Phase top-up */}
+      {hasAdd && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ color: '#22C55E', fontWeight: 700, fontSize: 16, marginBottom: 10 }}>
+            ⚡ Ajuste de fase — {phase}
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '9px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 5
+          }}>
+            <span style={{ color: '#f8fafc', fontSize: 14 }}>{plan.carbFood} extra</span>
+            <span style={{ color: '#94a3b8', fontSize: 12 }}>+{add.carbG}g</span>
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '9px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 5
+          }}>
+            <span style={{ color: '#f8fafc', fontSize: 14 }}>Fruta extra</span>
+            <span style={{ color: '#94a3b8', fontSize: 12 }}>+{add.fruitG}g</span>
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '9px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 5
+          }}>
+            <span style={{ color: '#f8fafc', fontSize: 14 }}>Aceite de oliva extra</span>
+            <span style={{ color: '#94a3b8', fontSize: 12 }}>+{add.oilMl}ml</span>
+          </div>
+          <div style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>
+            Estimación de partida — ajusta ±100 kcal/día según la tendencia real de peso, no según el objetivo teórico.
+          </div>
+        </div>
+      )}
+
       {/* Totals */}
       <div style={{
         background: '#0f172a', borderRadius: 10, padding: '14px 16px',
         display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8
       }}>
         {[
-          { label: 'Calorías', value: plan.totals.kcal, color: '#f8fafc' },
-          { label: 'Proteína', value: plan.totals.protein, color: '#22C55E' },
-          { label: 'Grasa',    value: plan.totals.fat,    color: '#F59E0B' },
-          { label: 'Carbos',   value: plan.totals.carbs,  color: '#3B82F6' },
+          { label: 'Calorías', value: `~${totals.kcal.toLocaleString('de-DE')}`, color: '#f8fafc' },
+          { label: 'Proteína', value: `~${totals.protein}g`, color: '#22C55E' },
+          { label: 'Grasa',    value: `~${totals.fat}g`,    color: '#F59E0B' },
+          { label: 'Carbos',   value: `~${totals.carbs}g`,  color: '#3B82F6' },
         ].map((t, i) => (
           <div key={i} style={{ textAlign: 'center' }}>
             <div style={{ color: t.color, fontWeight: 700, fontSize: 16 }}>{t.value}</div>
@@ -1425,33 +1218,51 @@ function SupplementsTab() {
   );
 }
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
-// Current week: W13 (Jun 30–Jul 6, 2026). Today is Monday Jul 6 → day index 0
-const CURRENT_WEEK = 12;  // 0-indexed = W13
-const CURRENT_DAY  = 0;   // 0-indexed = Lunes
+// ─── SECCIONES PRINCIPALES ────────────────────────────────────────────────────
+const SECTIONS = [
+  { id: 'entrenamiento', label: '🏋️ Entrenamiento', subtabs: [
+      { id: 'plan', label: 'Plan' },
+      { id: 'test', label: 'Test' },
+  ]},
+  { id: 'alimentacion', label: '🍽 Alimentación', subtabs: [
+      { id: 'compra', label: '🛒 Compra' },
+      { id: 'nutricion', label: 'Nutrición' },
+      { id: 'supps', label: '💊 Suplementos' },
+  ]},
+];
 
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
+  const defaults = computeDefaultWeekDay();
   const [weekIdx, setWeekIdx] = useState(() => {
-    try { const s = localStorage.getItem('ta_week'); return s !== null ? Number(s) : CURRENT_WEEK; } catch { return CURRENT_WEEK; }
+    try { const s = localStorage.getItem('ta_week'); return s !== null ? Number(s) : defaults.weekIdx; } catch { return defaults.weekIdx; }
   });
   const [dayIdx, setDayIdx] = useState(() => {
-    try { const s = localStorage.getItem('ta_day'); return s !== null ? Number(s) : CURRENT_DAY; } catch { return CURRENT_DAY; }
+    try { const s = localStorage.getItem('ta_day'); return s !== null ? Number(s) : defaults.dayIdx; } catch { return defaults.dayIdx; }
   });
-  const [tab, setTab] = useState('training');
   const [completed, setCompleted] = useState(() => {
     try { const s = localStorage.getItem('ta_completed'); return s ? JSON.parse(s) : {}; } catch { return {}; }
   });
+  const [rmStore, setRmStore] = useState(loadRM);
+
+  const [section, setSection] = useState('entrenamiento');
+  const [sub, setSub] = useState('plan');
 
   const markDone = (weekI, dayI) => {
     const key = `W${weekI+1}-${DAYS[dayI].name}`;
     setCompleted(prev => {
       const next = { ...prev };
-      if (next[key]) {
-        delete next[key];
-      } else {
-        next[key] = new Date().toISOString();
-      }
+      if (next[key]) delete next[key];
+      else next[key] = new Date().toISOString();
       try { localStorage.setItem('ta_completed', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const saveRM = (name, rm, unit, method, detail) => {
+    setRmStore(prev => {
+      const next = { ...prev, [name]: { rm, unit, method, date: new Date().toISOString(), detail } };
+      persistRM(next);
       return next;
     });
   };
@@ -1459,13 +1270,7 @@ export default function App() {
   const saveWeek = (w) => { setWeekIdx(w); try { localStorage.setItem('ta_week', w); } catch {} };
   const saveDay  = (d) => { setDayIdx(d);  try { localStorage.setItem('ta_day',  d); } catch {} };
 
-  const tabs = [
-    { id: 'training',  label: '🏋️ Entreno' },
-    { id: 'nutrition', label: '🍽 Nutrición' },
-    { id: 'supps',     label: '💊 Suplementos' },
-    { id: 'shopping',  label: '🛒 Compra' },
-    { id: 'extras',    label: '⭐ Extras' },
-  ];
+  const currentSection = SECTIONS.find(s => s.id === section);
 
   return (
     <div style={{
@@ -1510,14 +1315,28 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main tabs */}
+      {/* Section tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        {SECTIONS.map(s => (
+          <button key={s.id} onClick={() => { setSection(s.id); setSub(s.subtabs[0].id); }} style={{
+            flex: 1, padding: '12px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            fontWeight: 700, fontSize: 14,
+            background: section === s.id ? '#f8fafc' : '#1e293b',
+            color: section === s.id ? '#0f172a' : '#64748b'
+          }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Sub tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            flex: 1, padding: '10px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
+        {currentSection.subtabs.map(t => (
+          <button key={t.id} onClick={() => setSub(t.id)} style={{
+            flex: 1, padding: '9px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
             fontWeight: 600, fontSize: 13,
-            background: tab === t.id ? '#f8fafc' : '#1e293b',
-            color: tab === t.id ? '#0f172a' : '#64748b'
+            background: sub === t.id ? '#334155' : '#1e293b',
+            color: sub === t.id ? '#f8fafc' : '#64748b'
           }}>
             {t.label}
           </button>
@@ -1525,11 +1344,15 @@ export default function App() {
       </div>
 
       {/* Content */}
-      {tab === 'training'  && <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} />}
-      {tab === 'nutrition' && <NutritionTab />}
-      {tab === 'supps'     && <SupplementsTab />}
-      {tab === 'shopping'  && <ShoppingTab />}
-      {tab === 'extras'    && <ExtrasTab />}
+      {section === 'entrenamiento' && sub === 'plan' && (
+        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} />
+      )}
+      {section === 'entrenamiento' && sub === 'test' && (
+        <TestTab rmStore={rmStore} saveRM={saveRM} />
+      )}
+      {section === 'alimentacion' && sub === 'compra' && <ShoppingTab weekIdx={weekIdx} />}
+      {section === 'alimentacion' && sub === 'nutricion' && <NutritionTab weekIdx={weekIdx} />}
+      {section === 'alimentacion' && sub === 'supps' && <SupplementsTab />}
     </div>
   );
 }
