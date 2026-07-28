@@ -66,6 +66,26 @@ function epley1RM(weight, reps) {
   return weight * (1 + reps / 30);
 }
 
+// ─── CALENTAMIENTO PRESCRITO PARA TESTS DE MÁXIMO (escalera y vídeo) ────────
+// Antes se dejaba a criterio ("sube de carga hasta que la técnica se rompa").
+// Ahora hay una progresión concreta de calentamiento antes de ir a la carga
+// de test real — reps y descanso fijos en cada escalón, sobre el RM actual
+// (que se recalibra solo si guardas un test nuevo).
+const WARMUP_LADDER = [
+  { pct: 0.40, reps: 5, rest: 90 },
+  { pct: 0.55, reps: 3, rest: 120 },
+  { pct: 0.70, reps: 2, rest: 150 },
+  { pct: 0.80, reps: 1, rest: 180 },
+  { pct: 0.90, reps: 1, rest: 180 },
+];
+function buildWarmup(baseRM) {
+  return WARMUP_LADDER.map(w => ({
+    weight: Math.round(baseRM * w.pct / 2.5) * 2.5,
+    reps: w.reps,
+    rest: w.rest,
+  }));
+}
+
 // ─── RM: OVERRIDES GUARDADOS TRAS EL TEST (localStorage) ─────────────────────
 function loadRM() {
   try { const s = localStorage.getItem('ta_rm'); return s ? JSON.parse(s) : {}; }
@@ -200,32 +220,43 @@ const PLANK_SECONDS = {  // segundos por serie, 3 series — plancha con disco s
 
 // ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
 // type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
-// testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
-// directo del peso máximo con técnica limpia) · 'repmax' (test de reps + fórmula,
-// para ejercicios de mancuerna con pesos disponibles discretos)
+// testMethod: 'video' (velocidad + regresión carga-velocidad, solo válido en
+// básicos con MVT establecido en literatura) · 'ladder' (registro directo del
+// peso máximo con técnica limpia, solo para los compuestos que sostienen de
+// verdad la progresión del ciclo) · 'repmax' (test de reps con carga submáxima
+// + fórmula de Epley — mancuernas Y accesorios de aislamiento, donde buscar un
+// 1RM real no aporta nada al riesgo que añade)
+// restCategory: qué descanso entre series le corresponde — 'olimpico' (técnica
+// + potencia máxima), 'basico' (los 3 grandes: banca/sentadilla/peso muerto),
+// 'compuesto' (multiarticulares secundarios), 'aislamiento', 'core'.
+//
+// Orden anti-fatiga: antes se agrupaban 2-3 ejercicios seguidos del mismo
+// grupo muscular (tríceps×3 y luego bíceps×3 el lunes; los dos ejercicios de
+// isquios seguidos el sábado). Ahora se intercalan por grupo muscular para que
+// nunca lleguen 2 series seguidas al mismo músculo ya fatigado.
 const DAYS = [
   {
     name: 'Lunes', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
     exercises: [
-      { name: 'Triceps stretches cable pull bar',  rm: 35, unit: 'kg',     testMethod: 'ladder' },
-      { name: 'Triceps extension cable pull cord', rm: 30, unit: 'kg',     testMethod: 'ladder' },
-      { name: 'Triceps extension one-armed cable', rm: 10, unit: 'kg/arm', testMethod: 'ladder' },
-      { name: 'Bicep curls cable pull',            rm: 30, unit: 'kg',     testMethod: 'ladder' },
-      { name: 'Bicep curls sitting dumbbell',      rm: 9,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Bicep curls hammer grip seated',    rm: 8,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Seated lateral raises dumbbell',    rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Shoulder press sitting dumbbell',   rm: 15, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Butterfly reverse cable pull',      rm: 10, unit: 'kg/arm', testMethod: 'ladder' },
+      { name: 'Triceps stretches cable pull bar',  rm: 35, unit: 'kg',     testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bicep curls cable pull',            rm: 30, unit: 'kg',     testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Seated lateral raises dumbbell',    rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Triceps extension cable pull cord', rm: 30, unit: 'kg',     testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bicep curls sitting dumbbell',      rm: 9,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Shoulder press sitting dumbbell',   rm: 15, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Triceps extension one-armed cable', rm: 10, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bicep curls hammer grip seated',    rm: 8,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Butterfly reverse cable pull',      rm: 10, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
     ]
   },
   {
     name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
-      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder' },
-      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder', restCategory: 'olimpico' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder', restCategory: 'olimpico' },
+      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
+      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
     ]
   },
   {
@@ -235,40 +266,40 @@ const DAYS = [
   {
     name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
-      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17 },
-      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'ladder' },
-      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
-      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'ladder' },
-      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'ladder' },
+      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17, restCategory: 'basico' },
+      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
+      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS, restCategory: 'compuesto' },
+      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
     ]
   },
   {
     name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
-      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder' },
-      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder', restCategory: 'olimpico' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder', restCategory: 'olimpico' },
+      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
+      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
     ]
   },
   {
     name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
     exercises: [
-      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL, testMethod: 'ladder' },
-      { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', mvt: 0.30 },
-      { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'ladder' },
-      { name: 'Nordic curl',        rm: 65,  unit: 'kg', testMethod: 'ladder' },
-      { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL, testMethod: 'ladder', restCategory: 'basico' },
+      { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', mvt: 0.30, restCategory: 'basico' },
+      { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
+      { name: 'Nordic curl',        rm: 65,  unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
       { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
-        equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado',
+        equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado', restCategory: 'core',
         note: 'De pie, perpendicular a la polea. Extiende los brazos al frente y AGUANTA ahí quieto sin dejar que la cadera gire — es un aguante estático, no repeticiones de empuje y vuelta. Repite el hold en cada serie, cambia de lado al terminar las 3 series.',
         rm: 15, unit: 'kg', testMethod: 'coreload',
         testTarget: '35s/lado por serie (objetivo de fase Peak, el más exigente de las 4)',
         formCue: 'la cadera gire' },
       { name: 'Weighted plank (disco en la espalda)', type: 'bw', repsByPhase: PLANK_SECONDS,
-        equipLabel: 'Anti-extensión · con disco', unitSuffix: 's',
+        equipLabel: 'Anti-extensión · con disco', unitSuffix: 's', restCategory: 'core',
         note: 'Empieza con 5-10kg sobre la zona lumbar-alta. Si aguantas el tiempo objetivo con técnica limpia (sin que caiga la cadera), sube el disco de peso antes de subir el tiempo.',
         rm: 7.5, unit: 'kg', testMethod: 'coreload',
         testTarget: '50s por serie (objetivo de fase Peak, el más exigente de las 4)',
@@ -278,32 +309,60 @@ const DAYS = [
   {
     name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17 },
-      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'ladder' },
-      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
-      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'ladder' },
-      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'ladder' },
+      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17, restCategory: 'basico' },
+      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
+      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS, restCategory: 'compuesto' },
+      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
     ]
   },
 ];
 
+// Descanso entre series (segundos) según categoría del ejercicio y fase del
+// ciclo — sube de Base a Peak porque el %RM también sube, y los olímpicos
+// llevan más descanso que el resto por la demanda técnica/neural de cada rep.
+const REST_SECONDS = {
+  olimpico:    { 'Base': 180, 'Transición': 210, 'Intensidad': 240, 'Peak': 300 },
+  basico:      { 'Base': 120, 'Transición': 150, 'Intensidad': 180, 'Peak': 240 },
+  compuesto:   { 'Base': 90,  'Transición': 105, 'Intensidad': 120, 'Peak': 150 },
+  aislamiento: { 'Base': 60,  'Transición': 60,  'Intensidad': 75,  'Peak': 90  },
+  core:        { 'Base': 45,  'Transición': 45,  'Intensidad': 60,  'Peak': 60  },
+};
+function restSecondsFor(ex, phase) {
+  const cat = REST_SECONDS[ex.restCategory || 'aislamiento'];
+  return (cat && cat[phase]) || 90;
+}
+
 // Días de test (semana 16) — Miércoles, Viernes y Domingo quedan como descanso
 // porque repiten ejercicios ya cubiertos en Lunes/Martes/Jueves/Sábado.
 const TEST_DAY_NAMES = ['Lunes', 'Martes', 'Jueves', 'Sábado'];
+// Un ejercicio compartido entre dos días de entreno (ej. Bicep curls aparece
+// Lunes+Martes+Viernes) por defecto se testea el primer día donde aparece —
+// pero eso dejaba a Martes y Jueves con solo 2-3 ejercicios de test (los
+// olímpicos/básicos) porque Lunes se quedaba con todos los accesorios
+// compartidos. Aquí se reasigna explícitamente el día "dueño" del test para
+// que ningún día de test se quede sin accesorios que alternar con el
+// ejercicio pesado de ese día.
+const TEST_OWNER_OVERRIDE = {
+  'Bicep curls sitting dumbbell':      'Martes',
+  'Bicep curls hammer grip seated':    'Martes',
+  'Triceps extension cable pull cord': 'Jueves',
+  'Triceps extension one-armed cable': 'Jueves',
+};
 function buildTestPlan() {
   const seen = new Set();
   const byDay = {};
+  TEST_DAY_NAMES.forEach(dayName => { byDay[dayName] = []; });
   TEST_DAY_NAMES.forEach(dayName => {
     const day = DAYS.find(d => d.name === dayName);
-    const list = [];
     (day.exercises || []).forEach(ex => {
       if (!ex.testMethod) return;         // ej. Dips — progresa solo por reps, sin carga que testear
       if (seen.has(ex.name)) return;      // evita testear dos veces el mismo ejercicio
       seen.add(ex.name);
-      list.push(ex);
+      const owner = TEST_OWNER_OVERRIDE[ex.name] || dayName;
+      byDay[owner].push(ex);
     });
-    byDay[dayName] = list;
   });
   return byDay;
 }
@@ -490,7 +549,25 @@ function PhasePill({ weekIdx }) {
   );
 }
 
-function OlympicTable({ ex, weekIdx, rmStore }) {
+// Botón ⏱ compartido — arranca el descanso prescrito (según categoría del
+// ejercicio y fase del ciclo) en la barra global de descanso.
+function RestButton({ ex, weekIdx, totalSets, startRest }) {
+  if (!startRest) return null;
+  const phase = PROG[weekIdx].phase;
+  const seconds = restSecondsFor(ex, phase);
+  return (
+    <button
+      onClick={() => startRest(ex.name, seconds, totalSets)}
+      style={{
+        marginTop: 6, padding: '5px 10px', borderRadius: 6, border: '1px solid #334155',
+        background: '#0f172a', color: '#38bdf8', fontSize: 12, fontWeight: 600, cursor: 'pointer'
+      }}>
+      ⏱ Descanso {seconds}s
+    </button>
+  );
+}
+
+function OlympicTable({ ex, weekIdx, rmStore, startRest }) {
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
   const sets = overridden ? scaleOlympicTable(ex.sets, ex.rm, effRM) : ex.sets;
@@ -514,11 +591,12 @@ function OlympicTable({ ex, weekIdx, rmStore }) {
           </div>
         ))}
       </div>
+      <RestButton ex={ex} weekIdx={weekIdx} totalSets={4} startRest={startRest} />
     </div>
   );
 }
 
-function NonOlympicRow({ ex, weekIdx, rmStore }) {
+function NonOlympicRow({ ex, weekIdx, rmStore, startRest }) {
   const p = PROG[weekIdx];
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
@@ -527,27 +605,29 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const isArm = ex.unit === 'kg/arm';
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '10px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 6
     }}>
-      <div>
-        <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
-        <div style={{ color: overridden ? '#22C55E' : '#64748b', fontSize: 12 }}>
-          RM: {effRM} {ex.unit} {overridden && '✓ test'}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
+          <div style={{ color: overridden ? '#22C55E' : '#64748b', fontSize: 12 }}>
+            RM: {effRM} {ex.unit} {overridden && '✓ test'}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
+            {weight} {isArm ? 'kg/arm' : 'kg'}
+          </div>
+          <div style={{ color: '#94a3b8', fontSize: 13 }}>4 × {p.reps} reps</div>
+          {ex.dumbbell && <div style={{ color: '#64748b', fontSize: 11 }}>mancuerna real disponible</div>}
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
-          {weight} {isArm ? 'kg/arm' : 'kg'}
-        </div>
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>4 × {p.reps} reps</div>
-        {ex.dumbbell && <div style={{ color: '#64748b', fontSize: 11 }}>mancuerna real disponible</div>}
-      </div>
+      <RestButton ex={ex} weekIdx={weekIdx} totalSets={4} startRest={startRest} />
     </div>
   );
 }
 
-function BWRow({ ex, weekIdx, rmStore }) {
+function BWRow({ ex, weekIdx, rmStore, startRest }) {
   const phase = PROG[weekIdx].phase;
   const reps = ex.repsByPhase[phase];
   const equipLabel = ex.equipLabel || 'Peso corporal';
@@ -571,6 +651,7 @@ function BWRow({ ex, weekIdx, rmStore }) {
       <div style={{ color: '#64748b', fontSize: 11, marginTop: 6 }}>
         {note}
       </div>
+      <RestButton ex={ex} weekIdx={weekIdx} totalSets={reps.length} startRest={startRest} />
     </div>
   );
 }
@@ -642,7 +723,7 @@ function StretchTimerRow({ ex }) {
   );
 }
 
-function DayWorkout({ day, weekIdx, rmStore }) {
+function DayWorkout({ day, weekIdx, rmStore, startRest }) {
   if (day.special === 'stretch') {
     return (
       <div>
@@ -669,15 +750,15 @@ function DayWorkout({ day, weekIdx, rmStore }) {
   return (
     <div>
       {day.exercises.map((ex, i) => {
-        if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
-        if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
-        return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
+        if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />;
+        if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />;
+        return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />;
       })}
     </div>
   );
 }
 
-function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore }) {
+function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore, startRest }) {
   const day = DAYS[dayIdx];
   return (
     <div>
@@ -762,7 +843,7 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore 
         </div>
       </div>
 
-      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} />
+      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />
 
       {/* Condicionamiento añadido */}
       {CONDITIONING[day.name] && (
@@ -927,7 +1008,42 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
     return { a, b };
   }
   const fit = points.length >= 3 ? linreg(points) : null;
-  const estRM = (fit && fit.b !== 0) ? (mvt - fit.a) / fit.b : null;
+  const rawEstRM = (fit && fit.b !== 0) ? (mvt - fit.a) / fit.b : null;
+  // Corrección de sesgo del método carga-velocidad: la extrapolación lineal a
+  // la velocidad mínima tiende a SOBREESTIMAR el 1RM real frente a un test de
+  // carga directa. Ajuste tomado tal cual de lo ya decidido en otra conversación
+  // (Greig et al. 2023, −3.7%) — no lo he re-verificado yo mismo en esta sesión,
+  // lo aplico porque así se acordó, no como hallazgo propio.
+  const BIAS_CORRECTION = 0.037;
+  const estRM = rawEstRM ? rawEstRM * (1 - BIAS_CORRECTION) : null;
+
+  // R² y SEE del ajuste — calculados directamente de tus propios puntos, no de
+  // una cifra de literatura: cuánto se ajusta la recta a lo que mediste de
+  // verdad, y qué margen de error (en kg) se traduce a partir de esa dispersión.
+  let rSquared = null, seeWeight = null;
+  if (fit && points.length >= 3) {
+    const meanV = points.reduce((s, p) => s + p.v, 0) / points.length;
+    const ssTot = points.reduce((s, p) => s + (p.v - meanV) ** 2, 0);
+    const ssRes = points.reduce((s, p) => s + (p.v - (fit.a + fit.b * p.load)) ** 2, 0);
+    rSquared = ssTot > 0 ? 1 - ssRes / ssTot : null;
+    const seeV = Math.sqrt(ssRes / Math.max(1, points.length - 2));
+    seeWeight = fit.b !== 0 ? seeV / Math.abs(fit.b) : null;
+  }
+
+  // Avisos de calidad del test — no bloquean guardar, pero avisan de por qué
+  // el RM estimado puede no ser fiable.
+  const warnings = [];
+  if (points.length > 0 && points.length < 3) warnings.push('Añade al menos 3 series para ajustar la recta.');
+  if (points.length >= 3) {
+    const loads = points.map(p => p.load);
+    const maxLoad = Math.max(...loads), minLoad = Math.max(...loads) > 0 ? Math.min(...loads) : 0;
+    const baseRMnow = effectiveRM(ex, rmStore);
+    if (maxLoad < baseRMnow * 0.8) warnings.push(`La carga más pesada probada (${maxLoad}kg) está lejos de tu RM actual (${baseRMnow}kg) — la extrapolación a MVT es grande y menos fiable. Prueba con cargas más cercanas a tu límite.`);
+    if ((maxLoad - minLoad) < baseRMnow * 0.15) warnings.push('Las cargas probadas están muy juntas entre sí — con poco rango de carga la recta carga-velocidad queda mal condicionada. Prueba con más variedad, de ligera a pesada.');
+    const tooFast = points.filter(p => p.v > (mvt * 4));
+    if (tooFast.length > 0) warnings.push('Alguna serie se movió muy rápido en relación al MVT — puede aportar poco al ajuste o ser un error de marcado. Revisa esas series.');
+    if (rSquared !== null && rSquared < 0.85) warnings.push(`R² bajo (${rSquared.toFixed(2)}) — el ajuste no explica bien tus datos. Revisa que el marcado de inicio/fin sea preciso en cada serie.`);
+  }
 
   const current = rmStore[ex.name];
   const markerColor = { calib: '#F59E0B', start: '#3B82F6', end: '#EF4444' };
@@ -952,6 +1068,8 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
             Calibra con el disco (diámetro conocido) una vez por vídeo, luego marca inicio/fin de la fase concéntrica de cada serie sobre el propio fotograma — la app mide el desplazamiento real de la barra y calcula la velocidad. Con ≥3 series se ajusta la recta carga-velocidad y se extrapola el RM a la velocidad mínima (MVT).{' '}
             <span onClick={() => setLadderFallback(true)} style={{ color: '#F59E0B', cursor: 'pointer' }}>no puedo grabar hoy — usar escalera directa</span>
           </div>
+
+          <WarmupBlock baseRM={effectiveRM(ex, rmStore)} unit={ex.unit} />
 
           <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
             <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
@@ -1061,10 +1179,19 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
           {estRM && (
             <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
               <span style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>RM estimado: {estRM.toFixed(1)} kg</span>
+              <div style={{ color: '#64748b', fontSize: 11, marginTop: 4 }}>
+                Bruto de la extrapolación: {rawEstRM.toFixed(1)}kg · corregido −3.7% (sesgo de sobreestimación del método carga-velocidad): {estRM.toFixed(1)}kg
+                {rSquared !== null && <> · R² = {rSquared.toFixed(2)}</>}
+                {seeWeight !== null && <> · margen de error ≈ ±{seeWeight.toFixed(1)}kg</>}
+              </div>
             </div>
           )}
-          {points.length > 0 && points.length < 3 && (
-            <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 10 }}>Añade al menos 3 series para ajustar la recta.</div>
+          {warnings.length > 0 && (
+            <div style={{ background: '#1e293b', border: '1px solid #F59E0B33', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>
+              {warnings.map((w, i) => (
+                <div key={i} style={{ color: '#F59E0B', fontSize: 12, padding: '2px 0' }}>⚠ {w}</div>
+              ))}
+            </div>
           )}
 
           <button
@@ -1082,6 +1209,25 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
   );
 }
 
+// Bloque de calentamiento prescrito, reutilizado por escalera y vídeo.
+function WarmupBlock({ baseRM, unit }) {
+  const warmup = buildWarmup(baseRM);
+  const u = unit === 'kg/arm' ? 'kg/arm' : 'kg';
+  return (
+    <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
+      <div style={{ color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+        Calentamiento antes del test
+      </div>
+      {warmup.map((w, i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: 12, padding: '2px 0' }}>
+          <span>{w.weight}{u === 'kg/arm' ? ' kg/arm' : ' kg'} × {w.reps}</span>
+          <span>descanso {w.rest}s</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Cuerpo reutilizable del test de escalera de carga (registro directo), sin la
 // caja/cabecera propias — así lo puede reutilizar tanto LadderTestCard como el
 // fallback "no puedo grabar hoy" dentro de VideoTestCard.
@@ -1092,8 +1238,9 @@ function LadderBody({ ex, rmStore, saveRM }) {
   const ladder = [0.60,0.70,0.80,0.90,0.95,1.00,1.05].map(pct => Math.round(baseRM*pct/2.5)*2.5);
   return (
     <>
+      <WarmupBlock baseRM={baseRM} unit={ex.unit} />
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
-        Escalera de referencia (60→105% del RM actual): {ladder.join(' · ')} kg. Sube de carga hasta que la técnica se rompa y anota abajo el peso más alto conseguido limpio.
+        Tras el calentamiento, escalera de test (60→105% del RM actual): {ladder.join(' · ')} kg. Sube de carga hasta que la técnica se rompa y anota abajo el peso más alto conseguido limpio.
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <input type="number" placeholder={`Peso conseguido (${ex.unit})`} value={value} onChange={e => setValue(e.target.value)}
@@ -1157,27 +1304,44 @@ function CoreLoadTestCard({ ex, rmStore, saveRM }) {
   );
 }
 
+// Sirve tanto para mancuernas (peso discreto, selector) como para accesorios
+// de polea/máquina (aislamiento) — carga libre por texto. Ninguno de los dos
+// busca un 1RM real: en mancuerna por los saltos de peso disponibles, en
+// aislamiento porque el riesgo de ir a máximo no aporta nada a un accesorio
+// que no sostiene la progresión del ciclo (solo los compuestos que sí la
+// sostienen — banca, sentadilla, peso muerto, olímpicos, inclinado, jalón,
+// hip thrust — mantienen el test a máximo real vía escalera o vídeo).
 function RepMaxTestCard({ ex, rmStore, saveRM }) {
-  const [weight, setWeight] = useState(DUMBBELL_WEIGHTS[0]);
+  const isDumbbell = !!ex.dumbbell;
+  const unitLabel = ex.unit === 'kg/arm' ? 'kg/arm' : 'kg';
+  const [weight, setWeight] = useState(isDumbbell ? DUMBBELL_WEIGHTS[0] : '');
   const [reps, setReps] = useState('');
   const current = rmStore[ex.name];
-  const est = reps ? epley1RM(weight, Number(reps)) : null;
+  const w = isDumbbell ? weight : Number(weight);
+  const est = (reps && w) ? epley1RM(w, Number(reps)) : null;
   return (
     <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🏋️‍♂️ {ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)} kg/arm</span>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🔁 {ex.name}</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)} {unitLabel}</span>
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
-        Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. Haz el máximo de reps limpias con la mancuerna más pesada que controles y estimamos el RM con la fórmula de Epley.
+        {isDumbbell
+          ? 'Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. Haz el máximo de reps limpias con la mancuerna más pesada que controles y estimamos el RM con la fórmula de Epley.'
+          : 'Accesorio de aislamiento — no se busca un 1RM real, el riesgo no lo justifica en un ejercicio que no sostiene la progresión del ciclo. Con una carga submáxima que puedas mover 6-12 veces con técnica limpia, estimamos el RM con la fórmula de Epley.'}
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
-          Mancuerna (kg)
-          <select value={weight} onChange={e => setWeight(Number(e.target.value))}
-            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }}>
-            {DUMBBELL_WEIGHTS.map(w => <option key={w} value={w}>{w}kg</option>)}
-          </select>
+          {isDumbbell ? 'Mancuerna (kg)' : `Carga (${unitLabel})`}
+          {isDumbbell ? (
+            <select value={weight} onChange={e => setWeight(Number(e.target.value))}
+              style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }}>
+              {DUMBBELL_WEIGHTS.map(w => <option key={w} value={w}>{w}kg</option>)}
+            </select>
+          ) : (
+            <input type="number" value={weight} onChange={e => setWeight(e.target.value)}
+              style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
+          )}
         </label>
         <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
           Reps limpias
@@ -1185,15 +1349,15 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
             style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
         </label>
       </div>
-      {est && <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>RM estimado: {est.toFixed(1)} kg/arm</div>}
+      {est && <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>RM estimado: {est.toFixed(1)} {unitLabel}</div>}
       <button
         disabled={!est}
-        onClick={() => saveRM(ex.name, Math.round(est*2)/2, ex.unit, 'repmax', { weight, reps })}
+        onClick={() => saveRM(ex.name, Math.round(est*2)/2, ex.unit, 'repmax', { weight: w, reps })}
         style={{
           width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: est ? 'pointer' : 'default',
           background: est ? '#14532d' : '#1e293b', color: est ? '#86efac' : '#475569', fontWeight: 700, fontSize: 13
         }}>
-        {current ? `✓ Guardado (${current.rm}kg/arm) — actualizar` : 'Guardar como nuevo RM'}
+        {current ? `✓ Guardado (${current.rm}${unitLabel}) — actualizar` : 'Guardar como nuevo RM'}
       </button>
     </div>
   );
@@ -1207,9 +1371,22 @@ function TestTab({ rmStore, saveRM, mvtStore, saveMVT, clearMVT, lastTestDate, s
       <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
         <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 4 }}>Test Semana 16</div>
         <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
-          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 4 métodos según el ejercicio: vídeo con velocidad (sentadilla, press banca), registro directo de la escalera (olímpicos, peso muerto y accesorios de barra/cable), test de reps con fórmula (ejercicios de mancuerna) y test de carga por objetivo (Pallof press, plancha con disco).
+          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 4 métodos según el ejercicio: vídeo con velocidad (solo sentadilla y press banca — los únicos con MVT validado en literatura), registro directo de la escalera (solo los compuestos que sostienen la progresión: peso muerto, press inclinado, jalón, hip thrust), test de reps con fórmula de Epley (mancuerna y accesorios de aislamiento) y test de carga por objetivo (Pallof press, plancha con disco).
+        </div>
+        <div style={{ color: '#F59E0B', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
+          Clean & jerk y power snatch NO se testean por velocidad — no existe un MVT validado para movimientos de recepción/catch como estos. Se graban si quieres revisar técnica, pero el test en sí va por escalera de carga directa.
         </div>
       </div>
+
+      <div style={{ background: '#1e293b', border: '1px solid #F59E0B33', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+        <div style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+          Antes de testear
+        </div>
+        <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
+          Nada de móvil los 30 minutos previos (fatiga neural) · usa el mismo dispositivo/cámara en todos los tests de este ciclo · sin muñequeras ni straps que puedan enmascarar el agarre real · respeta el descanso completo entre cargas del calentamiento, no lo acortes.
+        </div>
+      </div>
+
       {TEST_DAY_NAMES.map(dayName => (
         <div key={dayName} style={{ marginBottom: 20 }}>
           <div style={{ color: '#64748b', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
@@ -1614,6 +1791,61 @@ const SECTIONS = [
 ];
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
+function restBtnStyle(bg) {
+  return {
+    padding: '10px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+    background: bg, color: '#fff', fontWeight: 700, fontSize: 13
+  };
+}
+
+// Barra fija inferior con la cuenta atrás del descanso entre series. Solo
+// existe un descanso activo a la vez (estado global en App()). Sobrevive a
+// que se apague/bloquee la pantalla porque el tiempo restante siempre se
+// recalcula a partir de un timestamp absoluto (endAt), nunca contando ticks.
+function RestTimerBar({ rest, onPauseResume, onAdjust, onSkip, onClose }) {
+  if (!rest) return null;
+  const mins = Math.floor(rest.remaining / 60);
+  const secs = rest.remaining % 60;
+  const finished = rest.remaining <= 0 && !rest.running;
+  return (
+    <div style={{
+      position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
+      background: '#0f172aee', backdropFilter: 'blur(6px)',
+      borderTop: '1px solid #334155', padding: '10px 16px 14px',
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.4)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>⏱ Descanso — {rest.name}</span>
+        <span style={{ color: '#94a3b8', fontSize: 12 }}>Serie {rest.setIdx}/{rest.totalRests + 1}</span>
+      </div>
+      <div style={{ textAlign: 'center', marginBottom: 8 }}>
+        {finished ? (
+          <span style={{ fontSize: 22, fontWeight: 700, color: '#22C55E' }}>✓ Descanso completo — a por la siguiente serie</span>
+        ) : (
+          <span style={{
+            fontSize: 40, fontWeight: 800,
+            color: rest.remaining <= 5 ? '#EF4444' : '#22C55E',
+            fontVariantNumeric: 'tabular-nums'
+          }}>
+            {mins}:{String(secs).padStart(2, '0')}
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <button onClick={() => onAdjust(-15)} style={restBtnStyle('#334155')}>−15s</button>
+        {!finished && (
+          <button onClick={onPauseResume} style={restBtnStyle(rest.running ? '#F59E0B' : '#22C55E')}>
+            {rest.running ? '⏸ Pausar' : '▶ Reanudar'}
+          </button>
+        )}
+        <button onClick={() => onAdjust(15)} style={restBtnStyle('#334155')}>+15s</button>
+        {rest.setIdx < rest.totalRests && <button onClick={onSkip} style={restBtnStyle('#2563EB')}>Saltar ›</button>}
+        <button onClick={onClose} style={restBtnStyle('#EF4444')}>✕ Cerrar</button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const defaults = computeDefaultWeekDay();
   const [weekIdx, setWeekIdx] = useState(() => {
@@ -1630,6 +1862,104 @@ export default function App() {
 
   const [section, setSection] = useState('entrenamiento');
   const [sub, setSub] = useState('plan');
+
+  // --- Descanso entre series: estado global, un único contador activo a la
+  // vez. rest = { name, seconds, totalRests, setIdx, remaining, running, endAt }
+  // totalRests = nº de descansos de la serie (totalSets - 1); setIdx va de
+  // 1 a totalRests. endAt es un timestamp absoluto: el tiempo restante se
+  // recalcula siempre a partir de él (Date.now()), no contando ticks de
+  // setInterval, para que sobreviva a que la pantalla se bloquee/atenúe.
+  const [rest, setRest] = useState(null);
+  const audioCtxRef = useRef(null);
+
+  const beepAndVibrate = () => {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) {
+        const ctx = audioCtxRef.current || new Ctx();
+        audioCtxRef.current = ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 880;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      }
+    } catch {}
+    try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch {}
+  };
+
+  // Recalcula remaining/setIdx a partir de endAt. Si toca a cero: avisa
+  // (beep+vibración) y, si quedan series, recarga sola el contador para la
+  // siguiente; si era la última, se detiene sin recargar.
+  const advanceRestIfDue = (prev) => {
+    if (!prev || !prev.running) return prev;
+    const remaining = Math.max(0, Math.round((prev.endAt - Date.now()) / 1000));
+    if (remaining > 0) return remaining === prev.remaining ? prev : { ...prev, remaining };
+    beepAndVibrate();
+    if (prev.setIdx < prev.totalRests) {
+      return { ...prev, setIdx: prev.setIdx + 1, remaining: prev.seconds, endAt: Date.now() + prev.seconds * 1000 };
+    }
+    return { ...prev, remaining: 0, running: false };
+  };
+
+  useEffect(() => {
+    if (!rest || !rest.running) return;
+    const id = setInterval(() => { setRest(prev => advanceRestIfDue(prev)); }, 250);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rest && rest.running, rest && rest.endAt, rest && rest.setIdx]);
+
+  // Si la pantalla se apaga/bloquea, setInterval se ralentiza o se pausa;
+  // al volver a primer plano forzamos un recálculo inmediato desde endAt.
+  useEffect(() => {
+    const recompute = () => setRest(prev => advanceRestIfDue(prev));
+    document.addEventListener('visibilitychange', recompute);
+    window.addEventListener('focus', recompute);
+    return () => {
+      document.removeEventListener('visibilitychange', recompute);
+      window.removeEventListener('focus', recompute);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startRest = (name, seconds, totalSets) => {
+    const totalRests = Math.max(1, totalSets - 1);
+    setRest({ name, seconds, totalRests, setIdx: 1, remaining: seconds, running: true, endAt: Date.now() + seconds * 1000 });
+  };
+
+  const pauseResumeRest = () => {
+    setRest(prev => {
+      if (!prev) return prev;
+      if (prev.running) {
+        const remaining = Math.max(0, Math.round((prev.endAt - Date.now()) / 1000));
+        return { ...prev, running: false, remaining };
+      }
+      return { ...prev, running: true, endAt: Date.now() + prev.remaining * 1000 };
+    });
+  };
+
+  const adjustRest = (delta) => {
+    setRest(prev => {
+      if (!prev) return prev;
+      const remaining = Math.max(0, prev.remaining + delta);
+      return { ...prev, remaining, endAt: prev.running ? Date.now() + remaining * 1000 : prev.endAt };
+    });
+  };
+
+  const skipRest = () => {
+    setRest(prev => {
+      if (!prev) return prev;
+      if (prev.setIdx < prev.totalRests) {
+        return { ...prev, setIdx: prev.setIdx + 1, remaining: prev.seconds, endAt: Date.now() + prev.seconds * 1000, running: true };
+      }
+      return null;
+    });
+  };
+
+  const closeRest = () => setRest(null);
 
   const markDone = (weekI, dayI) => {
     const key = `W${weekI+1}-${DAYS[dayI].name}`;
@@ -1766,7 +2096,7 @@ export default function App() {
 
       {/* Content */}
       {section === 'entrenamiento' && sub === 'plan' && (
-        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} />
+        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} startRest={startRest} />
       )}
       {section === 'entrenamiento' && sub === 'test' && (
         <TestTab rmStore={rmStore} saveRM={saveRM} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} lastTestDate={lastTestDate} startNewCycle={startNewCycle} />
@@ -1774,6 +2104,14 @@ export default function App() {
       {section === 'alimentacion' && sub === 'compra' && <ShoppingTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'nutricion' && <NutritionTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'supps' && <SupplementsTab />}
+
+      <RestTimerBar
+        rest={rest}
+        onPauseResume={pauseResumeRest}
+        onAdjust={adjustRest}
+        onSkip={skipRest}
+        onClose={closeRest}
+      />
     </div>
   );
 }
