@@ -768,7 +768,7 @@ function RestProvider({ children }) {
   // mode: 'rest' (descanso entre series de fuerza) | 'hold' (duración activa de
   // un estiramiento o de un bloque de piscina/cardio del miércoles) — mismo
   // motor de cuenta atrás, solo cambia el texto que se muestra en la barra.
-  const start = useCallback((id, label, seconds, sets, mode = 'rest') => {
+  const start = useCallback((id, label, seconds, sets, mode = 'rest', unit = 'serie') => {
     unlockAudio();
     requestWake();
     setActive(prev => {
@@ -779,7 +779,7 @@ function RestProvider({ children }) {
       // el botón para EMPEZAR a aguantar/nadar la serie 1 (así que debe
       // mostrar "serie 1", no "serie 2", desde el primer instante).
       if (!prev || prev.id !== id) setNextSet(mode === 'hold' ? 1 : 2);
-      return { id, label, total: seconds, sets, mode };
+      return { id, label, total: seconds, sets, mode, unit };
     });
     setLeft(seconds);
     deadlineRef.current = Date.now() + seconds * 1000;
@@ -919,21 +919,60 @@ function HoldButton({ id, seconds, sets, compact }) {
   );
 }
 
+// Botón de descanso para las tarjetas de TEST (no de entrenamiento normal):
+// mismo motor que RestButton (mode='rest'), pero con segundos/series/unidad
+// explícitos en vez de calculados por categoría+fase — el test no tiene fase
+// ni sigue el esquema semanal de PROG. `unit` cambia la palabra que se muestra
+// en la barra ("carga" en el perfil carga-velocidad, "serie" en el resto).
+// sets<=1 se usa para los intentos de escalera sin número fijo (sube hasta
+// que la técnica se rompa): cada pulsación es sólo "otro descanso", sin
+// marcar nunca "ejercicio completado".
+function TestRestButton({ id, label, seconds, sets = 1, unit = 'serie', compact }) {
+  const rest = useRest();
+  const isActive = rest && rest.active && rest.active.id === id;
+  const live = isActive && rest.running;
+  return (
+    <button
+      onClick={() => rest.start(id, label || id, seconds, sets, 'rest', unit)}
+      title={sets > 1 ? `${fmtClock(seconds)} entre cada ${unit}` : `Descanso: ${fmtClock(seconds)}`}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        padding: compact ? '4px 9px' : '5px 11px',
+        borderRadius: 999, cursor: 'pointer',
+        border: `1px solid ${isActive ? '#38bdf8' : '#334155'}`,
+        background: isActive ? '#0c4a6e' : '#0f172a',
+        color: isActive ? '#7dd3fc' : '#94a3b8',
+        fontSize: compact ? 11 : 12, fontWeight: 700,
+        fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+        transition: 'all 0.15s',
+      }}>
+      ⏱ {live ? fmtClock(rest.left) : fmtClock(seconds)}
+    </button>
+  );
+}
+
 // Texto y color de la barra según el modo — descanso entre series de fuerza
 // frente a mantener un estiramiento o un bloque continuo de piscina (sin
 // series, p.ej. nado o pool walking, donde sets=1 y no hay "serie X de Y").
-function restBarStatus({ mode, sets, nextSet, running, flash }) {
-  const finished = nextSet > sets;
+function restBarStatus({ mode, sets, nextSet, running, flash, unit = 'serie' }) {
+  // "finished" (ejercicio completado, ya no cuenta series) sólo tiene sentido
+  // cuando hay un número de series/cargas fijo. Con sets<=1 — un intento
+  // indefinido, como el ladder de "sube hasta que la técnica se rompa" — no
+  // hay un final que declarar: cada pulsación es simplemente otro descanso
+  // antes del siguiente intento, sin límite. Calcularlo sin este guard fue
+  // justo el bug que rompía el miércoles con sets=1 (ver HoldButton).
   const hasSets = sets > 1;
+  const finished = hasSets && nextSet > sets;
   if (mode === 'hold') {
-    if (flash)    return hasSets ? '✓ Serie completada' : '✓ Completado';
+    if (flash)    return hasSets ? `✓ ${unit} completada` : '✓ Completado';
     if (finished) return 'Ejercicio completado';
-    if (hasSets)  return running ? `Manteniendo → serie ${nextSet} de ${sets}` : `Preparado → serie ${nextSet} de ${sets}`;
+    if (hasSets)  return running ? `Manteniendo → ${unit} ${nextSet} de ${sets}` : `Preparado → ${unit} ${nextSet} de ${sets}`;
     return running ? 'En marcha' : 'Preparado';
   }
   if (flash)    return 'Descanso completado';
   if (finished) return 'Ejercicio completado';
-  return running ? `Descansando → serie ${nextSet} de ${sets}` : `En espera → serie ${nextSet} de ${sets}`;
+  if (hasSets)  return running ? `Descansando → ${unit} ${nextSet} de ${sets}` : `En espera → ${unit} ${nextSet} de ${sets}`;
+  return running ? 'Descansando' : 'En espera';
 }
 
 // Barra fija inferior: visible mientras haces scroll al ejercicio siguiente.
@@ -944,7 +983,7 @@ function RestBar() {
   const pct = active.total ? Math.max(0, Math.min(100, (left / active.total) * 100)) : 0;
   const isHold = active.mode === 'hold';
   const accent = flash ? '#22C55E' : running ? (isHold ? '#2dd4bf' : '#38bdf8') : '#fbbf24';
-  const statusText = restBarStatus({ mode: active.mode, sets: active.sets, nextSet, running, flash });
+  const statusText = restBarStatus({ mode: active.mode, sets: active.sets, nextSet, running, flash, unit: active.unit });
 
   return (
     <div style={{
@@ -1440,7 +1479,10 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
     <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🎥 {ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)}kg</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)}kg</span>
+          <TestRestButton id={`${ex.name}__lv`} label={ex.name} seconds={LV_REST_SEC} sets={LV_LADDER.length} unit="carga" compact />
+        </span>
       </div>
       {ladderFallback ? (
         <>
@@ -1680,6 +1722,12 @@ function LadderBody({ ex, rmStore, saveRM }) {
         del 90% en adelante, y singles a partir de ahí: si encadenas intentos pesados con poco
         descanso, lo que mides es la fatiga acumulada, no tu máximo.
       </div>
+      <div style={{ marginBottom: 10 }}>
+        <TestRestButton id={`${ex.name}__ladder`} label={ex.name} seconds={240} sets={1} compact />
+        <span style={{ color: '#475569', fontSize: 11, marginLeft: 8 }}>
+          4 min de referencia — pulsa tras cada intento pesado, tantas veces como intentos hagas.
+        </span>
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <input type="number" placeholder={`Peso conseguido (${ex.unit})`} value={value} onChange={e => setValue(e.target.value)}
           style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
@@ -1721,7 +1769,10 @@ function CoreLoadTestCard({ ex, rmStore, saveRM }) {
     <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🧱 {ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>Carga actual: {baseRM}{ex.unit}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: '#64748b', fontSize: 12 }}>Carga actual: {baseRM}{ex.unit}</span>
+          <TestRestButton id={`${ex.name}__core`} label={ex.name} seconds={90} sets={1} compact />
+        </span>
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
         No es un test de 1 repetición máxima — sube la carga en series sucesivas hasta encontrar el peso más alto con el que completas el objetivo de la fase Peak ({ex.testTarget}) sin que {ex.formCue}. Anota ese peso, es tu carga de partida para todo el ciclo.
@@ -1769,7 +1820,10 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
     <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🏋️‍♂️ {ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)} {unitLabel}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)} {unitLabel}</span>
+          <TestRestButton id={`${ex.name}__amrap`} label={ex.name} seconds={120} sets={1} compact />
+        </span>
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
         {isDumbbell
