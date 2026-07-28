@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, createContext, useContext } from "react";
 
 // ─── CYCLE DATES ──────────────────────────────────────────────────────────────
 // W1 empezó el martes 7 abril 2026. Semana/día por defecto se calculan solos
@@ -51,6 +51,108 @@ const PROG = [
 // Weight rounded up to nearest 2.5kg
 const wt = (rm, pct) => Math.ceil(rm * pct / 2.5) * 2.5;
 
+// ─── DESCANSO ENTRE SERIES ───────────────────────────────────────────────────
+// Base por categoría de ejercicio (segundos) + suplemento según fase del ciclo.
+//
+// Evidencia:
+//  · Grgic et al. (rev. sistemática, 23 estudios / 491 sujetos): en sujetos YA
+//    ENTRENADOS hacen falta >2 min para maximizar las ganancias de fuerza;
+//    60–120 s basta sólo en principiantes.
+//  · Meta-análisis 2025 en varones entrenados: el descanso corto (<60 s) penaliza
+//    fuerza (SMD −0,74) y potencia (SMD −0,64), pero NO hipertrofia (SMD 0,08, ns).
+//  · Meta-análisis bayesiano 2024 (hipertrofia): suelo de 60 s; por encima de
+//    ~90 s no se detecta beneficio adicional para crecimiento.
+//
+// Traducción práctica: los básicos pesados mandan el descanso largo (es donde se
+// pierde fuerza si recortas); el aislamiento puede ir a 90 s sin coste. La
+// distinción compuesto/aislamiento es extrapolación razonable — ningún
+// meta-análisis la ha testado por separado.
+const REST_BASE = {
+  olympic:   210,  // Clean & jerk, power snatch — técnicos y a velocidad máxima
+  heavy:     180,  // Básicos con barra pesada
+  compound:  120,  // Multiarticulares secundarios
+  isolation:  90,  // Monoarticular / cable / mancuerna
+  core:       60,  // Isométricos de core
+};
+// A más % del RM, más descanso: el coste neural de una serie al 95% no es el de
+// una al 70%.
+const REST_PHASE_ADD = { 'Base': 0, 'Transición': 15, 'Intensidad': 30, 'Peak': 45 };
+
+const REST_HEAVY = ['Bench press barbell', 'Squat barbell', 'Deadlift', 'Hip thrust'];
+const REST_COMPOUND = [
+  'Bench press inclined', 'Latzug breit', 'Leg curl', 'Nordic curl',
+  'Dips', 'Shoulder press sitting dumbbell',
+];
+
+function restCategory(ex) {
+  // Deadlift está marcado como 'olympic' sólo porque usa tabla de series propia,
+  // pero no es un levantamiento olímpico: descansa como básico pesado.
+  if (ex.type === 'olympic' && !ex.name.startsWith('Deadlift')) return 'olympic';
+  if (ex.testMethod === 'coreload') return 'core';
+  if (REST_HEAVY.some(h => ex.name.startsWith(h))) return 'heavy';
+  if (REST_COMPOUND.some(c => ex.name.startsWith(c))) return 'compound';
+  return 'isolation';
+}
+
+function restSecondsFor(ex, weekIdx) {
+  const cat = restCategory(ex);
+  const phase = (PROG[weekIdx] || PROG[0]).phase;
+  // El core isométrico no escala con el % de RM — no sigue la tabla percentual.
+  const add = cat === 'core' ? 0 : (REST_PHASE_ADD[phase] || 0);
+  return REST_BASE[cat] + add;
+}
+
+// ─── PROTOCOLO DE TEST CARGA-VELOCIDAD ───────────────────────────────────────
+// Escalera de cargas del perfil carga-velocidad.
+//  · Marston et al. 2022 (PLOS ONE, 25 estudios / 842 sujetos): las cargas
+//    PESADAS (>=80% 1RM) son las que más pesan en la calidad del ajuste; las
+//    muy ligeras aportan poco y ensucian la recta.
+//  · Dello Stritto et al. 2025: acotando el rango a ~35-90% y evitando
+//    velocidades por encima de 1,0 m/s en el punto más ligero, el error baja a
+//    SEE 1,21-2,86 kg — muy por debajo del error típico publicado.
+//  · Reps: varias a carga ligera quedándose con la más rápida; single a carga
+//    pesada, con >=2 min de descanso, para que la fatiga no contamine el punto
+//    que más manda.
+const LV_LADDER = [
+  { pct: 0.40, reps: 3 },
+  { pct: 0.55, reps: 3 },
+  { pct: 0.70, reps: 2 },
+  { pct: 0.80, reps: 1 },
+  { pct: 0.90, reps: 1 },
+];
+const LV_REST_SEC = 180;
+const LV_VMAX_WARN = 1.0;   // por encima de esto la serie ensucia la recta
+
+// Sobrestimación sistemática del método: Greig, Aspe, Hall, Comfort, Cooper &
+// Swinton 2023 (Sports Medicine, meta-análisis de datos individuales) — el
+// perfil carga-velocidad sobrestima el 1RM real en +4,5 kg = +3,7% de media,
+// con independencia del modelo usado. Si no se corrige, ese sesgo se propaga a
+// todos los porcentajes del ciclo siguiente.
+const LV_OVERESTIMATE = 0.037;
+// Error estándar de estimación por ejercicio (mismo meta-análisis): agrupado
+// 9,8%; press banca 9,9%; sentadilla 12,3%; peso muerto 8,0%. La sentadilla
+// libre es el peor caso — Banyard 2017 midió un CV del 22,5% en la velocidad
+// a 1RM, que es lo que hunde la precisión.
+const LV_SEE = { 'Bench press barbell': 0.099, 'Squat barbell': 0.123, 'Deadlift barbell': 0.080 };
+const LV_SEE_DEFAULT = 0.098;
+const seeFor = (name) => LV_SEE[name] ?? LV_SEE_DEFAULT;
+
+function fmtClock(s) {
+  const m = Math.floor(Math.abs(s) / 60);
+  const sec = Math.abs(s) % 60;
+  return `${m}:${String(sec).padStart(2, '0')}`;
+}
+
+// Nº de series que muestra cada tipo de fila, para que el contador sepa cuántas
+// rondas de descanso quedan.
+function setsCountFor(ex, weekIdx) {
+  if (ex.type === 'bw' && ex.repsByPhase) {
+    const r = ex.repsByPhase[(PROG[weekIdx] || PROG[0]).phase];
+    return Array.isArray(r) ? r.length : 4;
+  }
+  return 4;
+}
+
 // ─── MANCUERNAS REALES ────────────────────────────────────────────────────────
 // ⚠️ Ajusta este array a las mancuernas que tienes de verdad en el gimnasio.
 const DUMBBELL_WEIGHTS = [4, 6, 8, 12, 16, 20, 24, 28, 32];
@@ -64,26 +166,6 @@ function nearestDumbbell(target) {
 // es discreto y no tiene sentido buscar un 1RM real por riesgo/precisión.
 function epley1RM(weight, reps) {
   return weight * (1 + reps / 30);
-}
-
-// ─── CALENTAMIENTO PRESCRITO PARA TESTS DE MÁXIMO (escalera y vídeo) ────────
-// Antes se dejaba a criterio ("sube de carga hasta que la técnica se rompa").
-// Ahora hay una progresión concreta de calentamiento antes de ir a la carga
-// de test real — reps y descanso fijos en cada escalón, sobre el RM actual
-// (que se recalibra solo si guardas un test nuevo).
-const WARMUP_LADDER = [
-  { pct: 0.40, reps: 5, rest: 90 },
-  { pct: 0.55, reps: 3, rest: 120 },
-  { pct: 0.70, reps: 2, rest: 150 },
-  { pct: 0.80, reps: 1, rest: 180 },
-  { pct: 0.90, reps: 1, rest: 180 },
-];
-function buildWarmup(baseRM) {
-  return WARMUP_LADDER.map(w => ({
-    weight: Math.round(baseRM * w.pct / 2.5) * 2.5,
-    reps: w.reps,
-    rest: w.rest,
-  }));
 }
 
 // ─── RM: OVERRIDES GUARDADOS TRAS EL TEST (localStorage) ─────────────────────
@@ -220,43 +302,32 @@ const PLANK_SECONDS = {  // segundos por serie, 3 series — plancha con disco s
 
 // ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
 // type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
-// testMethod: 'video' (velocidad + regresión carga-velocidad, solo válido en
-// básicos con MVT establecido en literatura) · 'ladder' (registro directo del
-// peso máximo con técnica limpia, solo para los compuestos que sostienen de
-// verdad la progresión del ciclo) · 'repmax' (test de reps con carga submáxima
-// + fórmula de Epley — mancuernas Y accesorios de aislamiento, donde buscar un
-// 1RM real no aporta nada al riesgo que añade)
-// restCategory: qué descanso entre series le corresponde — 'olimpico' (técnica
-// + potencia máxima), 'basico' (los 3 grandes: banca/sentadilla/peso muerto),
-// 'compuesto' (multiarticulares secundarios), 'aislamiento', 'core'.
-//
-// Orden anti-fatiga: antes se agrupaban 2-3 ejercicios seguidos del mismo
-// grupo muscular (tríceps×3 y luego bíceps×3 el lunes; los dos ejercicios de
-// isquios seguidos el sábado). Ahora se intercalan por grupo muscular para que
-// nunca lleguen 2 series seguidas al mismo músculo ya fatigado.
+// testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
+// directo del peso máximo con técnica limpia) · 'repmax' (test de reps + fórmula,
+// para ejercicios de mancuerna con pesos disponibles discretos)
 const DAYS = [
   {
     name: 'Lunes', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
     exercises: [
-      { name: 'Triceps stretches cable pull bar',  rm: 35, unit: 'kg',     testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Bicep curls cable pull',            rm: 30, unit: 'kg',     testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Seated lateral raises dumbbell',    rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
-      { name: 'Triceps extension cable pull cord', rm: 30, unit: 'kg',     testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Bicep curls sitting dumbbell',      rm: 9,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
-      { name: 'Shoulder press sitting dumbbell',   rm: 15, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
-      { name: 'Triceps extension one-armed cable', rm: 10, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Bicep curls hammer grip seated',    rm: 8,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
-      { name: 'Butterfly reverse cable pull',      rm: 10, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Triceps stretches cable pull bar',  rm: 35, unit: 'kg',     testMethod: 'repmax' },
+      { name: 'Triceps extension cable pull cord', rm: 30, unit: 'kg',     testMethod: 'repmax' },
+      { name: 'Triceps extension one-armed cable', rm: 10, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Bicep curls cable pull',            rm: 30, unit: 'kg',     testMethod: 'repmax' },
+      { name: 'Bicep curls sitting dumbbell',      rm: 9,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated',    rm: 8,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Seated lateral raises dumbbell',    rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Shoulder press sitting dumbbell',   rm: 15, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Butterfly reverse cable pull',      rm: 10, unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
   {
     name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder', restCategory: 'olimpico' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder', restCategory: 'olimpico' },
-      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
-      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
-      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
+      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder' },
+      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
     ]
   },
   {
@@ -266,40 +337,40 @@ const DAYS = [
   {
     name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
-      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17, restCategory: 'basico' },
-      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
-      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS, restCategory: 'compuesto' },
-      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
+      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax' },
+      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
   {
     name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder', restCategory: 'olimpico' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder', restCategory: 'olimpico' },
-      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
-      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
-      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, restCategory: 'aislamiento' },
+      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
+      { name: 'Latzug breit (lat pulldown)', rm: 90,  unit: 'kg', testMethod: 'ladder' },
+      { name: 'Bicep curls sitting dumbbell',rm: 9,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated', rm: 8, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
     ]
   },
   {
     name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
     exercises: [
-      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL, testMethod: 'ladder', restCategory: 'basico' },
-      { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', mvt: 0.30, restCategory: 'basico' },
-      { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
-      { name: 'Nordic curl',        rm: 65,  unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL, testMethod: 'ladder' },
+      { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', mvt: 0.30 },
+      { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'repmax' },
+      { name: 'Nordic curl',        rm: 65,  unit: 'kg', testMethod: 'repmax' },
+      { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder' },
       { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
-        equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado', restCategory: 'core',
+        equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado',
         note: 'De pie, perpendicular a la polea. Extiende los brazos al frente y AGUANTA ahí quieto sin dejar que la cadera gire — es un aguante estático, no repeticiones de empuje y vuelta. Repite el hold en cada serie, cambia de lado al terminar las 3 series.',
         rm: 15, unit: 'kg', testMethod: 'coreload',
         testTarget: '35s/lado por serie (objetivo de fase Peak, el más exigente de las 4)',
         formCue: 'la cadera gire' },
       { name: 'Weighted plank (disco en la espalda)', type: 'bw', repsByPhase: PLANK_SECONDS,
-        equipLabel: 'Anti-extensión · con disco', unitSuffix: 's', restCategory: 'core',
+        equipLabel: 'Anti-extensión · con disco', unitSuffix: 's',
         note: 'Empieza con 5-10kg sobre la zona lumbar-alta. Si aguantas el tiempo objetivo con técnica limpia (sin que caiga la cadera), sube el disco de peso antes de subir el tiempo.',
         rm: 7.5, unit: 'kg', testMethod: 'coreload',
         testTarget: '50s por serie (objetivo de fase Peak, el más exigente de las 4)',
@@ -309,96 +380,173 @@ const DAYS = [
   {
     name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17, restCategory: 'basico' },
-      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder', restCategory: 'compuesto' },
-      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax', restCategory: 'aislamiento' },
-      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS, restCategory: 'compuesto' },
-      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax', restCategory: 'aislamiento' },
+      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
+      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax' },
+      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
 ];
 
-// Descanso entre series (segundos) según categoría del ejercicio y fase del
-// ciclo — sube de Base a Peak porque el %RM también sube, y los olímpicos
-// llevan más descanso que el resto por la demanda técnica/neural de cada rep.
-const REST_SECONDS = {
-  olimpico:    { 'Base': 180, 'Transición': 210, 'Intensidad': 240, 'Peak': 300 },
-  basico:      { 'Base': 120, 'Transición': 150, 'Intensidad': 180, 'Peak': 240 },
-  compuesto:   { 'Base': 90,  'Transición': 105, 'Intensidad': 120, 'Peak': 150 },
-  aislamiento: { 'Base': 60,  'Transición': 60,  'Intensidad': 75,  'Peak': 90  },
-  core:        { 'Base': 45,  'Transición': 45,  'Intensidad': 60,  'Peak': 60  },
-};
-function restSecondsFor(ex, phase) {
-  const cat = REST_SECONDS[ex.restCategory || 'aislamiento'];
-  return (cat && cat[phase]) || 90;
-}
-
 // Días de test (semana 16) — Miércoles, Viernes y Domingo quedan como descanso
 // porque repiten ejercicios ya cubiertos en Lunes/Martes/Jueves/Sábado.
 const TEST_DAY_NAMES = ['Lunes', 'Martes', 'Jueves', 'Sábado'];
-// Un ejercicio compartido entre dos días de entreno (ej. Bicep curls aparece
-// Lunes+Martes+Viernes) por defecto se testea el primer día donde aparece —
-// pero eso dejaba a Martes y Jueves con solo 2-3 ejercicios de test (los
-// olímpicos/básicos) porque Lunes se quedaba con todos los accesorios
-// compartidos. Aquí se reasigna explícitamente el día "dueño" del test para
-// que ningún día de test se quede sin accesorios que alternar con el
-// ejercicio pesado de ese día.
-const TEST_OWNER_OVERRIDE = {
-  'Bicep curls sitting dumbbell':      'Martes',
-  'Bicep curls hammer grip seated':    'Martes',
-  'Triceps extension cable pull cord': 'Jueves',
-  'Triceps extension one-armed cable': 'Jueves',
+
+// ─── ORDEN DE TEST: SEPARAR EJERCICIOS DEL MISMO MÚSCULO ─────────────────────
+// El orden del día de ENTRENAMIENTO (arriba, en DAYS) está pensado para la
+// sesión normal. Para TESTEAR el máximo de cada ejercicio ese orden es
+// contraproducente si agrupa varios ejercicios del mismo músculo seguidos: la
+// fatiga residual del primero deprime el máximo medido en el segundo y el
+// tercero, y ese número deprimido es justo el que se guarda como RM para todo
+// el ciclo siguiente.
+//
+// Es una recomendación estándar en protocolos de test de 1RM, no una opinión:
+//  · Guía ACI de test de 1RM: empezar por el músculo/multiarticular más
+//    grande y "alternar ejercicios de tren superior/inferior y/o grupos
+//    musculares agonistas/antagonistas" para minimizar la fatiga.
+//  · El estudio que valida un único día de test con 8 ejercicios (fiabilidad
+//    ICC 0,911–0,993, sin necesidad de sesión de confirmación) evitó
+//    deliberadamente testear dos ejercicios del mismo músculo seguidos — la
+//    fiabilidad que reportan no cubre el caso de tu Lunes actual (3 series de
+//    tríceps seguidas, luego 3 de bíceps seguidas).
+//
+// Antes: Lunes testeaba tríceps×3 seguidos y luego bíceps×3 seguidos; Sábado
+// testeaba leg curl y Nordic curl (los dos, isquiotibiales) uno detrás de
+// otro; Jueves testeaba tres ejercicios de pecho/empuje seguidos. Ahora se
+// reordena por músculo con un reparto tipo "task scheduler": coloca primero el
+// grupo con más ejercicios pendientes, nunca repitiendo el músculo del
+// ejercicio anterior si hay alternativa.
+const MUSCLE_TAG = {
+  'Triceps stretches cable pull bar':  'triceps',
+  'Triceps extension cable pull cord': 'triceps',
+  'Triceps extension one-armed cable': 'triceps',
+  'Bicep curls cable pull':            'biceps',
+  'Bicep curls sitting dumbbell':      'biceps',
+  'Bicep curls hammer grip seated':    'biceps',
+  'Seated lateral raises dumbbell':    'hombro',
+  'Shoulder press sitting dumbbell':   'hombro',
+  'Butterfly reverse cable pull':      'hombro',
+  'Bench press barbell':               'pecho',
+  'Bench press inclined barbell':      'pecho',
+  'Flys standing cable pull':          'pecho',
+  'Leg curl machine':                  'isquios',
+  'Nordic curl':                       'isquios',
 };
+
+function interleaveByMuscle(list) {
+  const groups = new Map();
+  list.forEach(ex => {
+    const tag = MUSCLE_TAG[ex.name] || `__solo__${ex.name}`; // sin tag = grupo propio, no restringe nada
+    if (!groups.has(tag)) groups.set(tag, []);
+    groups.get(tag).push(ex);
+  });
+  const buckets = Array.from(groups.entries()).map(([tag, items]) => ({ tag, items, idx: 0 }));
+  const result = [];
+  let lastTag = null;
+  while (result.length < list.length) {
+    const pending = buckets.filter(b => b.idx < b.items.length);
+    const preferred = pending.filter(b => b.tag !== lastTag);
+    const pool = preferred.length ? preferred : pending; // forzado sólo si no queda otra opción
+    pool.sort((a, b) => (b.items.length - b.idx) - (a.items.length - a.idx));
+    const chosen = pool[0];
+    result.push(chosen.items[chosen.idx]);
+    chosen.idx += 1;
+    lastTag = chosen.tag;
+  }
+  return result;
+}
+
+// Orden en el que cada ejercicio COMPARTIDO entre dos días (p.ej. las dos
+// extensiones de tríceps que aparecen tanto en Lunes como en Jueves) se
+// "reclama" para deduplicarlo. Importa: si se reclamaran en el orden de
+// visualización (Lunes antes que Jueves), Lunes se quedaría con tríceps +
+// bíceps + hombro (interleaving posible) pero Jueves se quedaría SOLO con
+// tres ejercicios de pecho seguidos (bench, bench inclinado, flys) — el mismo
+// problema de fatiga acumulada que se acaba de corregir arriba, sin nada con
+// que intercalarlo porque no quedaría ningún ejercicio de otro músculo ese
+// día. Reclamando primero para Jueves, ese día pasa a tener pecho + tríceps
+// (interleaveable) y Lunes se queda con tríceps(1) + bíceps(3) + hombro(3)
+// (también interleaveable). El orden de visualización en la pestaña de test
+// sigue siendo Lunes→Martes→Jueves→Sábado; esto solo cambia a quién se le
+// "asigna" cada ejercicio repetido antes de intercalar.
+const TEST_CLAIM_ORDER = ['Jueves', 'Lunes', 'Martes', 'Sábado'];
+
 function buildTestPlan() {
   const seen = new Set();
-  const byDay = {};
-  TEST_DAY_NAMES.forEach(dayName => { byDay[dayName] = []; });
-  TEST_DAY_NAMES.forEach(dayName => {
+  const rawByDay = {};
+  TEST_CLAIM_ORDER.forEach(dayName => {
     const day = DAYS.find(d => d.name === dayName);
+    const list = [];
     (day.exercises || []).forEach(ex => {
       if (!ex.testMethod) return;         // ej. Dips — progresa solo por reps, sin carga que testear
       if (seen.has(ex.name)) return;      // evita testear dos veces el mismo ejercicio
       seen.add(ex.name);
-      const owner = TEST_OWNER_OVERRIDE[ex.name] || dayName;
-      byDay[owner].push(ex);
+      list.push(ex);
     });
+    rawByDay[dayName] = list;
   });
+  const byDay = {};
+  TEST_DAY_NAMES.forEach(dayName => { byDay[dayName] = interleaveByMuscle(rawByDay[dayName]); });
   return byDay;
 }
 
 // ─── WEDNESDAY STRETCHES ─────────────────────────────────────────────────────
-// Los 3 primeros son bloques continuos de piscina (sin series que contar).
-// El resto llevan contador de 60s + contador de series: cada vez que pulsas
-// "Iniciar" cuenta como una repetición y arranca la cuenta atrás de esa serie.
+// totalSec/sets alimentan el timer (HoldButton) del miércoles: para los
+// bloques de piscina no hay series (sets:1, cuenta atrás única); para los
+// estiramientos, totalSec toma el extremo alto del rango "45–60 s" como
+// objetivo — el ±15s de la barra deja bajarlo a 45 si hace falta.
 const STRETCHES = [
-  { name: 'Pool walking',             duration: '10 min',
-    desc: 'Camina hacia adelante y hacia atrás en la piscina, agua a la altura del pecho. La resistencia del agua da cardio de bajo impacto sin cargar la rodilla.' },
-  { name: 'Float & decompress',       duration: '5 min',
-    desc: 'Flota boca arriba con los brazos separados, deja que el agua sostenga todo el peso del cuerpo. Relaja columna y articulaciones — descompresión pasiva, no fuerces nada.' },
-  { name: 'Arm circles in water',     duration: '5 min',
-    desc: 'De pie en el agua, brazos extendidos, haz círculos hacia adelante y hacia atrás usando la resistencia del agua para movilidad de hombro.' },
-  { name: 'Glutes stretch seated',      sets: 4, seconds: 60,
-    desc: 'Sentado, cruza un tobillo sobre la rodilla contraria (figura 4) e inclina el torso hacia adelante manteniendo la espalda recta. Notarás el estiramiento en el glúteo de la pierna cruzada.' },
-  { name: 'Adductors stretch standing', sets: 4, seconds: 60,
-    desc: 'De pie con piernas muy separadas, desplaza el peso hacia un lado flexionando esa rodilla y dejando la otra pierna estirada. El estiramiento se siente en la cara interna del muslo de la pierna estirada.' },
-  { name: 'Leg flexor stretch sitting', sets: 3, seconds: 60,
-    desc: 'Sentado, una pierna estirada al frente y la otra flexionada con el pie cerca del muslo interno. Inclina el torso desde la cadera hacia el pie de la pierna estirada, espalda recta, sin redondear.' },
-  { name: 'Leg stretch standing',       sets: 4, seconds: 60,
-    desc: 'Apoya el talón en una superficie elevada (banco bajo) con la pierna estirada y la rodilla de apoyo con un ligero micro-flexión (sin bloquear). Inclina el torso desde la cadera manteniendo la espalda plana. Si molesta la rodilla de apoyo, baja la altura del apoyo.' },
-  { name: 'Hip flexor stretch lunge',   sets: 4, seconds: 60,
-    desc: 'Zancada con la rodilla trasera apoyada en el suelo (usa una colchoneta o toalla bajo la rodilla). Empuja la cadera hacia adelante manteniendo el torso vertical. El estiramiento se siente en la parte delantera de la cadera de la pierna de atrás.' },
-  { name: 'Trapezius stretch sideways', sets: 4, seconds: 60,
-    desc: 'Sentado o de pie, inclina la cabeza hacia un lado llevando la oreja hacia el hombro. Puedes ayudarte con la mano del mismo lado para aumentar suavemente el estiramiento en el lado contrario del cuello/trapecio.' },
-  { name: 'Torso rotation stretch',     sets: 4, seconds: 60,
-    desc: 'Sentado o de pie, rota el torso hacia un lado sujetándote a algo fijo (respaldo de silla) para profundizar el giro, manteniendo la cadera mirando al frente.' },
-  { name: 'Torso side bending',         sets: 4, seconds: 60,
-    desc: 'De pie, eleva un brazo por encima de la cabeza e inclina el torso hacia el lado contrario. El estiramiento se siente a lo largo del costado del tronco (dorsal/oblicuo).' },
-  { name: 'Shoulder cross-body',        sets: 4, seconds: 60,
-    desc: 'Lleva un brazo estirado por delante del pecho y usa el otro brazo para presionarlo suavemente hacia ti. El estiramiento se siente en la parte trasera del hombro (deltoide posterior).' },
-  { name: 'Quadriceps stretch standing', sets: 4, seconds: 60,
-    desc: 'De pie apoyado en algo fijo para el equilibrio (pared o barra — prioridad por la rodilla), agarra el tobillo de la pierna a estirar y llévalo hacia el glúteo manteniendo las rodillas juntas. El estiramiento se siente en la parte delantera del muslo.' },
+  { name: 'Pool walking',               duration: '10 min',      totalSec: 600, sets: 1 },
+  { name: 'Float & decompress',         duration: '5 min',       totalSec: 300, sets: 1 },
+  { name: 'Arm circles in water',       duration: '5 min',       totalSec: 300, sets: 1 },
+  { name: 'Glutes stretch seated',      duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Adductors stretch standing', duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Leg flexor stretch sitting', duration: '3 × 45–60 s', totalSec: 60,  sets: 3 },
+  { name: 'Leg stretch standing',       duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Hip flexor stretch lunge',   duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Trapezius stretch sideways', duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Torso rotation stretch',     duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Torso side bending',         duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Shoulder cross-body',        duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
+  { name: 'Quadriceps stretch standing', duration: '4 × 45–60 s', totalSec: 60, sets: 4 },
 ];
+
+// Tarjeta de cada bloque del miércoles: nombre, contador de series en vivo
+// (lee del contexto compartido sólo si este es el bloque activo ahora mismo)
+// y el botón que arranca la cuenta atrás.
+function StretchCard({ s }) {
+  const rest = useRest();
+  const isActive = rest && rest.active && rest.active.id === s.name;
+  const hasSets = s.sets > 1;
+  let badge = null;
+  if (isActive) {
+    const finished = rest.nextSet > s.sets;
+    badge = finished
+      ? '✓ completo'
+      : hasSets
+        ? `serie ${Math.min(rest.nextSet, s.sets)}/${s.sets}`
+        : (rest.running ? 'en marcha' : 'preparado');
+  }
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
+      padding: '9px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 6
+    }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ color: '#f8fafc', fontSize: 14 }}>{s.name}</div>
+        {badge && (
+          <div style={{ color: '#5eead4', fontSize: 11, fontWeight: 700, marginTop: 2 }}>{badge}</div>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 500 }}>{s.duration}</span>
+        <HoldButton id={s.name} seconds={s.totalSec} sets={s.sets} compact />
+      </div>
+    </div>
+  );
+}
 
 // ─── NUTRITION DATA ───────────────────────────────────────────────────────────
 const NUTRITION = {
@@ -536,6 +684,325 @@ const SUPPS = [
 
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
+// ─── MOTOR DEL CONTADOR DE DESCANSO ──────────────────────────────────────────
+// Un único contador activo en toda la app: si arrancas el de otro ejercicio, el
+// anterior se cancela. Así no hay dos cuentas atrás compitiendo a mitad de
+// sesión.
+//
+// La cuenta atrás se calcula contra un timestamp objetivo (no sumando ticks),
+// porque el navegador del móvil ralentiza los intervalos cuando la pantalla se
+// apaga o cambias de app. Con deadline, al volver el tiempo restante es el real.
+const RestCtx = createContext(null);
+const useRest = () => useContext(RestCtx);
+
+function RestProvider({ children }) {
+  const [active, setActive] = useState(null);   // { id, label, total, sets, mode }
+  const [left, setLeft] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [nextSet, setNextSet] = useState(2);
+  const [flash, setFlash] = useState(false);    // pulso visual al llegar a cero
+
+  const deadlineRef = useRef(null);
+  const audioRef = useRef(null);
+  const wakeRef = useRef(null);
+
+  // El AudioContext debe crearse/reanudarse dentro de un gesto del usuario o iOS
+  // lo deja mudo. Se crea en el primer toque de "iniciar" y se reutiliza.
+  const unlockAudio = useCallback(() => {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioRef.current) audioRef.current = new Ctx();
+      if (audioRef.current.state === 'suspended') audioRef.current.resume();
+    } catch {}
+  }, []);
+
+  const beep = useCallback(() => {
+    try {
+      const ac = audioRef.current;
+      if (ac && ac.state !== 'closed') {
+        const t0 = ac.currentTime;
+        [0, 0.30, 0.60].forEach((off, i) => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = i === 2 ? 1245 : 880;
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          gain.gain.setValueAtTime(0.0001, t0 + off);
+          gain.gain.exponentialRampToValueAtTime(0.4, t0 + off + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + off + (i === 2 ? 0.45 : 0.24));
+          osc.start(t0 + off);
+          osc.stop(t0 + off + (i === 2 ? 0.5 : 0.28));
+        });
+      }
+    } catch {}
+    try { navigator.vibrate && navigator.vibrate([180, 90, 180, 90, 400]); } catch {}
+  }, []);
+
+  const releaseWake = useCallback(() => {
+    try { wakeRef.current && wakeRef.current.release(); } catch {}
+    wakeRef.current = null;
+  }, []);
+
+  const requestWake = useCallback(() => {
+    try {
+      if (navigator.wakeLock && !wakeRef.current) {
+        navigator.wakeLock.request('screen')
+          .then(l => { wakeRef.current = l; })
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
+
+  const stop = useCallback(() => {
+    deadlineRef.current = null;
+    setRunning(false);
+    setActive(null);
+    setLeft(0);
+    setNextSet(2);
+    releaseWake();
+  }, [releaseWake]);
+
+  // Arranca (o reinicia) el contador de un ejercicio concreto.
+  // mode: 'rest' (descanso entre series de fuerza) | 'hold' (duración activa de
+  // un estiramiento o de un bloque de piscina/cardio del miércoles) — mismo
+  // motor de cuenta atrás, solo cambia el texto que se muestra en la barra.
+  const start = useCallback((id, label, seconds, sets, mode = 'rest') => {
+    unlockAudio();
+    requestWake();
+    setActive(prev => {
+      // Cambiar de ejercicio reinicia el contador de series desde el principio.
+      // El punto de partida depende del modo: en 'rest' pulsas el botón
+      // DESPUÉS de levantar la serie 1 (así que el descanso ya apunta a la
+      // serie 2 — nunca hay "descanso antes de la serie 1"). En 'hold' pulsas
+      // el botón para EMPEZAR a aguantar/nadar la serie 1 (así que debe
+      // mostrar "serie 1", no "serie 2", desde el primer instante).
+      if (!prev || prev.id !== id) setNextSet(mode === 'hold' ? 1 : 2);
+      return { id, label, total: seconds, sets, mode };
+    });
+    setLeft(seconds);
+    deadlineRef.current = Date.now() + seconds * 1000;
+    setRunning(true);
+  }, [unlockAudio, requestWake]);
+
+  const pause = useCallback(() => {
+    if (!running) return;
+    const rem = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
+    deadlineRef.current = null;
+    setLeft(rem);
+    setRunning(false);
+    releaseWake();
+  }, [running, releaseWake]);
+
+  const resume = useCallback(() => {
+    if (running || !active) return;
+    unlockAudio();
+    requestWake();
+    deadlineRef.current = Date.now() + left * 1000;
+    setRunning(true);
+  }, [running, active, left, unlockAudio, requestWake]);
+
+  // Ajuste rápido ±15 s sin salir del contador (la barra pesada de hoy no es la
+  // de la semana que viene).
+  const adjust = useCallback((delta) => {
+    setLeft(prev => {
+      const next = Math.max(5, prev + delta);
+      if (running && deadlineRef.current) deadlineRef.current = Date.now() + next * 1000;
+      return next;
+    });
+  }, [running]);
+
+  // Salta al final: marca la serie como descansada sin esperar.
+  const skip = useCallback(() => {
+    if (!active) return;
+    deadlineRef.current = null;
+    setRunning(false);
+    setLeft(active.total);
+    setNextSet(n => Math.min(n + 1, active.sets + 1));
+    releaseWake();
+  }, [active, releaseWake]);
+
+  useEffect(() => {
+    if (!running) return;
+    const tick = () => {
+      if (!deadlineRef.current) return;
+      const rem = Math.round((deadlineRef.current - Date.now()) / 1000);
+      if (rem <= 0) {
+        deadlineRef.current = null;
+        setRunning(false);
+        beep();
+        setFlash(true);
+        setTimeout(() => setFlash(false), 2500);
+        // Vuelve al estado de espera, ya recargado para la serie siguiente.
+        setActive(a => {
+          if (a) { setLeft(a.total); setNextSet(n => Math.min(n + 1, a.sets + 1)); }
+          return a;
+        });
+        releaseWake();
+      } else {
+        setLeft(rem);
+      }
+    };
+    const iv = setInterval(tick, 250);
+    tick();
+    return () => clearInterval(iv);
+  }, [running, beep, releaseWake]);
+
+  // Al volver de segundo plano el wake lock se pierde: hay que repedirlo.
+  useEffect(() => {
+    const onVis = () => { if (document.visibilityState === 'visible' && running) requestWake(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [running, requestWake]);
+
+  useEffect(() => () => releaseWake(), [releaseWake]);
+
+  const value = {
+    active, left, running, nextSet, flash,
+    start, stop, pause, resume, adjust, skip,
+  };
+  return <RestCtx.Provider value={value}>{children}</RestCtx.Provider>;
+}
+
+// Botón por ejercicio: muestra el descanso prescrito y arranca la cuenta atrás.
+function RestButton({ ex, weekIdx, compact }) {
+  const rest = useRest();
+  const seconds = restSecondsFor(ex, weekIdx);
+  const sets = setsCountFor(ex, weekIdx);
+  const isActive = rest && rest.active && rest.active.id === ex.name;
+  const live = isActive && rest.running;
+  return (
+    <button
+      onClick={() => rest.start(ex.name, ex.name, seconds, sets)}
+      title={`Descanso prescrito entre series: ${fmtClock(seconds)}`}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        padding: compact ? '4px 9px' : '5px 11px',
+        borderRadius: 999, cursor: 'pointer',
+        border: `1px solid ${isActive ? '#38bdf8' : '#334155'}`,
+        background: isActive ? '#0c4a6e' : '#0f172a',
+        color: isActive ? '#7dd3fc' : '#94a3b8',
+        fontSize: compact ? 11 : 12, fontWeight: 700,
+        fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+        transition: 'all 0.15s',
+      }}>
+      ⏱ {live ? fmtClock(rest.left) : fmtClock(seconds)}
+    </button>
+  );
+}
+
+// Botón para el miércoles: la cuenta atrás ES el ejercicio (aguantar el
+// estiramiento, o nadar/caminar el bloque de piscina), no un descanso entre
+// series de fuerza — mismo motor que RestButton, mode='hold'.
+function HoldButton({ id, seconds, sets, compact }) {
+  const rest = useRest();
+  const isActive = rest && rest.active && rest.active.id === id;
+  const live = isActive && rest.running;
+  return (
+    <button
+      onClick={() => rest.start(id, id, seconds, sets, 'hold')}
+      title={sets > 1 ? `${fmtClock(seconds)} × ${sets} series` : `Duración: ${fmtClock(seconds)}`}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        padding: compact ? '4px 9px' : '5px 11px',
+        borderRadius: 999, cursor: 'pointer',
+        border: `1px solid ${isActive ? '#2dd4bf' : '#334155'}`,
+        background: isActive ? '#134e4a' : '#0f172a',
+        color: isActive ? '#5eead4' : '#94a3b8',
+        fontSize: compact ? 11 : 12, fontWeight: 700,
+        fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+        transition: 'all 0.15s',
+      }}>
+      ⏱ {live ? fmtClock(rest.left) : fmtClock(seconds)}
+    </button>
+  );
+}
+
+// Texto y color de la barra según el modo — descanso entre series de fuerza
+// frente a mantener un estiramiento o un bloque continuo de piscina (sin
+// series, p.ej. nado o pool walking, donde sets=1 y no hay "serie X de Y").
+function restBarStatus({ mode, sets, nextSet, running, flash }) {
+  const finished = nextSet > sets;
+  const hasSets = sets > 1;
+  if (mode === 'hold') {
+    if (flash)    return hasSets ? '✓ Serie completada' : '✓ Completado';
+    if (finished) return 'Ejercicio completado';
+    if (hasSets)  return running ? `Manteniendo → serie ${nextSet} de ${sets}` : `Preparado → serie ${nextSet} de ${sets}`;
+    return running ? 'En marcha' : 'Preparado';
+  }
+  if (flash)    return 'Descanso completado';
+  if (finished) return 'Ejercicio completado';
+  return running ? `Descansando → serie ${nextSet} de ${sets}` : `En espera → serie ${nextSet} de ${sets}`;
+}
+
+// Barra fija inferior: visible mientras haces scroll al ejercicio siguiente.
+function RestBar() {
+  const rest = useRest();
+  if (!rest || !rest.active) return null;
+  const { active, left, running, nextSet, flash } = rest;
+  const pct = active.total ? Math.max(0, Math.min(100, (left / active.total) * 100)) : 0;
+  const isHold = active.mode === 'hold';
+  const accent = flash ? '#22C55E' : running ? (isHold ? '#2dd4bf' : '#38bdf8') : '#fbbf24';
+  const statusText = restBarStatus({ mode: active.mode, sets: active.sets, nextSet, running, flash });
+
+  return (
+    <div style={{
+      position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
+      background: '#0b1220', borderTop: `1px solid ${accent}55`,
+      boxShadow: '0 -8px 24px rgba(0,0,0,0.55)',
+      padding: '10px 14px calc(10px + env(safe-area-inset-bottom, 0px))',
+    }}>
+      {/* Barra de progreso */}
+      <div style={{ height: 4, borderRadius: 999, background: '#1e293b', overflow: 'hidden', marginBottom: 9 }}>
+        <div style={{
+          width: `${pct}%`, height: '100%', background: accent,
+          transition: 'width 0.25s linear',
+        }} />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            color: '#f8fafc', fontSize: 13, fontWeight: 600,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {active.label}
+          </div>
+          <div style={{ color: flash ? '#22C55E' : '#64748b', fontSize: 11, marginTop: 1 }}>
+            {statusText}
+          </div>
+        </div>
+
+        <div style={{
+          color: accent, fontSize: 30, fontWeight: 800,
+          fontVariantNumeric: 'tabular-nums', letterSpacing: -1, minWidth: 78,
+          textAlign: 'right',
+        }}>
+          {fmtClock(left)}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+        <button onClick={() => rest.adjust(-15)} style={barBtn('#1e293b', '#94a3b8')}>−15s</button>
+        <button onClick={() => rest.adjust(15)} style={barBtn('#1e293b', '#94a3b8')}>+15s</button>
+        <button
+          onClick={() => (running ? rest.pause() : rest.resume())}
+          style={{ ...barBtn(running ? '#78350f' : '#065f46', running ? '#fcd34d' : '#6ee7b7'), flex: 2 }}>
+          {running ? '⏸ Pausa' : '▶ Iniciar'}
+        </button>
+        <button onClick={() => rest.skip()} style={barBtn('#1e293b', '#94a3b8')}>Saltar</button>
+        <button onClick={() => rest.stop()} style={barBtn('#1e293b', '#64748b')}>✕</button>
+      </div>
+    </div>
+  );
+}
+
+const barBtn = (bg, color) => ({
+  flex: 1, padding: '10px 6px', borderRadius: 8, border: 'none', cursor: 'pointer',
+  background: bg, color, fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap',
+});
+
 function PhasePill({ weekIdx }) {
   const p = PROG[weekIdx];
   return (
@@ -549,25 +1016,7 @@ function PhasePill({ weekIdx }) {
   );
 }
 
-// Botón ⏱ compartido — arranca el descanso prescrito (según categoría del
-// ejercicio y fase del ciclo) en la barra global de descanso.
-function RestButton({ ex, weekIdx, totalSets, startRest }) {
-  if (!startRest) return null;
-  const phase = PROG[weekIdx].phase;
-  const seconds = restSecondsFor(ex, phase);
-  return (
-    <button
-      onClick={() => startRest(ex.name, seconds, totalSets)}
-      style={{
-        marginTop: 6, padding: '5px 10px', borderRadius: 6, border: '1px solid #334155',
-        background: '#0f172a', color: '#38bdf8', fontSize: 12, fontWeight: 600, cursor: 'pointer'
-      }}>
-      ⏱ Descanso {seconds}s
-    </button>
-  );
-}
-
-function OlympicTable({ ex, weekIdx, rmStore, startRest }) {
+function OlympicTable({ ex, weekIdx, rmStore }) {
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
   const sets = overridden ? scaleOlympicTable(ex.sets, ex.rm, effRM) : ex.sets;
@@ -576,8 +1025,11 @@ function OlympicTable({ ex, weekIdx, rmStore, startRest }) {
     <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ color: '#f8fafc', fontWeight: 600, fontSize: 14 }}>🏋️ {ex.name}</span>
-        <span style={{ color: overridden ? '#22C55E' : '#94a3b8', fontSize: 12 }}>
-          RM: {effRM}kg {overridden && '✓ test'}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: overridden ? '#22C55E' : '#94a3b8', fontSize: 12 }}>
+            RM: {effRM}kg {overridden && '✓ test'}
+          </span>
+          <RestButton ex={ex} weekIdx={weekIdx} compact />
         </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
@@ -591,12 +1043,11 @@ function OlympicTable({ ex, weekIdx, rmStore, startRest }) {
           </div>
         ))}
       </div>
-      <RestButton ex={ex} weekIdx={weekIdx} totalSets={4} startRest={startRest} />
     </div>
   );
 }
 
-function NonOlympicRow({ ex, weekIdx, rmStore, startRest }) {
+function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const p = PROG[weekIdx];
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
@@ -605,29 +1056,28 @@ function NonOlympicRow({ ex, weekIdx, rmStore, startRest }) {
   const isArm = ex.unit === 'kg/arm';
   return (
     <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '10px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 6
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
-          <div style={{ color: overridden ? '#22C55E' : '#64748b', fontSize: 12 }}>
-            RM: {effRM} {ex.unit} {overridden && '✓ test'}
-          </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
-            {weight} {isArm ? 'kg/arm' : 'kg'}
-          </div>
-          <div style={{ color: '#94a3b8', fontSize: 13 }}>4 × {p.reps} reps</div>
-          {ex.dumbbell && <div style={{ color: '#64748b', fontSize: 11 }}>mancuerna real disponible</div>}
+      <div>
+        <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
+        <div style={{ color: overridden ? '#22C55E' : '#64748b', fontSize: 12 }}>
+          RM: {effRM} {ex.unit} {overridden && '✓ test'}
         </div>
       </div>
-      <RestButton ex={ex} weekIdx={weekIdx} totalSets={4} startRest={startRest} />
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
+          {weight} {isArm ? 'kg/arm' : 'kg'}
+        </div>
+        <div style={{ color: '#94a3b8', fontSize: 13 }}>4 × {p.reps} reps</div>
+        {ex.dumbbell && <div style={{ color: '#64748b', fontSize: 11 }}>mancuerna real disponible</div>}
+        <div style={{ marginTop: 5 }}><RestButton ex={ex} weekIdx={weekIdx} compact /></div>
+      </div>
     </div>
   );
 }
 
-function BWRow({ ex, weekIdx, rmStore, startRest }) {
+function BWRow({ ex, weekIdx, rmStore }) {
   const phase = PROG[weekIdx].phase;
   const reps = ex.repsByPhase[phase];
   const equipLabel = ex.equipLabel || 'Peso corporal';
@@ -638,7 +1088,10 @@ function BWRow({ ex, weekIdx, rmStore, startRest }) {
     <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</span>
-        <span style={{ color: '#64748b', fontSize: 12 }}>{loadLabel}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: '#64748b', fontSize: 12 }}>{loadLabel}</span>
+          <RestButton ex={ex} weekIdx={weekIdx} compact />
+        </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${reps.length}, 1fr)`, gap: 6 }}>
         {reps.map((r, i) => (
@@ -651,98 +1104,18 @@ function BWRow({ ex, weekIdx, rmStore, startRest }) {
       <div style={{ color: '#64748b', fontSize: 11, marginTop: 6 }}>
         {note}
       </div>
-      <RestButton ex={ex} weekIdx={weekIdx} totalSets={reps.length} startRest={startRest} />
     </div>
   );
 }
 
-// Contador de 60s + contador de series para los estiramientos del miércoles.
-// Cada pulsación de "Iniciar" cuenta como una repetición de esa serie y
-// arranca la cuenta atrás — no hace falta esperar a que termine para que
-// cuente, se cuenta en el momento de activar el contador.
-function StretchTimerRow({ ex }) {
-  const [seriesDone, setSeriesDone] = useState(0);
-  const [remaining, setRemaining] = useState(ex.seconds);
-  const [running, setRunning] = useState(false);
-  const intervalRef = useRef(null);
-
-  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
-
-  function startTimer() {
-    if (running) return;
-    setSeriesDone(s => s + 1);
-    setRemaining(ex.seconds);
-    setRunning(true);
-    intervalRef.current = setInterval(() => {
-      setRemaining(r => {
-        if (r <= 1) {
-          clearInterval(intervalRef.current);
-          setRunning(false);
-          return 0;
-        }
-        return r - 1;
-      });
-    }, 1000);
-  }
-
-  function resetSeries() {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setRunning(false);
-    setSeriesDone(0);
-    setRemaining(ex.seconds);
-  }
-
-  const done = seriesDone >= ex.sets;
-
-  return (
-    <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 6 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ color: '#f8fafc', fontSize: 14 }}>{ex.name}</span>
-        <span style={{ color: done ? '#22C55E' : '#94a3b8', fontSize: 13, fontWeight: 600 }}>
-          Serie {Math.min(seriesDone, ex.sets)}/{ex.sets}
-        </span>
-      </div>
-      {ex.desc && <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8, lineHeight: 1.4 }}>{ex.desc}</div>}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button onClick={startTimer} disabled={running}
-          style={{
-            flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: running ? 'default' : 'pointer',
-            background: running ? '#334155' : (done ? '#14532d' : '#2563EB'),
-            color: running ? '#94a3b8' : (done ? '#86efac' : '#fff'),
-            fontWeight: 700, fontSize: 14
-          }}>
-          {running ? `⏱ 0:${String(remaining).padStart(2, '0')}` : (done ? `✓ Completado — repetir (${ex.seconds}s)` : `▶ Iniciar (${ex.seconds}s)`)}
-        </button>
-        {(seriesDone > 0 && !running) && (
-          <span onClick={resetSeries} style={{ color: '#EF4444', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            reiniciar
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DayWorkout({ day, weekIdx, rmStore, startRest }) {
+function DayWorkout({ day, weekIdx, rmStore }) {
   if (day.special === 'stretch') {
     return (
       <div>
         <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
           🏊 Pool Recovery 20 min + 🏊‍♂️ Nado continuo/intervalos 15–20 min + 🧘 Estiramientos 45–60 s por serie
         </div>
-        {STRETCHES.map((s, i) => (
-          s.sets
-            ? <StretchTimerRow key={i} ex={s} />
-            : (
-              <div key={i} style={{ padding: '9px 14px', background: '#1e293b', borderRadius: 8, marginBottom: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#f8fafc', fontSize: 14 }}>{s.name}</span>
-                  <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 500 }}>{s.duration}</span>
-                </div>
-                {s.desc && <div style={{ color: '#64748b', fontSize: 12, marginTop: 4, lineHeight: 1.4 }}>{s.desc}</div>}
-              </div>
-            )
-        ))}
+        {STRETCHES.map((s, i) => <StretchCard key={i} s={s} />)}
       </div>
     );
   }
@@ -750,15 +1123,15 @@ function DayWorkout({ day, weekIdx, rmStore, startRest }) {
   return (
     <div>
       {day.exercises.map((ex, i) => {
-        if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />;
-        if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />;
-        return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />;
+        if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
+        if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
+        return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
       })}
     </div>
   );
 }
 
-function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore, startRest }) {
+function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore }) {
   const day = DAYS[dayIdx];
   return (
     <div>
@@ -777,9 +1150,39 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
       </div>
 
       {/* Phase info */}
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <PhasePill weekIdx={weekIdx} />
         <span style={{ color: '#64748b', fontSize: 13 }}>4 series</span>
+      </div>
+
+      {/* Leyenda de descansos de la fase actual */}
+      <div style={{
+        marginBottom: 16, background: '#0f172a', border: '1px solid #1e293b',
+        borderRadius: 10, padding: '9px 12px'
+      }}>
+        <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>
+          ⏱ Descanso entre series · fase {PROG[weekIdx].phase}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            ['Olímpicos', 'olympic'], ['Básicos', 'heavy'],
+            ['Compuestos', 'compound'], ['Aislamiento', 'isolation'], ['Core', 'core'],
+          ].map(([label, cat]) => {
+            const add = cat === 'core' ? 0 : (REST_PHASE_ADD[PROG[weekIdx].phase] || 0);
+            return (
+              <span key={cat} style={{
+                background: '#1e293b', borderRadius: 6, padding: '3px 8px',
+                color: '#94a3b8', fontSize: 11, fontVariantNumeric: 'tabular-nums'
+              }}>
+                {label} <strong style={{ color: '#7dd3fc' }}>{fmtClock(REST_BASE[cat] + add)}</strong>
+              </span>
+            );
+          })}
+        </div>
+        <div style={{ color: '#475569', fontSize: 10.5, marginTop: 6, lineHeight: 1.45 }}>
+          Pulsa ⏱ en cualquier ejercicio para lanzar la cuenta atrás. Al llegar a cero
+          suena y vibra, y queda recargada para la serie siguiente.
+        </div>
       </div>
 
       {/* Day selector */}
@@ -843,7 +1246,7 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
         </div>
       </div>
 
-      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} startRest={startRest} />
+      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} />
 
       {/* Condicionamiento añadido */}
       {CONDITIONING[day.name] && (
@@ -1005,45 +1408,30 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
     if (denom === 0) return null;
     const b = (n*sumXY - sumX*sumY) / denom;
     const a = (sumY - b*sumX) / n;
-    return { a, b };
+    // R²: sin esto no hay forma de saber si la recta describe los puntos o si
+    // uno de ellos está mal marcado. Un ajuste flojo invalida la extrapolación.
+    const meanY = sumY / n;
+    const ssTot = pts.reduce((s,p) => s + (p.v - meanY) ** 2, 0);
+    const ssRes = pts.reduce((s,p) => s + (p.v - (a + b * p.load)) ** 2, 0);
+    const r2 = ssTot === 0 ? 0 : 1 - ssRes / ssTot;
+    return { a, b, r2 };
   }
   const fit = points.length >= 3 ? linreg(points) : null;
-  const rawEstRM = (fit && fit.b !== 0) ? (mvt - fit.a) / fit.b : null;
-  // Corrección de sesgo del método carga-velocidad: la extrapolación lineal a
-  // la velocidad mínima tiende a SOBREESTIMAR el 1RM real frente a un test de
-  // carga directa. Ajuste tomado tal cual de lo ya decidido en otra conversación
-  // (Greig et al. 2023, −3.7%) — no lo he re-verificado yo mismo en esta sesión,
-  // lo aplico porque así se acordó, no como hallazgo propio.
-  const BIAS_CORRECTION = 0.037;
-  const estRM = rawEstRM ? rawEstRM * (1 - BIAS_CORRECTION) : null;
+  const rawRM = (fit && fit.b !== 0) ? (mvt - fit.a) / fit.b : null;
+  // Corrección del sesgo sistemático (+3,7%) antes de guardar nada: es el valor
+  // corregido el que debe alimentar los porcentajes del ciclo nuevo.
+  const estRM = rawRM ? rawRM / (1 + LV_OVERESTIMATE) : null;
+  const see = seeFor(ex.name);
+  const rmLow  = estRM ? estRM * (1 - see) : null;
+  const rmHigh = estRM ? estRM * (1 + see) : null;
 
-  // R² y SEE del ajuste — calculados directamente de tus propios puntos, no de
-  // una cifra de literatura: cuánto se ajusta la recta a lo que mediste de
-  // verdad, y qué margen de error (en kg) se traduce a partir de esa dispersión.
-  let rSquared = null, seeWeight = null;
-  if (fit && points.length >= 3) {
-    const meanV = points.reduce((s, p) => s + p.v, 0) / points.length;
-    const ssTot = points.reduce((s, p) => s + (p.v - meanV) ** 2, 0);
-    const ssRes = points.reduce((s, p) => s + (p.v - (fit.a + fit.b * p.load)) ** 2, 0);
-    rSquared = ssTot > 0 ? 1 - ssRes / ssTot : null;
-    const seeV = Math.sqrt(ssRes / Math.max(1, points.length - 2));
-    seeWeight = fit.b !== 0 ? seeV / Math.abs(fit.b) : null;
-  }
-
-  // Avisos de calidad del test — no bloquean guardar, pero avisan de por qué
-  // el RM estimado puede no ser fiable.
-  const warnings = [];
-  if (points.length > 0 && points.length < 3) warnings.push('Añade al menos 3 series para ajustar la recta.');
-  if (points.length >= 3) {
-    const loads = points.map(p => p.load);
-    const maxLoad = Math.max(...loads), minLoad = Math.max(...loads) > 0 ? Math.min(...loads) : 0;
-    const baseRMnow = effectiveRM(ex, rmStore);
-    if (maxLoad < baseRMnow * 0.8) warnings.push(`La carga más pesada probada (${maxLoad}kg) está lejos de tu RM actual (${baseRMnow}kg) — la extrapolación a MVT es grande y menos fiable. Prueba con cargas más cercanas a tu límite.`);
-    if ((maxLoad - minLoad) < baseRMnow * 0.15) warnings.push('Las cargas probadas están muy juntas entre sí — con poco rango de carga la recta carga-velocidad queda mal condicionada. Prueba con más variedad, de ligera a pesada.');
-    const tooFast = points.filter(p => p.v > (mvt * 4));
-    if (tooFast.length > 0) warnings.push('Alguna serie se movió muy rápido en relación al MVT — puede aportar poco al ajuste o ser un error de marcado. Revisa esas series.');
-    if (rSquared !== null && rSquared < 0.85) warnings.push(`R² bajo (${rSquared.toFixed(2)}) — el ajuste no explica bien tus datos. Revisa que el marcado de inicio/fin sea preciso en cada serie.`);
-  }
+  // Avisos de calidad del test
+  const testRM = effectiveRM(ex, rmStore);
+  const tooFast = points.filter(p => p.v > LV_VMAX_WARN);
+  const heavyPts = points.filter(p => p.load >= testRM * 0.78);
+  const spread = points.length >= 2
+    ? (Math.max(...points.map(p => p.load)) - Math.min(...points.map(p => p.load))) / testRM
+    : 0;
 
   const current = rmStore[ex.name];
   const markerColor = { calib: '#F59E0B', start: '#3B82F6', end: '#EF4444' };
@@ -1069,7 +1457,31 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
             <span onClick={() => setLadderFallback(true)} style={{ color: '#F59E0B', cursor: 'pointer' }}>no puedo grabar hoy — usar escalera directa</span>
           </div>
 
-          <WarmupBlock baseRM={effectiveRM(ex, rmStore)} unit={ex.unit} />
+          {/* Escalera prescrita para este ejercicio */}
+          <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 12px', marginBottom: 10, border: '1px solid #1e293b' }}>
+            <div style={{ color: '#7dd3fc', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
+              Cargas del test · {LV_REST_SEC / 60} min de descanso entre series
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${LV_LADDER.length}, 1fr)`, gap: 5 }}>
+              {LV_LADDER.map((st, i) => {
+                const kg = Math.round(effectiveRM(ex, rmStore) * st.pct / 2.5) * 2.5;
+                return (
+                  <div key={i} style={{ background: '#1e293b', borderRadius: 6, padding: '7px 4px', textAlign: 'center' }}>
+                    <div style={{ color: '#64748b', fontSize: 10 }}>{Math.round(st.pct * 100)}%</div>
+                    <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 14 }}>{kg}</div>
+                    <div style={{ color: '#94a3b8', fontSize: 11 }}>×{st.reps}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ color: '#475569', fontSize: 10.5, marginTop: 7, lineHeight: 1.5 }}>
+              Rango 40–90%: por debajo la barra va demasiado rápido y curva la recta, y no se
+              sube al 100% porque la extrapolación ya cubre ese tramo sin arriesgar un fallo.
+              De cada carga <strong>marca la repetición más rápida</strong>, no la media.
+              Intención máxima en todas — también en las ligeras: si no empujas al máximo,
+              la recta mide tu contención, no tu capacidad.
+            </div>
+          </div>
 
           <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
             <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
@@ -1177,26 +1589,67 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
           )}
 
           {estRM && (
-            <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
-              <span style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>RM estimado: {estRM.toFixed(1)} kg</span>
-              <div style={{ color: '#64748b', fontSize: 11, marginTop: 4 }}>
-                Bruto de la extrapolación: {rawEstRM.toFixed(1)}kg · corregido −3.7% (sesgo de sobreestimación del método carga-velocidad): {estRM.toFixed(1)}kg
-                {rSquared !== null && <> · R² = {rSquared.toFixed(2)}</>}
-                {seeWeight !== null && <> · margen de error ≈ ±{seeWeight.toFixed(1)}kg</>}
+            <div style={{ background: '#0f172a', borderRadius: 8, padding: '11px 14px', marginBottom: 10 }}>
+              <div style={{ color: '#22C55E', fontWeight: 700, fontSize: 17 }}>
+                RM estimado: {estRM.toFixed(1)} kg
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 5, lineHeight: 1.5 }}>
+                Rango probable <strong style={{ color: '#e2e8f0' }}>{rmLow.toFixed(1)}–{rmHigh.toFixed(1)} kg</strong>
+                {' '}(SEE {(see * 100).toFixed(1)}% para este ejercicio).<br />
+                Extrapolación bruta {rawRM.toFixed(1)} kg, corregida −3,7% por la
+                sobrestimación sistemática del método (Greig 2023, meta-análisis IPD).
+              </div>
+              <div style={{
+                marginTop: 7, paddingTop: 7, borderTop: '1px dashed #1e293b',
+                color: fit.r2 >= 0.95 ? '#22C55E' : fit.r2 >= 0.90 ? '#F59E0B' : '#EF4444',
+                fontSize: 12, fontWeight: 600
+              }}>
+                Ajuste de la recta: R² = {fit.r2.toFixed(3)}
+                {fit.r2 >= 0.95 ? ' · bueno'
+                  : fit.r2 >= 0.90 ? ' · aceptable, revisa si algún punto está mal marcado'
+                  : ' · malo — no te fíes de esta estimación, repite las marcas'}
               </div>
             </div>
           )}
-          {warnings.length > 0 && (
-            <div style={{ background: '#1e293b', border: '1px solid #F59E0B33', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>
-              {warnings.map((w, i) => (
-                <div key={i} style={{ color: '#F59E0B', fontSize: 12, padding: '2px 0' }}>⚠ {w}</div>
-              ))}
+
+          {/* Avisos de calidad — cada uno corresponde a un fallo concreto que
+              la literatura señala como fuente de error en este método. */}
+          {points.length > 0 && points.length < 3 && (
+            <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8 }}>
+              Añade al menos 3 series para ajustar la recta (5 es lo recomendado).
+            </div>
+          )}
+          {points.length >= 3 && points.length < 5 && (
+            <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
+              Con {points.length} puntos la recta ya sale, pero más cargas mejoran la
+              fiabilidad (ICC 0,90 con muchas cargas vs 0,81 con pocas).
+            </div>
+          )}
+          {tooFast.length > 0 && (
+            <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8 }}>
+              ⚠ {tooFast.length} serie{tooFast.length > 1 ? 's' : ''} por encima de {LV_VMAX_WARN} m/s
+              ({tooFast.map(p => `${p.load}kg`).join(', ')}). El tramo muy rápido curva la relación
+              y sesga la extrapolación — quítalas o sube esa carga.
+            </div>
+          )}
+          {points.length >= 3 && heavyPts.length === 0 && (
+            <div style={{ color: '#EF4444', fontSize: 12, marginBottom: 8 }}>
+              ⚠ Ninguna serie por encima del ~80% de tu RM actual. Las cargas pesadas son
+              las que más determinan la calidad del ajuste; sin ellas estás extrapolando a ciegas.
+            </div>
+          )}
+          {points.length >= 3 && spread < 0.35 && (
+            <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8 }}>
+              ⚠ Las cargas están demasiado juntas ({Math.round(spread * 100)}% de rango).
+              Separa más los puntos: cuanto más corto el tramo, más se amplifica el error al extrapolar.
             </div>
           )}
 
           <button
             disabled={!estRM}
-            onClick={() => saveRM(ex.name, Math.round(estRM * 2) / 2, ex.unit, 'video', { points, plateDiameter, mvt })}
+            onClick={() => saveRM(ex.name, Math.round(estRM * 2) / 2, ex.unit, 'video',
+              { points, plateDiameter, mvt, rawRM: Number(rawRM.toFixed(1)), r2: Number(fit.r2.toFixed(3)),
+                range: [Number(rmLow.toFixed(1)), Number(rmHigh.toFixed(1))] })}
             style={{
               width: '100%', padding: '10px', borderRadius: 8, border: 'none', cursor: estRM ? 'pointer' : 'default',
               background: estRM ? '#14532d' : '#1e293b', color: estRM ? '#86efac' : '#475569', fontWeight: 700, fontSize: 13
@@ -1205,25 +1658,6 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT }) {
           </button>
         </>
       )}
-    </div>
-  );
-}
-
-// Bloque de calentamiento prescrito, reutilizado por escalera y vídeo.
-function WarmupBlock({ baseRM, unit }) {
-  const warmup = buildWarmup(baseRM);
-  const u = unit === 'kg/arm' ? 'kg/arm' : 'kg';
-  return (
-    <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
-      <div style={{ color: '#64748b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
-        Calentamiento antes del test
-      </div>
-      {warmup.map((w, i) => (
-        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: 12, padding: '2px 0' }}>
-          <span>{w.weight}{u === 'kg/arm' ? ' kg/arm' : ' kg'} × {w.reps}</span>
-          <span>descanso {w.rest}s</span>
-        </div>
-      ))}
     </div>
   );
 }
@@ -1238,9 +1672,13 @@ function LadderBody({ ex, rmStore, saveRM }) {
   const ladder = [0.60,0.70,0.80,0.90,0.95,1.00,1.05].map(pct => Math.round(baseRM*pct/2.5)*2.5);
   return (
     <>
-      <WarmupBlock baseRM={baseRM} unit={ex.unit} />
-      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
-        Tras el calentamiento, escalera de test (60→105% del RM actual): {ladder.join(' · ')} kg. Sube de carga hasta que la técnica se rompa y anota abajo el peso más alto conseguido limpio.
+      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
+        Escalera de referencia (60→105% del RM actual): {ladder.join(' · ')} kg. Sube de carga
+        hasta que la técnica se rompa y anota abajo el peso más alto conseguido limpio.
+        <br />
+        <strong style={{ color: '#94a3b8' }}>3–5 min de descanso</strong> entre los intentos
+        del 90% en adelante, y singles a partir de ahí: si encadenas intentos pesados con poco
+        descanso, lo que mides es la fatiga acumulada, no tu máximo.
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <input type="number" placeholder={`Peso conseguido (${ex.unit})`} value={value} onChange={e => setValue(e.target.value)}
@@ -1304,39 +1742,47 @@ function CoreLoadTestCard({ ex, rmStore, saveRM }) {
   );
 }
 
-// Sirve tanto para mancuernas (peso discreto, selector) como para accesorios
-// de polea/máquina (aislamiento) — carga libre por texto. Ninguno de los dos
-// busca un 1RM real: en mancuerna por los saltos de peso disponibles, en
-// aislamiento porque el riesgo de ir a máximo no aporta nada a un accesorio
-// que no sostiene la progresión del ciclo (solo los compuestos que sí la
-// sostienen — banca, sentadilla, peso muerto, olímpicos, inclinado, jalón,
-// hip thrust — mantienen el test a máximo real vía escalera o vídeo).
+// Test de aislamiento: AMRAP a una carga exigente + fórmula de Epley, en vez de
+// buscar un máximo real de una repetición.
+//
+// Por qué: una revisión sistemática de fiabilidad del test de 1RM (ICCs 0,74–0,99
+// en ejercicios monoarticulares, comparable a los multiarticulares) muestra que
+// SÍ se puede testear un máximo real con fiabilidad en aislamiento — el problema
+// no es que el dato salga malo. Es que no hace falta gastar ahí el presupuesto
+// de fatiga del día de test: estos ejercicios no tienen una progresión rígida a
+// 15 semanas que dependa de un RM exacto (el ciclo nuevo los recalibra solo,
+// semana a semana, por RIR/velocidad), y sí tienen coste — cada serie cercana al
+// fallo en codo/hombro/rodilla de un ejercicio monoarticular es fatiga que ya no
+// está disponible para el press banca, la sentadilla o los olímpicos, que sí
+// dependen de un RM preciso durante todo el ciclo.
+// Con mancuerna real (peso discreto, ex.dumbbell): selector de pesos disponibles.
+// Con cable/máquina (peso continuo): carga libre en kg.
 function RepMaxTestCard({ ex, rmStore, saveRM }) {
   const isDumbbell = !!ex.dumbbell;
-  const unitLabel = ex.unit === 'kg/arm' ? 'kg/arm' : 'kg';
   const [weight, setWeight] = useState(isDumbbell ? DUMBBELL_WEIGHTS[0] : '');
   const [reps, setReps] = useState('');
   const current = rmStore[ex.name];
   const w = isDumbbell ? weight : Number(weight);
   const est = (reps && w) ? epley1RM(w, Number(reps)) : null;
+  const unitLabel = ex.unit === 'kg/arm' ? 'kg/arm' : 'kg';
   return (
     <div style={{ background: '#1e293b', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🔁 {ex.name}</span>
+        <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>🏋️‍♂️ {ex.name}</span>
         <span style={{ color: '#64748b', fontSize: 12 }}>RM actual: {effectiveRM(ex, rmStore)} {unitLabel}</span>
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
         {isDumbbell
           ? 'Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. Haz el máximo de reps limpias con la mancuerna más pesada que controles y estimamos el RM con la fórmula de Epley.'
-          : 'Accesorio de aislamiento — no se busca un 1RM real, el riesgo no lo justifica en un ejercicio que no sostiene la progresión del ciclo. Con una carga submáxima que puedas mover 6-12 veces con técnica limpia, estimamos el RM con la fórmula de Epley.'}
+          : 'Ejercicio de aislamiento — no busques aquí un máximo de una repetición: el riesgo de forma en la articulación no compensa la precisión ganada, y esta carga se recalibra sola cada semana por RIR. Haz el máximo de reps limpias con una carga exigente (deja 1–2 en el tanque en el intento, no busques el fallo) y estimamos el RM con la fórmula de Epley.'}
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
-          {isDumbbell ? 'Mancuerna (kg)' : `Carga (${unitLabel})`}
+          {isDumbbell ? 'Mancuerna (kg)' : 'Carga usada (kg)'}
           {isDumbbell ? (
             <select value={weight} onChange={e => setWeight(Number(e.target.value))}
               style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }}>
-              {DUMBBELL_WEIGHTS.map(w => <option key={w} value={w}>{w}kg</option>)}
+              {DUMBBELL_WEIGHTS.map(wv => <option key={wv} value={wv}>{wv}kg</option>)}
             </select>
           ) : (
             <input type="number" value={weight} onChange={e => setWeight(e.target.value)}
@@ -1371,22 +1817,95 @@ function TestTab({ rmStore, saveRM, mvtStore, saveMVT, clearMVT, lastTestDate, s
       <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
         <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 4 }}>Test Semana 16</div>
         <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
-          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 4 métodos según el ejercicio: vídeo con velocidad (solo sentadilla y press banca — los únicos con MVT validado en literatura), registro directo de la escalera (solo los compuestos que sostienen la progresión: peso muerto, press inclinado, jalón, hip thrust), test de reps con fórmula de Epley (mancuerna y accesorios de aislamiento) y test de carga por objetivo (Pallof press, plancha con disco).
-        </div>
-        <div style={{ color: '#F59E0B', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
-          Clean & jerk y power snatch NO se testean por velocidad — no existe un MVT validado para movimientos de recepción/catch como estos. Se graban si quieres revisar técnica, pero el test en sí va por escalera de carga directa.
-        </div>
-      </div>
-
-      <div style={{ background: '#1e293b', border: '1px solid #F59E0B33', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
-        <div style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
-          Antes de testear
-        </div>
-        <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.5 }}>
-          Nada de móvil los 30 minutos previos (fatiga neural) · usa el mismo dispositivo/cámara en todos los tests de este ciclo · sin muñequeras ni straps que puedan enmascarar el agarre real · respeta el descanso completo entre cargas del calentamiento, no lo acortes.
+          Descanso completo Miércoles, Viernes y Domingo (repiten ejercicios ya testeados). 4 métodos
+          según el ejercicio, con más rigor donde el ciclo lo necesita y menos donde solo cuesta fatiga:
+          vídeo con velocidad (sentadilla, press banca — los dos ejercicios donde el ciclo entero depende
+          de un RM preciso), registro directo de la escalera hasta el máximo real (olímpicos, peso
+          muerto, press inclinado, jalón, hip thrust — compuestos de verdad), test de reps con fórmula de
+          Epley sin buscar el fallo (mancuerna, y también aislamiento de cable/máquina como tríceps,
+          bíceps, aperturas, leg curl y Nordic curl — se recalibran solos cada semana) y test de carga por
+          objetivo (Pallof press, plancha con disco).
         </div>
       </div>
 
+      {/* Condiciones del test — cada punto corrige una fuente de error concreta */}
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, border: '1px solid #38bdf833' }}>
+        <div style={{ color: '#7dd3fc', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          Antes de empezar · condiciones del test
+        </div>
+        {[
+          ['Sin móvil los 30 min previos.',
+           'Alix-Fages 2023 (ensayo cruzado doble ciego): usar redes sociales antes de entrenar deterioró la velocidad media de la barra en la primera serie (p=0,003) sin que los sujetos lo notaran. El RIR estimado no se veía afectado — o sea, no puedes detectarlo por sensación.'],
+          ['Mismo dispositivo en todo el ciclo.',
+           'Los encoders no son intercambiables entre sí: tienen sesgos sistemáticos distintos. Si mezclas encoder y vídeo, la comparación entre test deja de significar nada.'],
+          ['Sin cinturón de agarre ni straps.',
+           'Reducen la validez de la relación carga-velocidad.'],
+          ['3 min entre cargas, 3–5 min en los intentos pesados.',
+           'La fatiga entre series baja la velocidad y hunde artificialmente la recta, lo que infraestima el RM.'],
+          ['Calentamiento idéntico al de la próxima vez.',
+           'Es la variable más fácil de estandarizar y la que más ruido mete si cambia.'],
+        ].map(([t, d], i) => (
+          <div key={i} style={{ marginBottom: 8 }}>
+            <div style={{ color: '#e2e8f0', fontSize: 12.5, fontWeight: 600 }}>· {t}</div>
+            <div style={{ color: '#64748b', fontSize: 11.5, lineHeight: 1.45, paddingLeft: 10 }}>{d}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Por qué el orden de test ya no es el orden de entrenamiento */}
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, border: '1px solid #a78bfa33' }}>
+        <div style={{ color: '#a78bfa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 }}>
+          El orden de aquí abajo no es el de un día normal de gimnasio
+        </div>
+        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.55 }}>
+          Testear tríceps tres veces seguidas (o bíceps, o isquiotibiales con leg curl y
+          Nordic curl uno detrás de otro) contamina el resultado: la fatiga del primero
+          deprime el máximo medido en el segundo y el tercero, y ese número deprimido es
+          el que se guarda como RM para todo el ciclo. Es la razón por la que los protocolos
+          estándar de test de 1RM (guía ACI; el estudio que valida testear 8 ejercicios en
+          una sola sesión) alternan grupos musculares o agonista/antagonista en vez de
+          agruparlos. Por eso el orden de test intercala músculos aunque el de entrenamiento
+          normal los agrupe — incluso cambia qué día "reclama" un ejercicio compartido entre
+          dos días (los tríceps de cable que aparecen tanto en Lunes como en Jueves se testean
+          en Jueves, alternados con press banca, para no dejar Lunes con tríceps de sobra y
+          Jueves con tres ejercicios de pecho seguidos).
+        </div>
+      </div>
+
+      {/* Por qué los olímpicos NO se testean por velocidad */}
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, border: '1px solid #F59E0B33' }}>
+        <div style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 }}>
+          Clean &amp; jerk y power snatch · registro directo, no velocidad
+        </div>
+        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.55 }}>
+          Haff, García-Ramos &amp; James (2020) probaron el perfil carga-velocidad en power clean:
+          CV del 10,4% con velocidad pico y del 14,4% con velocidad media (ICC 0,64), y concluyen
+          que <strong style={{ color: '#e2e8f0' }}>no es una herramienta aceptable</strong> para
+          monitorizar fuerza en ese patrón. El motivo es estructural: estos levantamientos están
+          limitados por la recepción, no por el tirón, así que la barra no desacelera hacia un
+          umbral de velocidad estable como en un básico. Por eso van por escalera directa.
+          Si algún día quieres una estimación por velocidad de tu snatch, hay que perfilar el
+          <strong style={{ color: '#e2e8f0' }}> snatch pull</strong> (sin recepción) y retrocalcular —
+          Sandau 2021 lo validó en halterófilos de élite con r=0,99 y sesgo de 0,2±1,5 kg.
+        </div>
+      </div>
+
+      {/* Datos extra que hacen falta para el ciclo nuevo */}
+      <div style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, border: '1px solid #22C55E33' }}>
+        <div style={{ color: '#22C55E', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 7 }}>
+          Apunta también esto — lo necesitamos el domingo
+        </div>
+        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.55 }}>
+          En sentadilla y press banca, guarda la <strong style={{ color: '#e2e8f0' }}>velocidad de
+          la serie más pesada</strong> con el botón «usar como mi MVT»: sustituye el valor de
+          literatura por el tuyo real y es lo que más reduce el error en los test siguientes.
+          <br /><br />
+          Y anota la <strong style={{ color: '#e2e8f0' }}>velocidad de la primera repetición al
+          70–80%</strong> de cada básico. Ese número es la referencia con la que el ciclo nuevo
+          va a cortar las series por pérdida de velocidad (20–25% en básicos), en lugar de
+          adivinar las repeticiones que te quedaban.
+        </div>
+      </div>
       {TEST_DAY_NAMES.map(dayName => (
         <div key={dayName} style={{ marginBottom: 20 }}>
           <div style={{ color: '#64748b', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
@@ -1791,61 +2310,6 @@ const SECTIONS = [
 ];
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
-function restBtnStyle(bg) {
-  return {
-    padding: '10px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-    background: bg, color: '#fff', fontWeight: 700, fontSize: 13
-  };
-}
-
-// Barra fija inferior con la cuenta atrás del descanso entre series. Solo
-// existe un descanso activo a la vez (estado global en App()). Sobrevive a
-// que se apague/bloquee la pantalla porque el tiempo restante siempre se
-// recalcula a partir de un timestamp absoluto (endAt), nunca contando ticks.
-function RestTimerBar({ rest, onPauseResume, onAdjust, onSkip, onClose }) {
-  if (!rest) return null;
-  const mins = Math.floor(rest.remaining / 60);
-  const secs = rest.remaining % 60;
-  const finished = rest.remaining <= 0 && !rest.running;
-  return (
-    <div style={{
-      position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
-      background: '#0f172aee', backdropFilter: 'blur(6px)',
-      borderTop: '1px solid #334155', padding: '10px 16px 14px',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.4)'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>⏱ Descanso — {rest.name}</span>
-        <span style={{ color: '#94a3b8', fontSize: 12 }}>Serie {rest.setIdx}/{rest.totalRests + 1}</span>
-      </div>
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        {finished ? (
-          <span style={{ fontSize: 22, fontWeight: 700, color: '#22C55E' }}>✓ Descanso completo — a por la siguiente serie</span>
-        ) : (
-          <span style={{
-            fontSize: 40, fontWeight: 800,
-            color: rest.remaining <= 5 ? '#EF4444' : '#22C55E',
-            fontVariantNumeric: 'tabular-nums'
-          }}>
-            {mins}:{String(secs).padStart(2, '0')}
-          </span>
-        )}
-      </div>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onAdjust(-15)} style={restBtnStyle('#334155')}>−15s</button>
-        {!finished && (
-          <button onClick={onPauseResume} style={restBtnStyle(rest.running ? '#F59E0B' : '#22C55E')}>
-            {rest.running ? '⏸ Pausar' : '▶ Reanudar'}
-          </button>
-        )}
-        <button onClick={() => onAdjust(15)} style={restBtnStyle('#334155')}>+15s</button>
-        {rest.setIdx < rest.totalRests && <button onClick={onSkip} style={restBtnStyle('#2563EB')}>Saltar ›</button>}
-        <button onClick={onClose} style={restBtnStyle('#EF4444')}>✕ Cerrar</button>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const defaults = computeDefaultWeekDay();
   const [weekIdx, setWeekIdx] = useState(() => {
@@ -1862,104 +2326,6 @@ export default function App() {
 
   const [section, setSection] = useState('entrenamiento');
   const [sub, setSub] = useState('plan');
-
-  // --- Descanso entre series: estado global, un único contador activo a la
-  // vez. rest = { name, seconds, totalRests, setIdx, remaining, running, endAt }
-  // totalRests = nº de descansos de la serie (totalSets - 1); setIdx va de
-  // 1 a totalRests. endAt es un timestamp absoluto: el tiempo restante se
-  // recalcula siempre a partir de él (Date.now()), no contando ticks de
-  // setInterval, para que sobreviva a que la pantalla se bloquee/atenúe.
-  const [rest, setRest] = useState(null);
-  const audioCtxRef = useRef(null);
-
-  const beepAndVibrate = () => {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (Ctx) {
-        const ctx = audioCtxRef.current || new Ctx();
-        audioCtxRef.current = ctx;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = 880;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.25);
-      }
-    } catch {}
-    try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch {}
-  };
-
-  // Recalcula remaining/setIdx a partir de endAt. Si toca a cero: avisa
-  // (beep+vibración) y, si quedan series, recarga sola el contador para la
-  // siguiente; si era la última, se detiene sin recargar.
-  const advanceRestIfDue = (prev) => {
-    if (!prev || !prev.running) return prev;
-    const remaining = Math.max(0, Math.round((prev.endAt - Date.now()) / 1000));
-    if (remaining > 0) return remaining === prev.remaining ? prev : { ...prev, remaining };
-    beepAndVibrate();
-    if (prev.setIdx < prev.totalRests) {
-      return { ...prev, setIdx: prev.setIdx + 1, remaining: prev.seconds, endAt: Date.now() + prev.seconds * 1000 };
-    }
-    return { ...prev, remaining: 0, running: false };
-  };
-
-  useEffect(() => {
-    if (!rest || !rest.running) return;
-    const id = setInterval(() => { setRest(prev => advanceRestIfDue(prev)); }, 250);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rest && rest.running, rest && rest.endAt, rest && rest.setIdx]);
-
-  // Si la pantalla se apaga/bloquea, setInterval se ralentiza o se pausa;
-  // al volver a primer plano forzamos un recálculo inmediato desde endAt.
-  useEffect(() => {
-    const recompute = () => setRest(prev => advanceRestIfDue(prev));
-    document.addEventListener('visibilitychange', recompute);
-    window.addEventListener('focus', recompute);
-    return () => {
-      document.removeEventListener('visibilitychange', recompute);
-      window.removeEventListener('focus', recompute);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const startRest = (name, seconds, totalSets) => {
-    const totalRests = Math.max(1, totalSets - 1);
-    setRest({ name, seconds, totalRests, setIdx: 1, remaining: seconds, running: true, endAt: Date.now() + seconds * 1000 });
-  };
-
-  const pauseResumeRest = () => {
-    setRest(prev => {
-      if (!prev) return prev;
-      if (prev.running) {
-        const remaining = Math.max(0, Math.round((prev.endAt - Date.now()) / 1000));
-        return { ...prev, running: false, remaining };
-      }
-      return { ...prev, running: true, endAt: Date.now() + prev.remaining * 1000 };
-    });
-  };
-
-  const adjustRest = (delta) => {
-    setRest(prev => {
-      if (!prev) return prev;
-      const remaining = Math.max(0, prev.remaining + delta);
-      return { ...prev, remaining, endAt: prev.running ? Date.now() + remaining * 1000 : prev.endAt };
-    });
-  };
-
-  const skipRest = () => {
-    setRest(prev => {
-      if (!prev) return prev;
-      if (prev.setIdx < prev.totalRests) {
-        return { ...prev, setIdx: prev.setIdx + 1, remaining: prev.seconds, endAt: Date.now() + prev.seconds * 1000, running: true };
-      }
-      return null;
-    });
-  };
-
-  const closeRest = () => setRest(null);
 
   const markDone = (weekI, dayI) => {
     const key = `W${weekI+1}-${DAYS[dayI].name}`;
@@ -2024,9 +2390,13 @@ export default function App() {
   const currentSection = SECTIONS.find(s => s.id === section);
 
   return (
+    <RestProvider>
     <div style={{
       minHeight: '100vh', background: '#0f172a', color: '#f8fafc',
-      fontFamily: 'system-ui, -apple-system, sans-serif', padding: '16px'
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      // Hueco inferior para que la barra fija del contador no tape el botón de
+      // "marcar sesión como hecha".
+      padding: '16px 16px 150px'
     }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
@@ -2096,7 +2466,7 @@ export default function App() {
 
       {/* Content */}
       {section === 'entrenamiento' && sub === 'plan' && (
-        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} startRest={startRest} />
+        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} />
       )}
       {section === 'entrenamiento' && sub === 'test' && (
         <TestTab rmStore={rmStore} saveRM={saveRM} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} lastTestDate={lastTestDate} startNewCycle={startNewCycle} />
@@ -2104,14 +2474,8 @@ export default function App() {
       {section === 'alimentacion' && sub === 'compra' && <ShoppingTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'nutricion' && <NutritionTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'supps' && <SupplementsTab />}
-
-      <RestTimerBar
-        rest={rest}
-        onPauseResume={pauseResumeRest}
-        onAdjust={adjustRest}
-        onSkip={skipRest}
-        onClose={closeRest}
-      />
     </div>
+    <RestBar />
+    </RestProvider>
   );
 }
