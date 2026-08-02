@@ -1827,8 +1827,8 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 8 }}>
         {isDumbbell
-          ? 'Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. Haz el máximo de reps limpias con la mancuerna más pesada que controles y estimamos el RM con la fórmula de Epley.'
-          : 'Ejercicio de aislamiento — no busques aquí un máximo de una repetición: el riesgo de forma en la articulación no compensa la precisión ganada, y esta carga se recalibra sola cada semana por RIR. Haz el máximo de reps limpias con una carga exigente (deja 1–2 en el tanque en el intento, no busques el fallo) y estimamos el RM con la fórmula de Epley.'}
+          ? 'Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. El objetivo es UNA serie que caiga entre 6 y 12 repeticiones limpias, dejando 1–2 en el tanque (no busques el fallo). Si con la mancuerna que cogiste te salen más de 12, no seguir hasta el fallo por curiosidad: descansa los 2 min de arriba y repite con la siguiente mancuerna disponible. Con esa serie estimamos el RM con la fórmula de Epley.'
+          : 'Ejercicio de aislamiento — no busques aquí un máximo de una repetición: el riesgo de forma en la articulación no compensa la precisión ganada, y esta carga se recalibra sola cada semana por RIR. El objetivo es UNA serie que caiga entre 6 y 12 repeticiones limpias, dejando 1–2 en el tanque. Si ves que vas a superar las 12, para ahí, descansa los 2 min de arriba y repite subiendo el peso — y si con el primer peso apenas llegas a 4-5 muy cerca del fallo, baja peso y repite igual. Con esa serie estimamos el RM con la fórmula de Epley.'}
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
@@ -1852,16 +1852,16 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
       {est && <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>RM estimado: {est.toFixed(1)} {unitLabel}</div>}
       {reps && Number(reps) > 12 && (
         <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
-          ⚠ {reps} reps es mucho para esta fórmula — cuantas más repeticiones, menos fiable es la
-          estimación, y encima estás dejando pasar el rango donde para de verdad (6–12). No sigas
-          hasta el fallo por ver cuánto das: descansa los 2 min de arriba, sube el peso y repite el
-          intento apuntando a esa horquilla.
+          ⚠ El objetivo es UNA serie entre 6 y 12 reps — con {reps} te has salido por arriba, y
+          cuantas más repeticiones, menos fiable es la estimación. No sigas hasta el fallo por ver
+          cuánto das: descansa los 2 min de arriba, sube el peso y repite apuntando a esa horquilla.
         </div>
       )}
-      {reps && Number(reps) > 0 && Number(reps) < 4 && (
+      {reps && Number(reps) > 0 && Number(reps) < 6 && (
         <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
-          ⚠ Con {reps} reps casi estás haciendo un máximo real — es justo lo que este método
-          evita en aislamiento. Baja el peso y repite apuntando a 6–12 reps limpias.
+          ⚠ El objetivo es UNA serie entre 6 y 12 reps — con {reps} te has salido por abajo
+          {Number(reps) < 4 ? ' (casi un máximo real, justo lo que este método evita en aislamiento)' : ''}.
+          Descansa los 2 min de arriba, baja el peso y repite apuntando a esa horquilla.
         </div>
       )}
       <button
