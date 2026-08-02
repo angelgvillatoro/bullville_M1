@@ -1850,6 +1850,20 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
         </label>
       </div>
       {est && <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>RM estimado: {est.toFixed(1)} {unitLabel}</div>}
+      {reps && Number(reps) > 12 && (
+        <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
+          ⚠ {reps} reps es mucho para esta fórmula — cuantas más repeticiones, menos fiable es la
+          estimación, y encima estás dejando pasar el rango donde para de verdad (6–12). No sigas
+          hasta el fallo por ver cuánto das: descansa los 2 min de arriba, sube el peso y repite el
+          intento apuntando a esa horquilla.
+        </div>
+      )}
+      {reps && Number(reps) > 0 && Number(reps) < 4 && (
+        <div style={{ color: '#F59E0B', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
+          ⚠ Con {reps} reps casi estás haciendo un máximo real — es justo lo que este método
+          evita en aislamiento. Baja el peso y repite apuntando a 6–12 reps limpias.
+        </div>
+      )}
       <button
         disabled={!est}
         onClick={() => saveRM(ex.name, Math.round(est*2)/2, ex.unit, 'repmax', { weight: w, reps })}
