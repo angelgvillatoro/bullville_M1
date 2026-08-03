@@ -155,7 +155,7 @@ function setsCountFor(ex, weekIdx) {
 
 // ─── MANCUERNAS REALES ────────────────────────────────────────────────────────
 // ⚠️ Ajusta este array a las mancuernas que tienes de verdad en el gimnasio.
-const DUMBBELL_WEIGHTS = [4, 6, 8, 12, 16, 20, 24, 28, 32];
+const DUMBBELL_WEIGHTS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
 function nearestDumbbell(target) {
   const avail = DUMBBELL_WEIGHTS.filter(w => w <= target);
   if (avail.length === 0) return DUMBBELL_WEIGHTS[0];
@@ -1806,14 +1806,21 @@ function CoreLoadTestCard({ ex, rmStore, saveRM }) {
 // fallo en codo/hombro/rodilla de un ejercicio monoarticular es fatiga que ya no
 // está disponible para el press banca, la sentadilla o los olímpicos, que sí
 // dependen de un RM preciso durante todo el ciclo.
-// Con mancuerna real (peso discreto, ex.dumbbell): selector de pesos disponibles.
-// Con cable/máquina (peso continuo): carga libre en kg.
+// Con mancuerna real (peso discreto, ex.dumbbell) o cable/máquina (peso continuo):
+// carga libre en kg en ambos casos — el desplegable de mancuernas se quitó porque
+// no cubría todos los pesos reales disponibles en el gimnasio.
+// Máquinas donde el número de la placa NO es el peso real (hay que multiplicar
+// por 1.5 para obtener los kg reales) — el valor que se introduce aquí siempre
+// es el kg real ya calculado, no el número que marca la máquina.
+const MACHINE_PLATE_NOTE = ['Butterfly reverse cable pull', 'Flys standing cable pull'];
+
 function RepMaxTestCard({ ex, rmStore, saveRM }) {
   const isDumbbell = !!ex.dumbbell;
-  const [weight, setWeight] = useState(isDumbbell ? DUMBBELL_WEIGHTS[0] : '');
+  const needsPlateNote = MACHINE_PLATE_NOTE.includes(ex.name);
+  const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const current = rmStore[ex.name];
-  const w = isDumbbell ? weight : Number(weight);
+  const w = Number(weight);
   const est = (reps && w) ? epley1RM(w, Number(reps)) : null;
   const unitLabel = ex.unit === 'kg/arm' ? 'kg/arm' : 'kg';
   return (
@@ -1830,18 +1837,19 @@ function RepMaxTestCard({ ex, rmStore, saveRM }) {
           ? 'Ejercicio de mancuerna — pesos discretos, no tiene sentido un 1RM real. El objetivo es UNA serie que caiga entre 6 y 12 repeticiones limpias, dejando 1–2 en el tanque (no busques el fallo). Si con la mancuerna que cogiste te salen más de 12, no seguir hasta el fallo por curiosidad: descansa los 2 min de arriba y repite con la siguiente mancuerna disponible. Con esa serie estimamos el RM con la fórmula de Epley.'
           : 'Ejercicio de aislamiento — no busques aquí un máximo de una repetición: el riesgo de forma en la articulación no compensa la precisión ganada, y esta carga se recalibra sola cada semana por RIR. El objetivo es UNA serie que caiga entre 6 y 12 repeticiones limpias, dejando 1–2 en el tanque. Si ves que vas a superar las 12, para ahí, descansa los 2 min de arriba y repite subiendo el peso — y si con el primer peso apenas llegas a 4-5 muy cerca del fallo, baja peso y repite igual. Con esa serie estimamos el RM con la fórmula de Epley.'}
       </div>
+      {needsPlateNote && (
+        <div style={{ color: '#38bdf8', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
+          ⓘ En esta máquina el número que marca la placa NO es el peso real — hay que
+          multiplicarlo ×1.5. Haz esa cuenta antes de escribir el peso abajo: aquí siempre
+          se introduce el kg real, nunca el número que marca la máquina.
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
           {isDumbbell ? 'Mancuerna (kg)' : 'Carga usada (kg)'}
-          {isDumbbell ? (
-            <select value={weight} onChange={e => setWeight(Number(e.target.value))}
-              style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }}>
-              {DUMBBELL_WEIGHTS.map(wv => <option key={wv} value={wv}>{wv}kg</option>)}
-            </select>
-          ) : (
-            <input type="number" value={weight} onChange={e => setWeight(e.target.value)}
-              style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
-          )}
+          <input type="number" step="0.5" value={weight} onChange={e => setWeight(e.target.value)}
+            placeholder={isDumbbell ? 'p.ej. 14 (cada 2kg)' : 'kg reales'}
+            style={{ width: '100%', marginTop: 4, padding: 6, borderRadius: 6, border: '1px solid #334155', background: '#0f172a', color: '#f8fafc' }} />
         </label>
         <label style={{ flex: 1, color: '#94a3b8', fontSize: 12 }}>
           Reps limpias
