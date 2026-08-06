@@ -50,6 +50,10 @@ const PROG = [
 
 // Weight rounded up to nearest 2.5kg
 const wt = (rm, pct) => Math.ceil(rm * pct / 2.5) * 2.5;
+// Los olímpicos y el peso muerto llevan tabla propia de rampa por series, guardada
+// como % del RM (no en kg): así se recalcula sola al cambiar el RM. Redondeo al
+// 2,5 más cercano, no hacia arriba, para respetar la rampa original.
+const wtOly = (rm, pctNum) => Math.round(rm * (pctNum / 100) / 2.5) * 2.5;
 
 // ─── DESCANSO ENTRE SERIES ───────────────────────────────────────────────────
 // Base por categoría de ejercicio (segundos) + suplemento según fase del ciclo.
@@ -209,68 +213,59 @@ function effectiveMVT(ex, mvtStore) {
   const o = mvtStore[ex.name];
   return o ? o.value : ex.mvt;
 }
-// Reescala una tabla de series olímpicas (pensada para un RM concreto) de forma
-// proporcional al nuevo RM real, conservando la estructura de rampa por semana
-// que ya estaba diseñada a mano.
-function scaleOlympicTable(sets, oldRM, newRM) {
-  if (!oldRM || oldRM === newRM) return sets;
-  const ratio = newRM / oldRM;
-  return sets.map(week => week.map((v, i) => (i % 2 === 0 ? Math.round(v * ratio / 2.5) * 2.5 : v)));
-}
-
 // ─── OLYMPIC SETS: [s1w, s1r, s2w, s2r, s3w, s3r, s4w, s4r] per week ────────
-const CJ = [
-  [72.5,5,80,4,82.5,4,87.5,3],   // W1
-  [72.5,5,80,4,82.5,4,90,3],     // W2
-  [82.5,4,82.5,4,90,4,95,2],     // W3
-  [82.5,4,87.5,3,92.5,3,95,2],   // W4
-  [82.5,4,87.5,3,92.5,2,100,1],  // W5
-  [87.5,3,87.5,3,92.5,2,100,1],  // W6
-  [87.5,3,87.5,3,95,1,100,1],    // W7
-  [87.5,3,90,3,95,1,102.5,1],    // W8
-  [87.5,3,90,3,100,1,102.5,1],   // W9
-  [87.5,3,90,3,100,1,102.5,1],   // W10
-  [87.5,3,92.5,2,100,1,105,1],   // W11
-  [90,1,95,1,102.5,1,105,1],     // W12
-  [90,2,95,1,102.5,1,105,1],     // W13
-  [95,1,100,1,102.5,1,105,1],    // W14
-  [95,1,100,1,102.5,1,110,1],    // W15
+const CJ_PCT = [   // [% del RM, reps] x 4 series
+  [68,5,77,4,80,4,84,3],       // W1
+  [68,5,77,4,80,4,86,3],       // W2
+  [80,4,80,4,86,4,91,2],       // W3
+  [80,4,84,3,89,3,91,2],       // W4
+  [80,4,84,3,89,2,95,1],       // W5
+  [84,3,84,3,89,2,95,1],       // W6
+  [84,3,84,3,91,1,95,1],       // W7
+  [84,3,86,3,91,1,98,1],       // W8
+  [84,3,86,3,95,1,98,1],       // W9
+  [84,3,86,3,95,1,98,1],       // W10
+  [84,3,89,2,95,1,100,1],      // W11
+  [86,3,91,1,98,1,100,1],      // W12
+  [86,2,91,1,98,1,100,1],      // W13
+  [91,1,95,1,98,1,100,1],      // W14
+  [91,1,95,1,98,1,105,1],      // W15
 ];
 
-const PS = [
-  [52.5,5,57.5,4,60,4,62.5,3],   // W1
-  [52.5,5,57.5,4,60,4,65,3],     // W2
-  [60,4,60,4,65,4,67.5,2],       // W3
-  [60,4,62.5,3,67.5,3,67.5,2],   // W4
-  [60,4,62.5,3,67.5,2,72.5,1],   // W5
-  [62.5,3,62.5,3,67.5,2,72.5,1], // W6
-  [62.5,3,62.5,3,67.5,1,72.5,1], // W7
-  [62.5,3,65,3,67.5,1,75,1],     // W8
-  [62.5,3,65,3,72.5,1,75,1],     // W9
-  [62.5,3,65,3,72.5,1,75,1],     // W10
-  [62.5,3,65,2,72.5,1,75,1],     // W11
-  [65,1,67.5,1,75,1,75,1],       // W12
-  [65,2,67.5,1,75,1,75,1],       // W13
-  [67.5,1,72.5,1,75,1,75,1],     // W14
-  [67.5,1,72.5,1,75,1,77.5,1],   // W15
+const PS_PCT = [   // [% del RM, reps] x 4 series
+  [70,5,77,4,80,4,83,3],       // W1
+  [70,5,77,4,80,4,87,3],       // W2
+  [80,4,80,4,87,4,90,2],       // W3
+  [80,4,83,3,88,3,92,2],       // W4
+  [80,4,83,3,90,2,97,1],       // W5
+  [83,3,83,3,90,2,97,1],       // W6
+  [83,3,83,3,90,1,97,1],       // W7
+  [83,3,87,3,90,1,100,1],      // W8
+  [83,3,87,3,97,1,100,1],      // W9
+  [83,3,87,3,97,1,100,1],      // W10
+  [83,3,87,2,97,1,100,1],      // W11
+  [87,3,90,1,100,1,100,1],     // W12
+  [87,2,90,1,100,1,100,1],     // W13
+  [90,1,97,1,100,1,100,1],     // W14
+  [90,1,97,1,100,1,103,1],     // W15
 ];
 
-const DL = [
-  [82.5,5,90,4,92.5,4,97.5,3],      // W1
-  [82.5,5,90,4,92.5,4,102.5,3],     // W2
-  [92.5,4,92.5,4,102.5,4,110,2],    // W3
-  [92.5,4,100,3,105,3,110,2],       // W4
-  [92.5,4,100,3,105,2,115,1],       // W5
-  [97.5,3,100,3,105,2,115,1],       // W6
-  [97.5,3,100,3,110,1,115,1],       // W7
-  [97.5,3,102.5,3,110,1,117.5,1],   // W8
-  [97.5,3,102.5,3,115,1,117.5,1],   // W9
-  [97.5,3,102.5,3,115,1,117.5,1],   // W10
-  [97.5,3,105,2,115,1,120,1],       // W11
-  [102.5,1,110,1,117.5,1,120,1],    // W12
-  [102.5,2,110,1,117.5,1,120,1],    // W13
-  [110,1,115,1,117.5,1,120,1],      // W14
-  [110,1,115,1,117.5,1,125,1],      // W15
+const DL_PCT = [   // [% del RM, reps] x 4 series
+  [69,6,75,5,77,5,81,4],       // W1
+  [69,6,75,5,77,5,85,4],       // W2
+  [77,5,77,5,85,4,92,2],       // W3
+  [77,5,83,4,88,3,92,2],       // W4
+  [77,5,83,4,88,3,96,1],       // W5
+  [81,4,83,4,88,3,96,1],       // W6
+  [81,4,83,4,92,2,96,1],       // W7
+  [81,4,85,3,92,2,98,1],       // W8
+  [81,3,85,3,96,1,98,1],       // W9
+  [81,3,85,3,96,1,98,1],       // W10
+  [81,3,88,2,96,1,100,1],      // W11
+  [85,3,92,1,98,1,100,1],      // W12
+  [85,2,92,1,98,1,100,1],      // W13
+  [92,1,96,1,98,1,100,1],      // W14
+  [92,1,96,1,98,1,104,1],      // W15
 ];
 
 // ─── DIPS: reps por serie y por fase ─────────────────────────────────────────
@@ -323,25 +318,25 @@ const DAYS = [
   {
     name: 'Lunes', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
     exercises: [
-      { name: 'Triceps stretches cable pull bar',  rm: 35, unit: 'kg',     testMethod: 'repmax' },
-      { name: 'Triceps extension cable pull cord', rm: 30, unit: 'kg',     testMethod: 'repmax' },
-      { name: 'Triceps extension one-armed cable', rm: 10, unit: 'kg/arm', testMethod: 'repmax' },
-      { name: 'Bicep curls cable pull',            rm: 30, unit: 'kg',     testMethod: 'repmax' },
-      { name: 'Bicep curls sitting dumbbell',      rm: 9,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Bicep curls hammer grip seated',    rm: 8,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Seated lateral raises dumbbell',    rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 6 },
-      { name: 'Shoulder press sitting dumbbell',   rm: 15, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Butterfly reverse cable pull',      rm: 10, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Triceps stretches cable pull bar',  rm: 46.5, unit: 'kg',     testMethod: 'repmax' },
+      { name: 'Triceps extension cable pull cord', rm: 39, unit: 'kg',     testMethod: 'repmax' },
+      { name: 'Triceps extension one-armed cable', rm: 28, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Bicep curls cable pull',            rm: 36, unit: 'kg',     testMethod: 'repmax' },
+      { name: 'Bicep curls sitting dumbbell',      rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 6 },
+      { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Butterfly reverse cable pull',      rm: 16, unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
   {
     name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
+      { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
       { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder' },
-      { name: 'Seated row cable pull',       rm: 40,  unit: 'kg',     testMethod: 'repmax' },
-      { name: 'One-armed row cable pull',    rm: 16,  unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Seated row cable pull',       rm: 91,  unit: 'kg',     testMethod: 'repmax' },
+      { name: 'One-armed row cable pull',    rm: 45.5,  unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
   {
@@ -351,31 +346,31 @@ const DAYS = [
   {
     name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
-      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17 },
-      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
-      { name: 'Triceps extension cable pull cord', rm: 30,   unit: 'kg', testMethod: 'repmax' },
-      { name: 'Triceps extension one-armed cable', rm: 10,   unit: 'kg/arm', testMethod: 'repmax' },
-      { name: 'Shoulder press sitting dumbbell',   rm: 15,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      { name: 'Triceps extension cable pull cord', rm: 39,   unit: 'kg', testMethod: 'repmax' },
+      { name: 'Triceps extension one-armed cable', rm: 28,   unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Shoulder press sitting dumbbell',   rm: 26.5,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
     ]
   },
   {
     name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 105, unit: 'kg', type: 'olympic', sets: CJ, testMethod: 'ladder' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS, testMethod: 'ladder' },
+      { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
       { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder' },
-      { name: 'Seated row cable pull',       rm: 40,  unit: 'kg',     testMethod: 'repmax' },
-      { name: 'One-armed row cable pull',    rm: 16,  unit: 'kg/arm', testMethod: 'repmax' },
-      { name: 'Seated lateral raises dumbbell', rm: 6,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 4 },
-      { name: 'Butterfly reverse cable pull', rm: 10,  unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Seated row cable pull',       rm: 91,  unit: 'kg',     testMethod: 'repmax' },
+      { name: 'One-armed row cable pull',    rm: 45.5,  unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 4 },
+      { name: 'Butterfly reverse cable pull', rm: 16,  unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
   {
     name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
     exercises: [
-      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL, testMethod: 'ladder' },
+      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
       { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', mvt: 0.30,
         backoff: { factor: 0.72, reps: 10, setCount: 3, restSeconds: 120 } },
       { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'repmax', setCount: 8,
@@ -398,9 +393,9 @@ const DAYS = [
   {
     name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Bench press barbell',               rm: 90,   unit: 'kg', testMethod: 'video', mvt: 0.17 },
-      { name: 'Bench press inclined barbell',      rm: 72.5, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 12.5, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
     ]
   },
@@ -1075,8 +1070,7 @@ function PhasePill({ weekIdx }) {
 function OlympicTable({ ex, weekIdx, rmStore }) {
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
-  const sets = overridden ? scaleOlympicTable(ex.sets, ex.rm, effRM) : ex.sets;
-  const weekSets = sets[weekIdx];
+  const weekSets = ex.sets[weekIdx];   // [% RM, reps] x4
   return (
     <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -1094,7 +1088,8 @@ function OlympicTable({ ex, weekIdx, rmStore }) {
             background: '#0f172a', borderRadius: 6, padding: '8px 10px', textAlign: 'center'
           }}>
             <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 3 }}>Serie {i+1}</div>
-            <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 16 }}>{weekSets[i*2]}kg</div>
+            <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 16 }}>{wtOly(effRM, weekSets[i*2])}kg</div>
+            <div style={{ color: '#475569', fontSize: 10 }}>{weekSets[i*2]}%</div>
             <div style={{ color: '#94a3b8', fontSize: 12 }}>×{weekSets[i*2+1]}</div>
           </div>
         ))}
@@ -1503,6 +1498,7 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT, rmHis
   const personalMVT = mvtStore ? mvtStore[ex.name] : null;
   const [mvt, setMvt] = useState(effectiveMVT(ex, mvtStore || {}));
   const [videoUrl, setVideoUrl] = useState(null);
+  const [videoError, setVideoError] = useState(null);
   const [load, setLoad] = useState('');
   const [mode, setMode] = useState(null); // null | 'calib1' | 'calib2' | 'start' | 'end'
   const [calibP1, setCalibP1] = useState(null);
@@ -1662,14 +1658,30 @@ function VideoTestCard({ ex, rmStore, saveRM, mvtStore, saveMVT, clearMVT, rmHis
           <input type="file" accept="video/*" onChange={e => {
             const f = e.target.files[0];
             if (f) {
+              setVideoError(null);
               setVideoUrl(URL.createObjectURL(f));
               setCalibP1(null); setCalibP2(null); setStartClick(null); setEndClick(null); setMode(null);
             }
           }} style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8 }} />
 
+          {videoError && (
+            <div style={{ background: '#450a0a', border: '1px solid #EF444455', borderRadius: 8, padding: '10px 12px', marginBottom: 8, color: '#fca5a5', fontSize: 12, lineHeight: 1.5 }}>
+              ⚠ El navegador no puede reproducir este vídeo. Casi siempre es porque el iPhone graba
+              en HEVC/H.265 y Chrome y Firefox no lo decodifican (Safari sí).
+              <br /><br />
+              Dos soluciones: abrir la app en <strong style={{ color: '#fecaca' }}>Safari</strong>, o
+              cambiar el formato de grabación en el iPhone a H.264 en
+              <strong style={{ color: '#fecaca' }}> Ajustes → Cámara → Formatos → «Más compatible»</strong> y
+              volver a grabar. Los vídeos que ya tengas en HEVC hay que convertirlos aparte.
+            </div>
+          )}
+
           {videoUrl && (
             <div style={{ position: 'relative', marginBottom: 8 }}>
-              <video ref={videoRef} src={videoUrl} controls style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+              <video ref={videoRef} src={videoUrl} controls
+                onError={() => setVideoError(true)}
+                onLoadedMetadata={() => setVideoError(null)}
+                style={{ width: '100%', borderRadius: 8, display: 'block' }} />
               <div onClick={handleOverlayClick} style={{
                 position: 'absolute', inset: 0, cursor: mode ? 'crosshair' : 'default'
               }}>
