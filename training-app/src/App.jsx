@@ -29,24 +29,67 @@ function computeDefaultWeekDay() {
   return { weekIdx, dayIdx };
 }
 
-// ─── PROGRESSION TABLE (15 weeks, 0-indexed) ─────────────────────────────────
+// ─── PROGRESSION TABLE (15 semanas, 0-indexed) ───────────────────────────────
+// REDISEÑO 2026-08-06. La tabla anterior era simultáneamente demasiado blanda al
+// principio y aritméticamente imposible al final: 70%x7 deja ~5 repeticiones en
+// reserva (a 70% del RM se pueden hacer ~12), y 100%x2 o 95%x3 piden más
+// repeticiones de las que ese porcentaje permite por definición. Además
+// prescribía las MISMAS repeticiones en las 4 series, cuando las tablas de
+// repeticiones por porcentaje describen la primera serie en fresco: si la serie 1
+// ya va al fallo, las series 2-4 son inviables.
+//
+// Ahora cada semana lleva su propio esquema de repeticiones POR SERIE, que baja
+// conforme se acumula fatiga, y un RIR objetivo para la primera serie.
+// Referencia de repeticiones máximas por carga (compuestos, sujeto entrenado):
+//   70%→12 · 75%→10 · 80%→8 · 82,5%→7 · 85%→6 · 87,5%→5 · 90%→4 · 92,5%→3 · 95%→2 · 100%→1
+//
+// El criterio de cercanía al fallo sigue la meta-regresión de Robinson 2024
+// (Sports Medicine): la hipertrofia mejora conforme baja el RIR, así que el
+// bloque de acumulación trabaja a 2-3 RIR en vez de a 5.
 const PROG = [
-  { pct: 0.70, reps: 7, phase: 'Base',       color: '#3B82F6' }, // W1
-  { pct: 0.70, reps: 7, phase: 'Base',       color: '#3B82F6' }, // W2
-  { pct: 0.75, reps: 5, phase: 'Base',       color: '#3B82F6' }, // W3
-  { pct: 0.75, reps: 6, phase: 'Base',       color: '#3B82F6' }, // W4
-  { pct: 0.80, reps: 4, phase: 'Transición', color: '#F59E0B' }, // W5
-  { pct: 0.80, reps: 5, phase: 'Transición', color: '#F59E0B' }, // W6
-  { pct: 0.85, reps: 3, phase: 'Transición', color: '#F59E0B' }, // W7
-  { pct: 0.85, reps: 4, phase: 'Transición', color: '#F59E0B' }, // W8
-  { pct: 0.90, reps: 3, phase: 'Intensidad', color: '#EF4444' }, // W9
-  { pct: 0.90, reps: 4, phase: 'Intensidad', color: '#EF4444' }, // W10
-  { pct: 0.95, reps: 2, phase: 'Intensidad', color: '#EF4444' }, // W11
-  { pct: 0.95, reps: 3, phase: 'Intensidad', color: '#EF4444' }, // W12
-  { pct: 1.00, reps: 1, phase: 'Peak',       color: '#22C55E' }, // W13
-  { pct: 1.00, reps: 2, phase: 'Peak',       color: '#22C55E' }, // W14
-  { pct: 1.03, reps: 1, phase: 'Peak',       color: '#22C55E' }, // W15
+  { pct: 0.700, sets: [9, 8, 8, 7],  rir: 3, phase: 'Base',       color: '#3B82F6' }, // W1
+  { pct: 0.700, sets: [10, 9, 8, 8], rir: 2, phase: 'Base',       color: '#3B82F6' }, // W2
+  { pct: 0.750, sets: [8, 7, 7, 6],  rir: 2, phase: 'Base',       color: '#3B82F6' }, // W3
+  { pct: 0.750, sets: [8, 8, 7, 7],  rir: 2, phase: 'Base',       color: '#3B82F6' }, // W4
+  { pct: 0.800, sets: [6, 5, 5, 5],  rir: 2, phase: 'Transición', color: '#F59E0B' }, // W5
+  { pct: 0.800, sets: [6, 6, 5, 5],  rir: 2, phase: 'Transición', color: '#F59E0B' }, // W6
+  { pct: 0.825, sets: [5, 5, 4, 4],  rir: 2, phase: 'Transición', color: '#F59E0B' }, // W7
+  { pct: 0.850, sets: [4, 4, 4, 3],  rir: 2, phase: 'Transición', color: '#F59E0B' }, // W8
+  { pct: 0.875, sets: [4, 4, 3, 3],  rir: 1, phase: 'Intensidad', color: '#EF4444' }, // W9
+  { pct: 0.900, sets: [3, 3, 3, 3],  rir: 1, phase: 'Intensidad', color: '#EF4444' }, // W10
+  { pct: 0.925, sets: [2, 2, 2, 2],  rir: 1, phase: 'Intensidad', color: '#EF4444' }, // W11
+  { pct: 0.950, sets: [2, 2, 1, 1],  rir: 0, phase: 'Intensidad', color: '#EF4444' }, // W12
+  { pct: 0.975, sets: [1, 1, 1, 1],  rir: 0, phase: 'Peak',       color: '#22C55E' }, // W13
+  { pct: 0.850, sets: [3, 3, 3],     rir: 3, phase: 'Peak',       color: '#22C55E' }, // W14 · descarga
+  { pct: 1.000, sets: [1, 1, 1],     rir: 0, phase: 'Peak',       color: '#22C55E' }, // W15 · intento de récord
 ];
+// Repeticiones para un número de series distinto de 4 (ej. leg curl con 8):
+// se toma el esquema de la semana y se prolonga repitiendo la última serie.
+function repsForSets(weekIdx, n) {
+  const base = (PROG[weekIdx] || PROG[0]).sets;
+  if (n <= base.length) return base.slice(0, n);
+  return base.concat(Array(n - base.length).fill(base[base.length - 1]));
+}
+
+// ─── PÉRDIDA DE VELOCIDAD (autorregulación) ──────────────────────────────────
+// Corta la serie cuando la velocidad de una repetición cae ese % respecto a la
+// más rápida de la serie, aunque queden repeticiones en el papel.
+// Básicos: Hernández-Belmonte 2022 — VL<=25% dio más fuerza con ~45% menos
+// repeticiones totales. Aislamiento orientado a hipertrofia: Jukic 2023 tolera
+// 30-40%. En Peak se aprieta el umbral porque ahí interesa la calidad, no el
+// volumen.
+const VL_BY_PHASE = {
+  'Base':       { heavy: 25, other: 35 },
+  'Transición': { heavy: 25, other: 35 },
+  'Intensidad': { heavy: 20, other: 30 },
+  'Peak':       { heavy: 15, other: 25 },
+};
+function vlFor(ex, weekIdx) {
+  const phase = (PROG[weekIdx] || PROG[0]).phase;
+  const cat = restCategory(ex);
+  const t = VL_BY_PHASE[phase] || VL_BY_PHASE['Base'];
+  return (cat === 'olympic' || cat === 'heavy' || cat === 'compound') ? t.heavy : t.other;
+}
 
 // Weight rounded up to nearest 2.5kg
 const wt = (rm, pct) => Math.ceil(rm * pct / 2.5) * 2.5;
@@ -151,13 +194,29 @@ function fmtClock(s) {
 // Nº de series que muestra cada tipo de fila, para que el contador sepa cuántas
 // rondas de descanso quedan.
 function setsCountFor(ex, weekIdx) {
+  if (ex.byPhase) {
+    const b = ex.byPhase[(PROG[weekIdx] || PROG[0]).phase];
+    if (b) return b.sets.length;
+  }
   if (ex.type === 'bw' && ex.repsByPhase) {
     const r = ex.repsByPhase[(PROG[weekIdx] || PROG[0]).phase];
     return Array.isArray(r) ? r.length : 4;
   }
   if (ex.setCount) return ex.setCount;
-  return 4;
+  return (PROG[weekIdx] || PROG[0]).sets.length;   // varía por semana (4, y 3 en descarga y test)
 }
+
+// ─── SENTADILLA DE VOLUMEN (miércoles) ───────────────────────────────────────
+// Segunda exposición semanal de cuádriceps. Intensidad y repeticiones propias:
+// la tabla PROG baja a series de 1 en Peak, y aquí lo que se busca es estímulo
+// de hipertrofia constante a 2-3 RIR, no intensidad. Sábado→miércoles son 4 días
+// y miércoles→sábado 3: el reparto más simétrico posible en la semana.
+const VOLUME_SQUAT = {
+  'Base':       { pct: 0.68, sets: [10, 9, 9, 8] },
+  'Transición': { pct: 0.70, sets: [10, 9, 9, 8] },
+  'Intensidad': { pct: 0.72, sets: [9, 8, 8, 7] },
+  'Peak':       { pct: 0.70, sets: [8, 8, 7] },
+};
 
 // ─── MANCUERNAS REALES ────────────────────────────────────────────────────────
 // ⚠️ Ajusta este array a las mancuernas que tienes de verdad en el gimnasio.
@@ -183,7 +242,7 @@ function persistRM(store) {
   try { localStorage.setItem('ta_rm', JSON.stringify(store)); } catch {}
 }
 function effectiveRM(ex, rmStore) {
-  const o = rmStore[ex.name];
+  const o = rmStore[ex.rmRef || ex.name];
   return o ? o.rm : ex.rm;
 }
 
@@ -340,8 +399,13 @@ const DAYS = [
     ]
   },
   {
-    name: 'Miércoles', label: 'Stretch & Pool', emoji: '🏊', nutriDay: 'A',
-    special: 'stretch'
+    name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'A',
+    special: 'stretch',
+    exercises: [
+      { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 160, unit: 'kg',
+        byPhase: VOLUME_SQUAT,
+        note: 'Segunda exposición de cuádriceps en la semana. Profundidad completa y controlado — busca 2-3 repeticiones en reserva, no llegues al fallo. Si notas la rodilla, este es el primer bloque que se recorta.' },
+    ]
   },
   {
     name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
@@ -370,12 +434,11 @@ const DAYS = [
   {
     name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
     exercises: [
-      { name: 'Deadlift barbell',   rm: 120, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
-      { name: 'Squat barbell',      rm: 105, unit: 'kg', testMethod: 'video', mvt: 0.30,
-        backoff: { factor: 0.72, reps: 10, setCount: 3, restSeconds: 120 } },
-      { name: 'Leg curl machine',   rm: 80,  unit: 'kg', testMethod: 'repmax', setCount: 8,
+      { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
+      { name: 'Squat barbell',      rm: 160, unit: 'kg', testMethod: 'video', mvt: 0.30 },
+      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 8,
         note: 'Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio (énfasis en la parte excéntrica) sin necesitar la fuerza de un Nordic curl completo.' },
-      { name: 'Hip thrust machine', rm: 120, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
       { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
         equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado',
         note: 'De pie, perpendicular a la polea. Extiende los brazos al frente y AGUANTA ahí quieto sin dejar que la cadera gire — es un aguante estático, no repeticiones de empuje y vuelta. Repite el hold en cada serie, cambia de lado al terminar las 3 series.',
@@ -385,7 +448,7 @@ const DAYS = [
       { name: 'Weighted plank (disco en la espalda)', type: 'bw', repsByPhase: PLANK_SECONDS,
         equipLabel: 'Anti-extensión · con disco', unitSuffix: 's',
         note: 'Empieza con 5-10kg sobre la zona lumbar-alta. Si aguantas el tiempo objetivo con técnica limpia (sin que caiga la cadera), sube el disco de peso antes de subir el tiempo.',
-        rm: 7.5, unit: 'kg', testMethod: 'coreload',
+        rm: 10, unit: 'kg', testMethod: 'coreload',
         testTarget: '50s por serie (objetivo de fase Peak, el más exigente de las 4)',
         formCue: 'caiga la cadera' },
     ]
@@ -510,19 +573,25 @@ function buildTestPlan() {
 // estiramientos, totalSec toma el extremo alto del rango "45–60 s" como
 // objetivo — el ±15s de la barra deja bajarlo a 45 si hace falta.
 const STRETCHES = [
-  { name: 'Pool walking',               duration: '10 min',      totalSec: 600, sets: 1 },
-  { name: 'Float & decompress',         duration: '5 min',       totalSec: 300, sets: 1 },
-  { name: 'Arm circles in water',       duration: '5 min',       totalSec: 300, sets: 1 },
-  { name: 'Glutes stretch seated',      duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Adductors stretch standing', duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Leg flexor stretch sitting', duration: '3 × 45–60 s', totalSec: 60,  sets: 3 },
-  { name: 'Leg stretch standing',       duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Hip flexor stretch lunge',   duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Trapezius stretch sideways', duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Torso rotation stretch',     duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Torso side bending',         duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Shoulder cross-body',        duration: '4 × 45–60 s', totalSec: 60,  sets: 4 },
-  { name: 'Quadriceps stretch standing', duration: '4 × 45–60 s', totalSec: 60, sets: 4 },
+  // Prioritarios — 5 min/semana cada uno. La meseta de ganancia está en 10
+  // min/semana por grupo muscular (Warneke 2024, meta-regresión de 189 estudios);
+  // antes se hacían 4 min de cada uno, menos de la mitad de la dosis útil.
+  { name: 'Sóleo y gemelo en pared (dorsiflexión)', duration: '5 × 60 s', totalSec: 60, sets: 5,
+    cue: 'Rodilla hacia la pared sin despegar el talón. Repite con la rodilla estirada para el gemelo y flexionada para el sóleo. Es el limitador habitual de la profundidad de sentadilla: si falta tobillo, compensa la rodilla.' },
+  { name: 'Isquiotibiales sentado',                 duration: '5 × 60 s', totalSec: 60, sets: 5,
+    cue: 'Espalda recta, giro desde la cadera. Es el grupo con mayor respuesta documentada al estiramiento.' },
+  { name: 'Dorsal ancho colgado en barra',          duration: '5 × 60 s', totalSec: 60, sets: 5,
+    cue: 'Colgado o con las manos en un soporte alto, deja caer el pecho. El dorsal es el principal limitador de la posición sobre la cabeza en snatch y clean & jerk.' },
+  { name: 'Flexores de cadera en zancada',          duration: '5 × 60 s', totalSec: 60, sets: 5,
+    cue: 'Glúteo apretado y pelvis retrovertida; si arqueas la lumbar no estás estirando el psoas.' },
+  { name: 'Aductores de pie',                       duration: '5 × 60 s', totalSec: 60, sets: 5 },
+  { name: 'Glúteo sentado',                         duration: '5 × 60 s', totalSec: 60, sets: 5 },
+  { name: 'Cuádriceps de pie',                      duration: '5 × 60 s', totalSec: 60, sets: 5 },
+  // Mantenimiento y descarga de tensión — 3 min/semana.
+  { name: 'Extensión torácica sobre banco',         duration: '3 × 60 s', totalSec: 60, sets: 3,
+    cue: 'Codos en el banco y pecho hacia el suelo. Junto con el dorsal, es lo que abre la posición por encima de la cabeza.' },
+  { name: 'Trapecio y cuello lateral',              duration: '3 × 60 s', totalSec: 60, sets: 3 },
+  { name: 'Hombro cruzado',                         duration: '3 × 60 s', totalSec: 60, sets: 3 },
 ];
 
 // Tarjeta de cada bloque del miércoles: nombre, contador de series en vivo
@@ -550,6 +619,9 @@ function StretchCard({ s }) {
         <div style={{ color: '#f8fafc', fontSize: 14 }}>{s.name}</div>
         {badge && (
           <div style={{ color: '#5eead4', fontSize: 11, fontWeight: 700, marginTop: 2 }}>{badge}</div>
+        )}
+        {s.cue && (
+          <div style={{ color: '#64748b', fontSize: 11, lineHeight: 1.4, marginTop: 3 }}>{s.cue}</div>
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -1062,7 +1134,7 @@ function PhasePill({ weekIdx }) {
       border: `1px solid ${p.color}55`,
       borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 600
     }}>
-      {p.phase} · {Math.round(p.pct * 100)}% RM · {p.reps} reps
+      {p.phase} · {Math.round(p.pct * 100)}% RM · RIR {p.rir}
     </span>
   );
 }
@@ -1099,7 +1171,11 @@ function OlympicTable({ ex, weekIdx, rmStore }) {
 }
 
 function NonOlympicRow({ ex, weekIdx, rmStore }) {
-  const p = PROG[weekIdx];
+  const prog = PROG[weekIdx];
+  // Un ejercicio puede llevar su propia intensidad/repeticiones por fase
+  // (ej. la sentadilla de volumen del miércoles), al margen de la tabla PROG.
+  const own = ex.byPhase ? ex.byPhase[prog.phase] : null;
+  const p = own ? { ...prog, pct: own.pct, sets: own.sets, rir: 2 } : prog;
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
   let weight = wt(effRM, p.pct);
@@ -1129,7 +1205,10 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
           <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
             {weight} {isArm ? 'kg/arm' : 'kg'}
           </div>
-          <div style={{ color: '#94a3b8', fontSize: 13 }}>{ex.setCount || 4} × {p.reps} reps</div>
+          <div style={{ color: '#94a3b8', fontSize: 13 }}>
+            {(own ? own.sets : repsForSets(weekIdx, setsCountFor(ex, weekIdx))).join(' · ')} reps
+          </div>
+          <div style={{ color: '#64748b', fontSize: 10.5, maxWidth: 190, marginLeft: 'auto' }}>RIR {p.rir} · corta a −{vlFor(ex, weekIdx)}% vel.</div>
           {ex.dumbbell && <div style={{ color: '#64748b', fontSize: 11 }}>mancuerna real disponible</div>}
           <div style={{ marginTop: 5 }}><RestButton ex={ex} weekIdx={weekIdx} compact /></div>
         </div>
@@ -1214,8 +1293,12 @@ function DayWorkout({ day, weekIdx, rmStore }) {
   if (day.special === 'stretch') {
     return (
       <div>
-        <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
-          🏊 Pool Recovery 20 min + 🏊‍♂️ Nado continuo/intervalos 15–20 min + 🧘 Estiramientos 45–60 s por serie
+        {(day.exercises || []).map((ex, i) => (
+          <NonOlympicRow key={'x'+i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />
+        ))}
+        <div style={{ color: '#94a3b8', fontSize: 13, margin: '16px 0 12px' }}>
+          🧘 Movilidad · 60 s por serie. El volumen semanal es lo que manda, no la
+          intensidad ni cómo lo repartas (Warneke 2024).
         </div>
         {STRETCHES.map((s, i) => <StretchCard key={i} s={s} />)}
       </div>
@@ -1254,7 +1337,7 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore 
       {/* Phase info */}
       <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <PhasePill weekIdx={weekIdx} />
-        <span style={{ color: '#64748b', fontSize: 13 }}>4 series</span>
+        <span style={{ color: '#64748b', fontSize: 13 }}>{PROG[weekIdx].sets.length} series · {PROG[weekIdx].sets.join('·')} reps</span>
       </div>
 
       {/* Leyenda de descansos de la fase actual */}
