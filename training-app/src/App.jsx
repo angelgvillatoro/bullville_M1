@@ -399,7 +399,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'A',
+    name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'C',
     special: 'stretch',
     exercises: [
       { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 160, unit: 'kg',
@@ -408,7 +408,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
+    name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
@@ -420,7 +420,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
+    name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
       { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
@@ -633,10 +633,19 @@ function StretchCard({ s }) {
 }
 
 // ─── NUTRITION DATA ───────────────────────────────────────────────────────────
+// Reordenado 8/08/2026 en bloques contiguos: Dom-Jue plan A, Vie-Sáb plan B,
+// y el miércoles pasa a ser plan C (día de hígado). Ver notas de hierro abajo.
+//
+// TRES REGLAS QUE NO SE PUEDEN ROMPER (motivo: absorción de hierro):
+//  1. El Skyr va SOLO a las 11:00, nunca dentro del desayuno. Sus ~675mg de
+//     calcio bloqueaban el hierro no hemo de las semillas y las espinacas.
+//  2. La fruta del desayuno debe ser cítrica (kiwi/mandarina/naranja/fresas).
+//     La vitamina C solo potencia el hierro NO hemo, que está todo ahí.
+//  3. El almuerzo no lleva lácteo. La fruta del almuerzo es libre.
 const NUTRITION = {
   A: {
     label: 'Días A',
-    days: 'Lun · Mar · Mié',
+    days: 'Dom · Lun · Mar · Jue',
     color: '#3B82F6',
     meals: [
       {
@@ -647,12 +656,17 @@ const NUTRITION = {
           { food: 'Parmesano', amount: '50g', macros: '18g P · 13g G · 2g C' },
           { food: 'Semillas de calabaza', amount: '25g', macros: '5g P · 7g G · 2g C' },
           { food: 'Ajo', amount: 'al gusto', macros: '—' },
-          { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
-          { food: 'Fruta (naranja/manzana)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
+          { food: '⚠️ Fruta CÍTRICA (kiwi/mandarina/naranja/fresas)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
         ]
       },
       {
-        name: '🍗 Almuerzo (13:00)',
+        name: '🥛 Media mañana (11:00) — el Skyr va solo',
+        items: [
+          { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
+        ]
+      },
+      {
+        name: '🍗 Almuerzo (13:00) — sin lácteo',
         items: [
           { food: 'Pechuga de pollo (cocida)', amount: '300g', macros: '78g P · 6g G · 0g C' },
           { food: 'Arroz (cocido)', amount: '100g', macros: '3g P · 0g G · 28g C' },
@@ -662,17 +676,58 @@ const NUTRITION = {
           { food: 'Sofrito — Ajo', amount: '2 dientes', macros: '—' },
           { food: 'Brócoli', amount: '200g', macros: '6g P · 1g G · 14g C' },
           { food: 'Aceite de oliva', amount: '25ml', macros: '0g P · 23g G · 0g C' },
-          { food: 'Fruta', amount: '~150g', macros: '1g P · 0g G · 12g C' },
+          { food: 'Fruta (la que quieras)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
         ]
       }
     ],
     totals: { kcal: 1975, protein: 205, fat: 84, carbs: 103 },
-    // qué añadir en el "ajuste de fase" (rico en carbohidrato de este día)
+    carbFood: 'Arroz (cocido)'
+  },
+  C: {
+    label: 'Día C · Hígado',
+    days: 'Miércoles',
+    color: '#A855F7',
+    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. Una vez por semana y ni una más — dos raciones entrarían en exceso de vitamina A, que también provoca caída de pelo. Cómpralo en el batch cook del sábado y congélalo el mismo día (aguanta 1-2 días en nevera, no llega al miércoles); sácalo el martes por la noche. 4 min a fuego fuerte, rosa por dentro.',
+    meals: [
+      {
+        name: '🍳 Desayuno (8:00–8:30) — igual que días A',
+        items: [
+          { food: 'Huevos', amount: '4 uds', macros: '28g P · 20g G · 2g C' },
+          { food: 'Espinacas', amount: '140g', macros: '4g P · 1g G · 5g C' },
+          { food: 'Parmesano', amount: '50g', macros: '18g P · 13g G · 2g C' },
+          { food: 'Semillas de calabaza', amount: '25g', macros: '5g P · 7g G · 2g C' },
+          { food: 'Ajo', amount: 'al gusto', macros: '—' },
+          { food: '⚠️ Fruta CÍTRICA (kiwi/mandarina/naranja/fresas)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
+        ]
+      },
+      {
+        name: '🥛 Media mañana (11:00) — el Skyr va solo',
+        items: [
+          { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
+        ]
+      },
+      {
+        name: '🫀 Almuerzo (13:00) — día de hierro',
+        items: [
+          { food: 'Hígado de pollo (cocido)', amount: '150g', macros: '37g P · 10g G · 1g C' },
+          { food: 'Pechuga de pollo (cocida)', amount: '150g', macros: '39g P · 3g G · 0g C' },
+          { food: 'Arroz (cocido)', amount: '100g', macros: '3g P · 0g G · 28g C' },
+          { food: 'Sofrito — Tomate', amount: '80g', macros: '1g P · 0g G · 4g C' },
+          { food: 'Sofrito — Pimiento', amount: '60g', macros: '1g P · 0g G · 3g C' },
+          { food: 'Sofrito — Calabacín', amount: '50g', macros: '0g P · 0g G · 2g C' },
+          { food: 'Sofrito — Ajo', amount: '2 dientes', macros: '—' },
+          { food: 'Brócoli', amount: '200g', macros: '6g P · 1g G · 14g C' },
+          { food: 'Aceite de oliva', amount: '18ml', macros: '0g P · 17g G · 0g C' },
+          { food: 'Fruta (la que quieras)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
+        ]
+      }
+    ],
+    totals: { kcal: 1970, protein: 203, fat: 84, carbs: 104 },
     carbFood: 'Arroz (cocido)'
   },
   B: {
     label: 'Días B',
-    days: 'Jue · Vie',
+    days: 'Vie · Sáb',
     color: '#F59E0B',
     meals: [
       {
@@ -682,18 +737,23 @@ const NUTRITION = {
           { food: 'Aceite de oliva (tortilla)', amount: '5ml', macros: '0g P · 5g G · 0g C' },
           { food: 'Salmón (cocido)', amount: '250g', macros: '55g P · 22g G · 0g C' },
           { food: 'Boniato (cocido)', amount: '100g', macros: '2g P · 0g G · 17g C' },
-          { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
-          { food: 'Fruta', amount: '~150g', macros: '1g P · 0g G · 20g C' },
+          { food: '⚠️ Fruta CÍTRICA (kiwi/mandarina/naranja/fresas)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
         ]
       },
       {
-        name: '🥩 Almuerzo (13:00)',
+        name: '🥛 Media mañana (11:00) — el Skyr va solo',
+        items: [
+          { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
+        ]
+      },
+      {
+        name: '🥩 Almuerzo (13:00) — sin lácteo',
         items: [
           { food: 'Ternera (cocida)', amount: '220g', macros: '55g P · 14g G · 0g C' },
           { food: 'Patata (cocida)', amount: '100g', macros: '2g P · 0g G · 17g C' },
           { food: 'Brócoli', amount: '200g', macros: '6g P · 1g G · 14g C' },
           { food: 'Aceite de oliva', amount: '15ml', macros: '0g P · 14g G · 0g C' },
-          { food: 'Fruta', amount: '~150g', macros: '1g P · 0g G · 12g C' },
+          { food: 'Fruta (la que quieras)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
         ]
       }
     ],
@@ -708,11 +768,31 @@ const NUTRITION = {
 // El extra se añade siempre vía carbohidrato + fruta + aceite (no proteína,
 // que ya está cubierta) para sostener el gasto del condicionamiento nuevo sin
 // tocar las cantidades de pollo/salmón/ternera que ya calibran la proteína.
+// Recalibrado 8/08/2026 — TECHO DE DÉFICIT AL 20%.
+// La versión anterior dejaba la fase Base en 1.991 kcal de media semanal, un
+// 27,6% de déficit y 0,69 kg/semana (0,76% del peso corporal). Eso está en el
+// rango donde aparece la pérdida de pelo por efluvio telógeno y la pérdida de
+// masa magra. Ahora ninguna fase pasa del 20% de déficit ni del 0,55%/semana.
+//
+// Media semanal con el reparto 4 días A + 1 día C + 2 días B (base 1.990 kcal):
+//   Base       2.202 kcal · déficit 19,9% · 0,50 kg/sem
+//   Transición 2.257 kcal · déficit 17,9% · 0,45 kg/sem
+//   Intensidad 2.306 kcal · déficit 16,1% · 0,40 kg/sem
+//   Peak       2.360 kcal · déficit 14,2% · 0,35 kg/sem
+//
+// Gasto de referencia 2.750 kcal (Katch-McArdle sobre 70,8 kg de magra = 1.900
+// de basal, por 7 sesiones semanales). NO es el 2.600 que decía el plan viejo,
+// que estaba infraestimado. Sigue siendo una ESTIMACIÓN: la que manda es la
+// regla de corrección de la pestaña Seguimiento.
+//
+// El extra entra por carbohidrato + fruta + aceite, NUNCA proteína: ya estás en
+// 2,25 g/kg de peso (2,90 g/kg de magra), por encima de la meseta. Además el
+// mismo aporte como pollo cuesta ~10 €/semana frente a ~1 € como arroz.
 const PHASE_ADD = {
-  'Base':       { carbG: 0,   fruitG: 0,   oilMl: 0  },
-  'Transición': { carbG: 40,  fruitG: 100, oilMl: 5  },
-  'Intensidad': { carbG: 80,  fruitG: 150, oilMl: 8  },
-  'Peak':       { carbG: 120, fruitG: 150, oilMl: 12 },
+  'Base':       { carbG: 135, fruitG: 100, oilMl: 0 },
+  'Transición': { carbG: 160, fruitG: 100, oilMl: 3 },
+  'Intensidad': { carbG: 180, fruitG: 100, oilMl: 6 },
+  'Peak':       { carbG: 210, fruitG: 120, oilMl: 7 },
 };
 function phaseAddMacros(p) {
   const carbKcal = p.carbG * 1.2, carbCarbs = p.carbG * 0.28, carbProt = p.carbG * 0.02;
@@ -1423,11 +1503,11 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore 
           </div>
         </div>
         <div style={{
-          background: day.nutriDay === 'A' ? '#3B82F622' : '#F59E0B22',
-          color: day.nutriDay === 'A' ? '#3B82F6' : '#F59E0B',
+          background: (NUTRITION[day.nutriDay]?.color || '#94a3b8') + '22',
+          color: NUTRITION[day.nutriDay]?.color || '#94a3b8',
           borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600
         }}>
-          {day.nutriDay === 'A' ? '🍗 Pollo' : '🐟 Salmón / 🥩 Ternera'}
+          {{ A: '🍗 Pollo', B: '🐟 Salmón / 🥩 Ternera', C: '🫀 Hígado de pollo' }[day.nutriDay]}
         </div>
       </div>
 
@@ -2278,6 +2358,25 @@ const PB = [
   { cat:'🫙 Despensa',         name:'Aceite de oliva',           qty:20,  unit:'ml' },
   { cat:'🍓 Fruta',            name:'Fruta variada',             qty:300, unit:'g' },
 ];
+// Día C — miércoles, día de hígado. Igual que PA pero con media ración de pollo
+// sustituida por 150g de hígado de pollo (~17mg de hierro hemo) y algo menos de
+// aceite, porque el hígado ya trae grasa. La proteína queda igual que un día A.
+const PC = [
+  { cat:'🥩 Proteínas',        name:'Hígado de pollo',           qty:150, unit:'g' },
+  { cat:'🥩 Proteínas',        name:'Pechuga de pollo (cocida)', qty:150, unit:'g' },
+  { cat:'🥚 Huevos y lácteos', name:'Huevos',                    qty:4,   unit:'uds' },
+  { cat:'🥚 Huevos y lácteos', name:'Arla Skyr 450g',            qty:1,   unit:'pack' },
+  { cat:'🥚 Huevos y lácteos', name:'Parmesano',                 qty:50,  unit:'g' },
+  { cat:'🥦 Verduras',         name:'Brócoli',                   qty:200, unit:'g' },
+  { cat:'🥦 Verduras',         name:'Espinacas',                 qty:140, unit:'g' },
+  { cat:'🥦 Verduras',         name:'Tomate',                    qty:80,  unit:'g' },
+  { cat:'🥦 Verduras',         name:'Pimiento',                  qty:60,  unit:'g' },
+  { cat:'🥦 Verduras',         name:'Calabacín',                 qty:50,  unit:'g' },
+  { cat:'🍠 Cereales',         name:'Arroz (seco)',              qty:35,  unit:'g' },
+  { cat:'🫙 Despensa',         name:'Semillas de calabaza',      qty:25,  unit:'g' },
+  { cat:'🫙 Despensa',         name:'Aceite de oliva',           qty:18,  unit:'ml' },
+  { cat:'🍓 Fruta',            name:'Fruta variada',             qty:300, unit:'g' },
+];
 const CAT_COL = {
   '🥩 Proteínas':'#EF4444', '🥚 Huevos y lácteos':'#F59E0B',
   '🥦 Verduras':'#22C55E',  '🍠 Cereales':'#8B5CF6',
@@ -2289,25 +2388,26 @@ function fmtQ(qty, unit) {
   return `${qty} ${unit}`;
 }
 function scaled(items, days) { return items.map(i => ({...i, total: i.qty * days})); }
-function merged(dA, dB) {
+function merged(dA, dB, dC = 0) {
   const map = new Map();
-  const add = (items, d) => items.forEach(i => {
+  const add = (items, d) => { if (!d) return; items.forEach(i => {
     if (map.has(i.name)) map.get(i.name).total += i.qty * d;
     else map.set(i.name, {...i, total: i.qty * d});
-  });
-  add(PA, dA); add(PB, dB);
+  }); };
+  add(PA, dA); add(PC, dC); add(PB, dB);
   const cats = {};
   map.forEach(v => { if (!cats[v.cat]) cats[v.cat]=[]; cats[v.cat].push(v); });
   return cats;
 }
 
 function ShoppingTab({ weekIdx }) {
-  const [daysA, setDaysA]     = useState(3);
+  const [daysA, setDaysA]     = useState(4);
   const [daysB, setDaysB]     = useState(2);
+  const [daysC, setDaysC]     = useState(1);
   const [checked, setChecked] = useState({});
   const toggle = k => setChecked(p => ({...p, [k]: !p[k]}));
 
-  const totalDays = daysA + daysB;
+  const totalDays = daysA + daysB + daysC;
   const phase = PROG[weekIdx].phase;
   const add = PHASE_ADD[phase];
 
@@ -2391,9 +2491,9 @@ function ShoppingTab({ weekIdx }) {
     <div>
       {/* Day selectors */}
       <div style={{display:'flex', gap:10, marginBottom:20}}>
-        {[['Plan A', daysA, setDaysA, '#3B82F6'], ['Plan B', daysB, setDaysB, '#F59E0B']].map(([label, val, setter, color]) => (
-          <div key={label} style={{flex:1, background:'#1e293b', borderRadius:10, padding:'14px', textAlign:'center'}}>
-            <div style={{color, fontWeight:700, marginBottom:10}}>{label}</div>
+        {[['Plan A', daysA, setDaysA, '#3B82F6'], ['🫀 Hígado', daysC, setDaysC, '#A855F7'], ['Plan B', daysB, setDaysB, '#F59E0B']].map(([label, val, setter, color]) => (
+          <div key={label} style={{flex:1, background:'#1e293b', borderRadius:10, padding:'12px 6px', textAlign:'center'}}>
+            <div style={{color, fontWeight:700, marginBottom:10, fontSize:13}}>{label}</div>
             <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:14}}>
               <button onClick={() => setter(Math.max(0, val-1))} style={{
                 width:32, height:32, borderRadius:6, border:'none', cursor:'pointer',
@@ -2411,8 +2511,8 @@ function ShoppingTab({ weekIdx }) {
       </div>
 
       {totalDays > 0 ? (
-        Object.entries(merged(daysA, daysB)).map(([cat, items]) =>
-          <CatGroup key={cat} catName={cat} items={items} prefix={`c${daysA}${daysB}`} />
+        Object.entries(merged(daysA, daysB, daysC)).map(([cat, items]) =>
+          <CatGroup key={cat} catName={cat} items={items} prefix={`c${daysA}${daysB}${daysC}`} />
         )
       ) : (
         <div style={{color:'#64748b', textAlign:'center', padding:32}}>Selecciona al menos 1 día</div>
@@ -2441,11 +2541,11 @@ function NutritionTab({ weekIdx }) {
     <div>
       {/* Toggle */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {['A', 'B'].map(v => (
+        {['A', 'C', 'B'].map(v => (
           <button key={v} onClick={() => setView(v)} style={{
-            flex: 1, padding: '10px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            fontWeight: 700, fontSize: 14,
-            background: v === view ? (v === 'A' ? '#3B82F6' : '#F59E0B') : '#1e293b',
+            flex: 1, padding: '10px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            fontWeight: 700, fontSize: 13,
+            background: v === view ? NUTRITION[v].color : '#1e293b',
             color: v === view ? '#fff' : '#64748b'
           }}>
             {NUTRITION[v].label}
@@ -2455,6 +2555,26 @@ function NutritionTab({ weekIdx }) {
       </div>
 
       <div style={{ marginBottom: 16 }}><PhasePill weekIdx={weekIdx} /></div>
+
+      {plan.note && (
+        <div style={{
+          background: '#2e1065', border: '1px solid #7c3aed', borderRadius: 10,
+          padding: '12px 14px', marginBottom: 16, color: '#e9d5ff', fontSize: 13, lineHeight: 1.6
+        }}>
+          <b>🫀 Por qué el hígado y cómo tratarlo.</b> {plan.note}
+        </div>
+      )}
+
+      {/* Regla del hierro — visible siempre */}
+      <div style={{
+        background: '#0f172a', border: '1px solid #334155', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{color:'#f8fafc', fontWeight:700, marginBottom:6, fontSize:13}}>🩸 Reglas del hierro — no romperlas</div>
+        <b style={{color:'#e2e8f0'}}>1.</b> El Skyr va <b>solo</b> a las 11:00. Sus ~675mg de calcio bloqueaban el hierro no hemo de las semillas y las espinacas del desayuno.<br/>
+        <b style={{color:'#e2e8f0'}}>2.</b> La fruta del desayuno tiene que ser <b>cítrica</b>. La vitamina C solo potencia el hierro no hemo, y ese está todo ahí. Plátano o manzana no sirven.<br/>
+        <b style={{color:'#e2e8f0'}}>3.</b> El almuerzo <b>no lleva lácteo</b>. La fruta del almuerzo es libre.
+      </div>
 
       {/* Meals */}
       {plan.meals.map((meal, mi) => (
@@ -2505,7 +2625,7 @@ function NutritionTab({ weekIdx }) {
             <span style={{ color: '#94a3b8', fontSize: 12 }}>+{add.oilMl}ml</span>
           </div>
           <div style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>
-            Estimación de partida — ajusta ±100 kcal/día según la tendencia real de peso, no según el objetivo teórico.
+            Estimación de partida sobre un gasto supuesto de 2.750 kcal. Lo que manda es la regla de corrección de la pestaña <b>📈 Seguimiento</b>: objetivo 0,45–0,55 kg/semana de media semanal. Dos semanas por encima de 0,65 → +150 kcal/día. Dos por debajo de 0,25 → −150 kcal/día.
           </div>
         </div>
       )}
@@ -2581,6 +2701,288 @@ function SupplementsTab() {
   );
 }
 
+// ─── SEGUIMIENTO ─────────────────────────────────────────────────────────────
+// Añadido 8/08/2026. La tabla de calorías descansa sobre un gasto ESTIMADO de
+// 2.750 kcal (Katch-McArdle + 7 sesiones). Si el gasto real fuera 2.950, las
+// 2.200 kcal serían un 25% de déficit y volveríamos a la zona de riesgo de
+// efluvio telógeno sin enterarnos. Esta pestaña existe para cerrar ese hueco:
+// no protege la tabla, protege la regla de corrección.
+const TRACK_TARGET_LO = 0.25;   // kg/semana — por debajo, el déficit se quedó corto
+const TRACK_TARGET_HI = 0.65;   // kg/semana — por encima, el déficit aprieta de más
+const TRACK_BAND = [0.45, 0.55]; // objetivo
+
+function loadTrack() {
+  try { const s = localStorage.getItem('ta_track'); return s ? JSON.parse(s) : []; }
+  catch { return []; }
+}
+function saveTrack(rows) {
+  try { localStorage.setItem('ta_track', JSON.stringify(rows)); } catch {}
+}
+function loadLabs() {
+  try { const s = localStorage.getItem('ta_labs'); return s ? JSON.parse(s) : {}; }
+  catch { return {}; }
+}
+function saveLabs(o) {
+  try { localStorage.setItem('ta_labs', JSON.stringify(o)); } catch {}
+}
+
+const LAB_PANEL = [
+  { k:'blutbild', de:'großes Blutbild',   es:'Hemograma completo',
+    why:'Base de todo. Descarta anemia franca y da pistas de inflamación.' },
+  { k:'ferritin', de:'Ferritin',          es:'Ferritina',
+    why:'El parámetro clave. El folículo sufre por debajo de 40-70 ng/ml aunque la hemoglobina esté normal.' },
+  { k:'crp',      de:'CRP',               es:'Proteína C reactiva',
+    why:'NO es opcional. La ferritina sube con la inflamación y con el entrenamiento duro; sin CRP no sabes si una ferritina normal es real o está falseada al alza.' },
+  { k:'tsh',      de:'TSH und fT4',       es:'TSH y T4 libre',
+    why:'El hipotiroidismo subclínico da caída difusa exactamente igual que el efluvio.' },
+  { k:'vitd',     de:'25-OH-Vitamin D',   es:'Vitamina D',
+    why:'Braunschweig está a 52,3°N. En invierno no hay síntesis cutánea útil, haga el sol que haga.' },
+  { k:'zink',     de:'Zink',              es:'Zinc',
+    why:'Déficit y exceso dan ambos caída de pelo. Por eso se mide antes de suplementar.' },
+  { k:'b12',      de:'Vitamin B12',       es:'Vitamina B12',
+    why:'Se cubre de sobra con la dieta, pero es barato descartarlo.' },
+];
+
+function daysBetween(a, b) {
+  return (new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000;
+}
+
+// Ritmo semanal de pérdida entre dos registros. Positivo = está bajando.
+function rateBetween(prev, cur) {
+  const d = daysBetween(prev.date, cur.date);
+  if (!d || d <= 0) return null;
+  return (prev.weight - cur.weight) / (d / 7);
+}
+
+function TrackingTab() {
+  const [rows, setRows] = useState(loadTrack);
+  const [labs, setLabs] = useState(loadLabs);
+  const [date, setDate]     = useState(() => new Date().toISOString().slice(0, 10));
+  const [weight, setWeight] = useState('');
+  const [waist, setWaist]   = useState('');
+  const [hair, setHair]     = useState('igual');
+
+  const sorted = [...rows].sort((a, b) => a.date < b.date ? -1 : 1);
+
+  const add = () => {
+    const w = parseFloat(String(weight).replace(',', '.'));
+    if (!date || !w || w < 40 || w > 200) return;
+    const wa = parseFloat(String(waist).replace(',', '.'));
+    const next = [...rows.filter(r => r.date !== date),
+                  { date, weight: w, waist: (wa && wa > 40 && wa < 200) ? wa : null, hair }];
+    next.sort((a, b) => a.date < b.date ? -1 : 1);
+    setRows(next); saveTrack(next);
+    setWeight(''); setWaist('');
+  };
+  const del = (d) => {
+    const next = rows.filter(r => r.date !== d);
+    setRows(next); saveTrack(next);
+  };
+  const toggleLab = (k) => {
+    const next = { ...labs, [k]: !labs[k] };
+    setLabs(next); saveLabs(next);
+  };
+
+  // Últimos dos ritmos semana-a-semana — la regla habla de "dos semanas seguidas"
+  const rates = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const r = rateBetween(sorted[i - 1], sorted[i]);
+    if (r !== null) rates.push({ to: sorted[i].date, rate: r });
+  }
+  const last2 = rates.slice(-2);
+  const latest = sorted[sorted.length - 1];
+
+  // Ritmo medio de las últimas 4 semanas (más estable que un solo salto)
+  let avgRate = null;
+  if (sorted.length >= 2) {
+    const window = sorted.slice(-5);
+    const first = window[0], last = window[window.length - 1];
+    avgRate = rateBetween(first, last);
+  }
+
+  let verdict = null;
+  if (latest && latest.hair === 'mas') {
+    verdict = { color:'#EF4444', bg:'#450a0a', title:'Sube 150 kcal/día — ahora',
+      text:'Has marcado que la caída de pelo ha aumentado. Esto manda por encima de la báscula: la caída es una señal más temprana y más fiable de que el déficit aprieta de más que cualquier número de peso. Sube 150 kcal/día aunque el ritmo esté en rango.' };
+  } else if (last2.length === 2 && last2.every(r => r.rate > TRACK_TARGET_HI)) {
+    verdict = { color:'#F59E0B', bg:'#451a03', title:'Sube 150 kcal/día',
+      text:`Dos semanas seguidas por encima de ${TRACK_TARGET_HI} kg/sem. Tu gasto real es mayor del que asumimos (2.750) y estás en un déficit más profundo del que crees — justo el escenario que queríamos evitar.` };
+  } else if (last2.length === 2 && last2.every(r => r.rate < TRACK_TARGET_LO)) {
+    verdict = { color:'#3B82F6', bg:'#172554', title:'Baja 150 kcal/día',
+      text:`Dos semanas seguidas por debajo de ${TRACK_TARGET_LO} kg/sem. O el gasto real es menor del estimado, o hay ingesta que no se está contabilizando. Antes de recortar, revisa lo segundo.` };
+  } else if (last2.length === 2) {
+    verdict = { color:'#22C55E', bg:'#052e16', title:'En rango — no toques nada',
+      text:`El ritmo está dentro de la banda segura (${TRACK_BAND[0]}–${TRACK_BAND[1]} kg/sem, tolerancia ${TRACK_TARGET_LO}–${TRACK_TARGET_HI}). Ni pérdida de masa magra ni riesgo de efluvio a este ritmo.` };
+  } else {
+    verdict = { color:'#64748b', bg:'#0f172a', title:'Faltan datos',
+      text:'Necesitas al menos tres registros semanales para que la regla de corrección diga algo. Con dos ya se ve un ritmo, pero un solo salto puede ser agua.' };
+  }
+
+  const inp = {
+    background:'#0f172a', border:'1px solid #334155', borderRadius:8,
+    padding:'9px 10px', color:'#f8fafc', fontSize:14, width:'100%',
+    boxSizing:'border-box', outline:'none'
+  };
+  const lbl = { color:'#64748b', fontSize:11, marginBottom:4, fontWeight:600 };
+
+  return (
+    <div>
+      {/* Veredicto */}
+      <div style={{
+        background: verdict.bg, border:`1px solid ${verdict.color}`, borderRadius:12,
+        padding:'14px 16px', marginBottom:16
+      }}>
+        <div style={{ color: verdict.color, fontWeight:700, fontSize:16, marginBottom:6 }}>
+          {verdict.title}
+        </div>
+        <div style={{ color:'#cbd5e1', fontSize:13, lineHeight:1.6 }}>{verdict.text}</div>
+      </div>
+
+      {/* Métricas */}
+      <div style={{
+        background:'#0f172a', borderRadius:10, padding:'14px 16px', marginBottom:16,
+        display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8
+      }}>
+        {[
+          { label:'Peso actual', value: latest ? `${latest.weight.toFixed(1)} kg` : '—', color:'#f8fafc' },
+          { label:'Ritmo (últ. 4 sem)', value: avgRate !== null ? `${avgRate >= 0 ? '' : '+'}${Math.abs(avgRate).toFixed(2)} kg/sem` : '—',
+            color: avgRate === null ? '#64748b' : (avgRate > TRACK_TARGET_HI || avgRate < TRACK_TARGET_LO) ? '#F59E0B' : '#22C55E' },
+          { label:'Cintura', value: latest && latest.waist ? `${latest.waist.toFixed(1)} cm` : '—', color:'#3B82F6' },
+        ].map((m, i) => (
+          <div key={i} style={{ textAlign:'center' }}>
+            <div style={{ color:m.color, fontWeight:700, fontSize:16 }}>{m.value}</div>
+            <div style={{ color:'#64748b', fontSize:11 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Cómo medir */}
+      <div style={{
+        background:'#0f172a', border:'1px solid #334155', borderRadius:10,
+        padding:'12px 14px', marginBottom:16, color:'#94a3b8', fontSize:12.5, lineHeight:1.7
+      }}>
+        <div style={{ color:'#f8fafc', fontWeight:700, marginBottom:6, fontSize:13 }}>📏 Cómo medir para que esto sirva</div>
+        <b style={{color:'#e2e8f0'}}>Peso:</b> pésate a diario en ayunas, después de orinar, y apunta aquí <b>la media de los 7 días</b>, nunca el dato de un día suelto. El peso fluctúa 1-2 kg por agua y glucógeno sin que signifique nada.<br/>
+        <b style={{color:'#e2e8f0'}}>Cintura:</b> una vez por semana, en ayunas, a la altura del ombligo, sin apretar y sin meter barriga. Con esta magnitud de cambio la cinta métrica es <b>más fiable que tu báscula de bioimpedancia</b>, que tiene ±3-4 puntos de error en el % de grasa y es muy sensible a la hidratación.<br/>
+        <b style={{color:'#e2e8f0'}}>Las 2 primeras semanas</b> verás 1-2 kg de bajada que son glucógeno y agua, no grasa. No corrijas nada con esos datos.<br/>
+        <b style={{color:'#e2e8f0'}}>Si ganas masa magra</b>, el peso bajará menos de lo previsto mientras el % de grasa sigue cayendo. La báscula miente en esa dirección concreta — por eso está la cintura.
+      </div>
+
+      {/* Nuevo registro */}
+      <div style={{ background:'#1e293b', borderRadius:12, padding:'14px 16px', marginBottom:16 }}>
+        <div style={{ color:'#f8fafc', fontWeight:700, fontSize:15, marginBottom:12 }}>➕ Registro semanal</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+          <div>
+            <div style={lbl}>FECHA</div>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inp} />
+          </div>
+          <div>
+            <div style={lbl}>PESO MEDIO SEMANAL (kg)</div>
+            <input type="number" inputMode="decimal" step="0.1" placeholder="91.0"
+              value={weight} onChange={e => setWeight(e.target.value)} style={inp} />
+          </div>
+          <div>
+            <div style={lbl}>CINTURA (cm) · opcional</div>
+            <input type="number" inputMode="decimal" step="0.5" placeholder="94"
+              value={waist} onChange={e => setWaist(e.target.value)} style={inp} />
+          </div>
+          <div>
+            <div style={lbl}>CAÍDA DE PELO</div>
+            <select value={hair} onChange={e => setHair(e.target.value)} style={inp}>
+              <option value="menos">Menos que la semana pasada</option>
+              <option value="igual">Igual</option>
+              <option value="mas">Más</option>
+            </select>
+          </div>
+        </div>
+        <button onClick={add} style={{
+          width:'100%', padding:'11px', borderRadius:8, border:'none', cursor:'pointer',
+          background:'#22C55E', color:'#052e16', fontWeight:700, fontSize:14
+        }}>Guardar semana</button>
+      </div>
+
+      {/* Historial */}
+      {sorted.length > 0 && (
+        <div style={{ marginBottom:16 }}>
+          <div style={{ color:'#f8fafc', fontWeight:700, fontSize:15, marginBottom:10 }}>📊 Historial</div>
+          {[...sorted].reverse().map((r, i) => {
+            const idx = sorted.indexOf(r);
+            const rate = idx > 0 ? rateBetween(sorted[idx - 1], r) : null;
+            const rateCol = rate === null ? '#64748b'
+              : (rate > TRACK_TARGET_HI || rate < TRACK_TARGET_LO) ? '#F59E0B' : '#22C55E';
+            const hairIcon = { menos:'📉', igual:'➡️', mas:'📈' }[r.hair] || '';
+            return (
+              <div key={r.date} style={{
+                display:'flex', alignItems:'center', gap:10,
+                padding:'10px 14px', background:'#1e293b', borderRadius:8, marginBottom:5
+              }}>
+                <span style={{ color:'#64748b', fontSize:12, minWidth:78 }}>{r.date}</span>
+                <span style={{ color:'#f8fafc', fontSize:14, fontWeight:600, minWidth:60 }}>{r.weight.toFixed(1)} kg</span>
+                <span style={{ color:'#3B82F6', fontSize:12, minWidth:52 }}>{r.waist ? `${r.waist} cm` : '—'}</span>
+                <span style={{ fontSize:13, minWidth:24 }} title={`Pelo: ${r.hair}`}>{hairIcon}</span>
+                <span style={{ color:rateCol, fontSize:12, fontWeight:700, flex:1, textAlign:'right' }}>
+                  {rate === null ? '' : `${rate >= 0 ? '−' : '+'}${Math.abs(rate).toFixed(2)} kg/sem`}
+                </span>
+                <button onClick={() => del(r.date)} style={{
+                  background:'none', border:'none', color:'#475569', cursor:'pointer', fontSize:16, padding:0
+                }}>×</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Regla de corrección */}
+      <div style={{
+        background:'#0f172a', border:'1px solid #334155', borderRadius:10,
+        padding:'12px 14px', marginBottom:16, color:'#94a3b8', fontSize:12.5, lineHeight:1.7
+      }}>
+        <div style={{ color:'#f8fafc', fontWeight:700, marginBottom:6, fontSize:13 }}>⚖️ La regla de corrección</div>
+        Objetivo: <b style={{color:'#22C55E'}}>0,45–0,55 kg/semana</b>.<br/>
+        Dos semanas seguidas por encima de <b>0,65</b> → <b style={{color:'#F59E0B'}}>+150 kcal/día</b>.<br/>
+        Dos semanas seguidas por debajo de <b>0,25</b> → <b style={{color:'#3B82F6'}}>−150 kcal/día</b>.<br/>
+        <b style={{color:'#EF4444'}}>Guardarraíl del pelo:</b> si la caída aumenta, sube 150 kcal aunque el peso vaya en el ritmo correcto. Manda por encima de la báscula.<br/><br/>
+        En tres o cuatro semanas esto te calibra el gasto real mejor que cualquier fórmula. El 2.750 de la tabla de fases es una estimación; esto es una medida.
+      </div>
+
+      {/* Analítica */}
+      <div style={{ background:'#1e293b', borderRadius:12, padding:'14px 16px' }}>
+        <div style={{ color:'#f8fafc', fontWeight:700, fontSize:15, marginBottom:4 }}>🩸 Analítica pendiente</div>
+        <div style={{ color:'#94a3b8', fontSize:12.5, lineHeight:1.7, marginBottom:12 }}>
+          Es el siguiente paso y manda sobre todo lo demás. <b style={{color:'#e2e8f0'}}>Ve un lunes</b>, no un domingo después del LegDay — el entrenamiento duro sube la ferritina y falsea la lectura. <b style={{color:'#e2e8f0'}}>En ayunas</b>, aunque tengas que retrasar el desayuno: el zinc tiene variación diurna y baja tras comer. <b style={{color:'#e2e8f0'}}>Sin biotina</b> los días previos — falsea tiroides y troponina.
+        </div>
+        {LAB_PANEL.map(p => (
+          <div key={p.k} onClick={() => toggleLab(p.k)} style={{
+            display:'flex', gap:10, padding:'10px 12px', background:'#0f172a',
+            borderRadius:8, marginBottom:5, cursor:'pointer', opacity: labs[p.k] ? 0.45 : 1
+          }}>
+            <div style={{
+              width:18, height:18, borderRadius:4, flexShrink:0, marginTop:2,
+              border:`2px solid ${labs[p.k] ? '#22C55E' : '#334155'}`,
+              background: labs[p.k] ? '#22C55E' : 'transparent',
+              display:'flex', alignItems:'center', justifyContent:'center'
+            }}>
+              {labs[p.k] && <span style={{ color:'#052e16', fontSize:11, fontWeight:700 }}>✓</span>}
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ color:'#f8fafc', fontSize:14, fontWeight:600 }}>
+                {p.de} <span style={{ color:'#64748b', fontWeight:400 }}>· {p.es}</span>
+              </div>
+              <div style={{ color:'#94a3b8', fontSize:12, lineHeight:1.5, marginTop:2 }}>{p.why}</div>
+            </div>
+          </div>
+        ))}
+        <div style={{ color:'#94a3b8', fontSize:12.5, lineHeight:1.7, marginTop:12 }}>
+          <b style={{ color:'#f8fafc' }}>Dónde, en Braunschweig.</b><br/>
+          <b style={{color:'#e2e8f0'}}>Barato:</b> tu Hausarzt, presentándolo como <i>«Haarausfall seit mehreren Monaten»</i>. Con esa indicación el seguro público suele cubrir Blutbild, Ferritin y TSH. Vitamina D y zinc casi siempre van como IGeL, ~20-30 € cada uno.<br/>
+          <b style={{color:'#e2e8f0'}}>Rápido:</b> HIB Blutanalyselabor, Papenstieg 8 (Schloss Carree). Autopagador, sin receta y sin cita, lu-vi 8:00-13:00. Tel. 0531 2311325.<br/><br/>
+          <b style={{ color:'#EF4444' }}>No suplementes hierro sin la ferritina medida.</b> La sobrecarga de hierro hace más daño que el déficit.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── SECCIONES PRINCIPALES ────────────────────────────────────────────────────
 const SECTIONS = [
   { id: 'entrenamiento', label: '🏋️ Entrenamiento', subtabs: [
@@ -2591,6 +2993,9 @@ const SECTIONS = [
       { id: 'compra', label: '🛒 Compra' },
       { id: 'nutricion', label: 'Nutrición' },
       { id: 'supps', label: '💊 Suplementos' },
+  ]},
+  { id: 'seguimiento', label: '📈 Seguimiento', subtabs: [
+      { id: 'control', label: 'Peso · Pelo · Analítica' },
   ]},
 ];
 
@@ -2767,6 +3172,7 @@ export default function App() {
       {section === 'alimentacion' && sub === 'compra' && <ShoppingTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'nutricion' && <NutritionTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'supps' && <SupplementsTab />}
+      {section === 'seguimiento' && <TrackingTab />}
     </div>
     <RestBar />
     </RestProvider>
