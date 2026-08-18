@@ -389,7 +389,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
+    name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
       { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
@@ -399,7 +399,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'C',
+    name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'A',
     special: 'stretch',
     exercises: [
       { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 160, unit: 'kg',
@@ -408,7 +408,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
+    name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'C',
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
@@ -420,7 +420,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'B',
+    name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
       { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
@@ -454,7 +454,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
+    name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'C',
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
@@ -790,8 +790,13 @@ function StretchCard({ s }) {
 }
 
 // ─── NUTRITION DATA ───────────────────────────────────────────────────────────
-// Reordenado 8/08/2026 en bloques contiguos: Dom-Jue plan A, Vie-Sáb plan B,
-// y el miércoles pasa a ser plan C (día de hígado). Ver notas de hierro abajo.
+// REORGANIZADO 18/08/2026 por espaciado de absorción. Antes: 4 A + 1 C + 2 B con
+// los dos días B pegados (Vie-Sáb). Ahora: 3 A + 2 B + 2 C, con los cuatro
+// almuerzos de hierro hemo separados 2 días entre sí — Dom → Mar → Jue → Sáb.
+// Motivo: una carga de hierro eleva la hepcidina y frena la absorción de la
+// siguiente ~24 h, así que días consecutivos se aprovechan a medias.
+// LAS CANTIDADES SEMANALES DE COMPRA NO CAMBIAN. Es puro reordenamiento:
+// 1,35 kg pollo · 150 g hígado · 500 g salmón · 440 g ternera, igual que antes.
 //
 // TRES REGLAS QUE NO SE PUEDEN ROMPER (motivo: absorción de hierro):
 //  1. El Skyr va SOLO a las 11:00, nunca dentro del desayuno. Sus ~675mg de
@@ -802,7 +807,7 @@ function StretchCard({ s }) {
 const NUTRITION = {
   A: {
     label: 'Días A',
-    days: 'Dom · Lun · Mar · Jue',
+    days: 'Lun · Mié · Vie',
     color: '#3B82F6',
     meals: [
       {
@@ -830,13 +835,14 @@ const NUTRITION = {
       {
         name: '🍗 Almuerzo — parmesano + 2 h (~13:00) · sin lácteo',
         items: [
-          { food: 'Pechuga de pollo (cocida)', amount: '300g', macros: '78g P · 6g G · 0g C' },
+          { food: 'Pechuga de pollo', amount: '300g', raw: 300, cooked: 225, yield: 0.75, macros: '69g P · 8g G · 0g C' },
           { food: 'Arroz (cocido)', amount: '100g', macros: '3g P · 0g G · 28g C' },
           { food: 'Sofrito — Tomate', amount: '80g', macros: '1g P · 0g G · 4g C' },
           { food: 'Sofrito — Pimiento', amount: '60g', macros: '1g P · 0g G · 3g C' },
           { food: 'Sofrito — Calabacín', amount: '50g', macros: '0g P · 0g G · 2g C' },
           { food: 'Sofrito — Ajo', amount: '2 dientes', macros: '—' },
           { food: 'Brócoli', amount: '200g', macros: '6g P · 1g G · 14g C' },
+          { food: '🌱 Mostaza parda en polvo — AL SERVIR, plato < 60°C', amount: '1g', macros: '—' },
           { food: 'Aceite de oliva', amount: '25ml', macros: '0g P · 23g G · 0g C' },
           { food: 'Fruta (la que quieras)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
         ]
@@ -846,10 +852,10 @@ const NUTRITION = {
     carbFood: 'Arroz (cocido)'
   },
   C: {
-    label: 'Día C · Hígado',
-    days: 'Miércoles',
+    label: 'Días C · Hígado',
+    days: 'Dom · Jue',
     color: '#A855F7',
-    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. Una vez por semana y ni una más — dos raciones entrarían en exceso de vitamina A, que también provoca caída de pelo. Cómpralo en el batch cook del sábado y congélalo el mismo día (aguanta 1-2 días en nevera, no llega al miércoles); sácalo el martes por la noche. 4 min a fuego fuerte, rosa por dentro.',
+    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. PARTIDO EN 2 RACIONES DE 75 g (18/08/2026) — mismos 150 g semanales, pero domingo y jueves. La absorción fraccional del hierro cae con el tamaño de la dosis: dos raciones pequeñas separadas 4 días rinden más hierro absorbido que una de 150 g, y cada una queda en ~2.450 µg de retinol, por debajo del límite de 3.000 µg/día (el exceso de vitamina A también provoca caída de pelo). Se compran los 150 g en el batch cook del sábado: la ración del domingo va fresca a la nevera, la del jueves se congela el sábado y se saca el miércoles por la noche. 4 min a fuego fuerte, rosa por dentro. Y OJO: buena parte del hierro del hígado NO es hemo, es no hemo unido a ferritina — por eso la fruta de este almuerzo tiene que ser cítrica.',
     meals: [
       {
         name: '🍳 Desayuno (~8:30) — hora cero · igual que días A',
@@ -876,25 +882,26 @@ const NUTRITION = {
       {
         name: '🫀 Almuerzo — parmesano + 2 h (~13:00) · día de hierro',
         items: [
-          { food: 'Hígado de pollo (cocido)', amount: '150g', macros: '37g P · 10g G · 1g C' },
-          { food: 'Pechuga de pollo (cocida)', amount: '150g', macros: '39g P · 3g G · 0g C' },
+          { food: 'Hígado de pollo', amount: '75g', raw: 75, cooked: 52, yield: 0.70, macros: '13g P · 4g G · 1g C' },
+          { food: 'Pechuga de pollo', amount: '225g', raw: 225, cooked: 169, yield: 0.75, macros: '52g P · 6g G · 0g C' },
           { food: 'Arroz (cocido)', amount: '100g', macros: '3g P · 0g G · 28g C' },
           { food: 'Sofrito — Tomate', amount: '80g', macros: '1g P · 0g G · 4g C' },
           { food: 'Sofrito — Pimiento', amount: '60g', macros: '1g P · 0g G · 3g C' },
           { food: 'Sofrito — Calabacín', amount: '50g', macros: '0g P · 0g G · 2g C' },
           { food: 'Sofrito — Ajo', amount: '2 dientes', macros: '—' },
           { food: 'Brócoli', amount: '200g', macros: '6g P · 1g G · 14g C' },
-          { food: 'Aceite de oliva', amount: '18ml', macros: '0g P · 17g G · 0g C' },
-          { food: 'Fruta (la que quieras)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
+          { food: '🌱 Mostaza parda en polvo — AL SERVIR, plato < 60°C', amount: '1g', macros: '—' },
+          { food: 'Aceite de oliva', amount: '22ml', macros: '0g P · 20g G · 0g C' },
+          { food: '⚠️ Fruta CÍTRICA (día de hierro)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
         ]
       }
     ],
-    totals: { kcal: 1970, protein: 203, fat: 84, carbs: 104 },
+    totals: { kcal: 1975, protein: 204, fat: 84, carbs: 103 },
     carbFood: 'Arroz (cocido)'
   },
   B: {
     label: 'Días B',
-    days: 'Vie · Sáb',
+    days: 'Mar · Sáb',
     color: '#F59E0B',
     meals: [
       {
@@ -902,7 +909,7 @@ const NUTRITION = {
         items: [
           { food: 'Huevos', amount: '4 uds', macros: '28g P · 20g G · 2g C' },
           { food: 'Aceite de oliva (tortilla)', amount: '5ml', macros: '0g P · 5g G · 0g C' },
-          { food: 'Salmón (cocido)', amount: '250g', macros: '55g P · 22g G · 0g C' },
+          { food: 'Salmón', amount: '250g', raw: 250, cooked: 200, yield: 0.80, macros: '50g P · 33g G · 0g C' },
           { food: 'Boniato (cocido)', amount: '100g', macros: '2g P · 0g G · 17g C' },
           { food: '⚠️ Fruta CÍTRICA (kiwi/mandarina/naranja/fresas)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
         ]
@@ -916,11 +923,12 @@ const NUTRITION = {
       {
         name: '🥩 Almuerzo — Skyr + 2 h 30 (~13:00) · sin lácteo',
         items: [
-          { food: 'Ternera (cocida)', amount: '220g', macros: '55g P · 14g G · 0g C' },
+          { food: 'Ternera magra', amount: '220g', raw: 220, cooked: 161, yield: 0.73, macros: '46g P · 15g G · 0g C' },
           { food: 'Patata (cocida)', amount: '100g', macros: '2g P · 0g G · 17g C' },
           { food: 'Brócoli', amount: '200g', macros: '6g P · 1g G · 14g C' },
+          { food: '🌱 Mostaza parda en polvo — AL SERVIR, plato < 60°C', amount: '1g', macros: '—' },
           { food: 'Aceite de oliva', amount: '15ml', macros: '0g P · 14g G · 0g C' },
-          { food: 'Fruta (la que quieras)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
+          { food: '⚠️ Fruta CÍTRICA (día de hierro)', amount: '~150g', macros: '1g P · 0g G · 12g C' },
         ]
       }
     ],
@@ -941,7 +949,9 @@ const NUTRITION = {
 // rango donde aparece la pérdida de pelo por efluvio telógeno y la pérdida de
 // masa magra. Ahora ninguna fase pasa del 20% de déficit ni del 0,55%/semana.
 //
-// Media semanal con el reparto 4 días A + 1 día C + 2 días B (base 1.990 kcal):
+// Media semanal con el reparto 3 días A + 2 días B + 2 días C (base 1.991 kcal).
+// 18/08/2026: el reparto cambió de 4A+1C+2B a 3A+2B+2C y la media semanal pasa de
+// 1.990 a 1.991 kcal — o sea, la tabla de fases de abajo sigue siendo válida tal cual.
 //   Base       2.202 kcal · déficit 19,9% · 0,50 kg/sem
 //   Transición 2.257 kcal · déficit 17,9% · 0,45 kg/sem
 //   Intensidad 2.306 kcal · déficit 16,1% · 0,40 kg/sem
@@ -987,10 +997,10 @@ const SUPPS = [
   {
     name: 'Omega-3',
     brand: 'Natural Elements',
-    dose: '3 cápsulas / día',
-    timing: 'Desayuno: 1 cáp · Almuerzo: 2 cáps (con D3+K2 y magnesio)',
+    dose: '3 cáps / día — ⏭ NINGUNA los días B (Mar y Sáb)',
+    timing: 'Desayuno: 1 cáp · Almuerzo: 2 cáps (con D3+K2 y magnesio). Días de salmón: saltarlas enteras.',
     detail: '1.000mg aceite de pescado/cápsula · forma triglicérido (TG) · 800mg EPA+DHA/cáp',
-    why: '2,4g EPA+DHA diarios. Forma TG = mejor absorción que ésteres etílicos. Cubre los días sin salmón.',
+    why: '2,4g EPA+DHA diarios. Forma TG = mejor absorción que ésteres etílicos. Cubre los días SIN salmón — y solo esos: 18/08/2026 se retiran los días B, porque 250g de salmón ya dan ~5.000mg de EPA+DHA frente a un objetivo de 2.000. Tomarlas ahí era desperdicio puro. Son 6 cápsulas menos por semana: el bote de 120 pasa de ~40 a ~57 días.',
     color: '#3B82F6'
   },
   {
@@ -1008,7 +1018,7 @@ const SUPPS = [
     dose: '⏸ SUSPENDIDO — no tomar hasta la analítica',
     timing: '—',
     detail: '25mg/comprimido · Albion® Zinc Bisglicinato (en pausa desde 8/08/2026)',
-    why: 'Dos motivos. (1) Interfiere con el hierro: el zinc y el hierro no hemo compiten por el mismo transportador (DMT1), y 12,5mg en el desayuno chocaban de frente con las semillas de calabaza y las espinacas — justo lo que se está intentando proteger. (2) Suplementar a ciegas induce déficit de cobre, y el déficit de cobre da anemia Y caída de pelo, o sea el síntoma que se quiere arreglar. La dieta aporta 8-9mg contra un objetivo de 11: hay hueco, pero pequeño, y el hígado del miércoles (~4mg de zinc y una de las mejores fuentes de cobre que existen) más el parmesano (~2mg) lo cubren casi entero. Retomar solo si la analítica lo justifica; si se retoma, va en el ALMUERZO y saltándolo los miércoles (el hierro del almuerzo es hemo, que usa otro transportador y apenas se ve afectado).',
+    why: 'Dos motivos. (1) Interfiere con el hierro: el zinc y el hierro no hemo compiten por el mismo transportador (DMT1), y 12,5mg en el desayuno chocaban de frente con las semillas de calabaza y las espinacas — justo lo que se está intentando proteger. (2) Suplementar a ciegas induce déficit de cobre, y el déficit de cobre da anemia Y caída de pelo, o sea el síntoma que se quiere arreglar. La dieta aporta 8-9mg contra un objetivo de 11: hay hueco, pero pequeño, y el hígado de domingo y jueves (~2mg de zinc por ración de 75g, y de las mejores fuentes de cobre que existen) más el parmesano (~2mg) y la ternera de martes y sábado (~10mg) lo cubren casi entero. Retomar solo si la analítica lo justifica; si se retoma, va en el ALMUERZO y saltándolo los días con hígado (Dom y Jue). NOTA 18/08/2026: con el zinc fuera, los días A se quedan en ~8,3mg frente a un objetivo de 12-15 y la media semanal en ~9,6mg. Es el único hueco real que deja la suspensión, y es el primer parámetro a mirar cuando llegue la analítica.',
     color: '#64748b',
     paused: true
   },
@@ -2501,7 +2511,7 @@ function TestTab({ rmStore, saveRM, rmHistory, mvtStore, saveMVT, clearMVT, last
 
 // ─── SHOPPING: ITEMS POR DÍA ─────────────────────────────────────────────────
 const PA = [
-  { cat:'🥩 Proteínas',        name:'Pechuga de pollo (cocida)', qty:300, unit:'g' },
+  { cat:'🥩 Proteínas',        name:'Pechuga de pollo (crudo)',  qty:300, unit:'g' },
   { cat:'🥚 Huevos y lácteos', name:'Huevos',                    qty:4,   unit:'uds' },
   { cat:'🥚 Huevos y lácteos', name:'Arla Skyr 450g',            qty:1,   unit:'pack' },
   { cat:'🥚 Huevos y lácteos', name:'Parmesano',                 qty:50,  unit:'g' },
@@ -2513,25 +2523,29 @@ const PA = [
   { cat:'🍠 Cereales',         name:'Arroz (seco)',              qty:35,  unit:'g' },
   { cat:'🫙 Despensa',         name:'Semillas de calabaza',      qty:25,  unit:'g' },
   { cat:'🫙 Despensa',         name:'Aceite de oliva',           qty:25,  unit:'ml' },
+  { cat:'🫙 Despensa',         name:'Senfmehl braun (mostaza parda)', qty:1, unit:'g' },
   { cat:'🍓 Fruta',            name:'Fruta variada',             qty:300, unit:'g' },
 ];
 const PB = [
-  { cat:'🥩 Proteínas',        name:'Salmón',                    qty:250, unit:'g' },
-  { cat:'🥩 Proteínas',        name:'Ternera',                   qty:220, unit:'g' },
+  { cat:'🥩 Proteínas',        name:'Salmón (crudo)',            qty:250, unit:'g' },
+  { cat:'🥩 Proteínas',        name:'Ternera magra (crudo)',     qty:220, unit:'g' },
   { cat:'🥚 Huevos y lácteos', name:'Huevos',                    qty:4,   unit:'uds' },
   { cat:'🥚 Huevos y lácteos', name:'Arla Skyr 450g',            qty:1,   unit:'pack' },
   { cat:'🥦 Verduras',         name:'Brócoli',                   qty:200, unit:'g' },
   { cat:'🍠 Cereales',         name:'Boniato',                   qty:100, unit:'g' },
   { cat:'🍠 Cereales',         name:'Patata',                    qty:100, unit:'g' },
   { cat:'🫙 Despensa',         name:'Aceite de oliva',           qty:20,  unit:'ml' },
+  { cat:'🫙 Despensa',         name:'Senfmehl braun (mostaza parda)', qty:1, unit:'g' },
   { cat:'🍓 Fruta',            name:'Fruta variada',             qty:300, unit:'g' },
 ];
-// Día C — miércoles, día de hígado. Igual que PA pero con media ración de pollo
-// sustituida por 150g de hígado de pollo (~17mg de hierro hemo) y algo menos de
-// aceite, porque el hígado ya trae grasa. La proteína queda igual que un día A.
+// Día C — domingo y jueves, días de hígado. Igual que PA pero con 75g de pollo
+// sustituidos por 75g de hígado y algo menos de aceite, porque el hígado ya trae
+// grasa. La proteína queda igual que un día A. Actualizado 18/08/2026: antes era
+// un solo día con 150g; ahora dos días con 75g — mismo total semanal, mejor
+// absorción fraccional y retinol por debajo del UL cada día.
 const PC = [
-  { cat:'🥩 Proteínas',        name:'Hígado de pollo',           qty:150, unit:'g' },
-  { cat:'🥩 Proteínas',        name:'Pechuga de pollo (cocida)', qty:150, unit:'g' },
+  { cat:'🥩 Proteínas',        name:'Hígado de pollo (crudo)',   qty:75,  unit:'g' },
+  { cat:'🥩 Proteínas',        name:'Pechuga de pollo (crudo)',  qty:225, unit:'g' },
   { cat:'🥚 Huevos y lácteos', name:'Huevos',                    qty:4,   unit:'uds' },
   { cat:'🥚 Huevos y lácteos', name:'Arla Skyr 450g',            qty:1,   unit:'pack' },
   { cat:'🥚 Huevos y lácteos', name:'Parmesano',                 qty:50,  unit:'g' },
@@ -2542,7 +2556,8 @@ const PC = [
   { cat:'🥦 Verduras',         name:'Calabacín',                 qty:50,  unit:'g' },
   { cat:'🍠 Cereales',         name:'Arroz (seco)',              qty:35,  unit:'g' },
   { cat:'🫙 Despensa',         name:'Semillas de calabaza',      qty:25,  unit:'g' },
-  { cat:'🫙 Despensa',         name:'Aceite de oliva',           qty:18,  unit:'ml' },
+  { cat:'🫙 Despensa',         name:'Aceite de oliva',           qty:22,  unit:'ml' },
+  { cat:'🫙 Despensa',         name:'Senfmehl braun (mostaza parda)', qty:1, unit:'g' },
   { cat:'🍓 Fruta',            name:'Fruta variada',             qty:300, unit:'g' },
 ];
 const CAT_COL = {
@@ -2569,9 +2584,10 @@ function merged(dA, dB, dC = 0) {
 }
 
 function ShoppingTab({ weekIdx }) {
-  const [daysA, setDaysA]     = useState(4);
+  // 18/08/2026: reparto nuevo 3 A + 2 B + 2 C (antes 4 + 2 + 1).
+  const [daysA, setDaysA]     = useState(3);
   const [daysB, setDaysB]     = useState(2);
-  const [daysC, setDaysC]     = useState(1);
+  const [daysC, setDaysC]     = useState(2);
   const [checked, setChecked] = useState({});
   const toggle = k => setChecked(p => ({...p, [k]: !p[k]}));
 
@@ -2581,7 +2597,9 @@ function ShoppingTab({ weekIdx }) {
 
   const suppItems = [
     { name:'D3+K2 · Natural Elements',                 qty:totalDays,              unit:'comp' },
-    { name:'Omega-3 · Natural Elements',               qty:totalDays * 3,          unit:'cáps' },
+    // Omega-3 solo los días SIN salmón: 250g de salmón ya dan ~5.000mg de EPA+DHA,
+    // muy por encima del objetivo de 2.000. Saltarlas los días B ahorra 6 cáps/semana.
+    { name:'Omega-3 · NE (no en días B — ya hay salmón)', qty:(daysA + daysC) * 3, unit:'cáps' },
     { name:'Magnesio Bisglicinato · Natural Elements', qty:totalDays,              unit:'cáps' },
 
   ];
@@ -2741,8 +2759,10 @@ function NutritionTab({ weekIdx }) {
         <div style={{color:'#f8fafc', fontWeight:700, marginBottom:6, fontSize:13}}>🩸 Reglas del hierro — no romperlas</div>
         <b style={{color:'#e2e8f0'}}>1.</b> <b>Todo el calcio fuera de las comidas con hierro.</b> Skyr y parmesano van solos, a media mañana. El calcio es el único inhibidor que frena el hierro hemo <i>y</i> el no hemo.<br/>
         <b style={{color:'#e2e8f0'}}>2.</b> La fruta del desayuno tiene que ser <b>cítrica</b> — 2 kiwis son la mejor opción (~140mg de vitamina C). No es opcional: es lo que compensa la fosvitina de la yema del huevo, que también bloquea hierro.<br/>
-        <b style={{color:'#e2e8f0'}}>3.</b> El almuerzo <b>no lleva lácteo</b>. La fruta del almuerzo es libre.<br/>
-        <b style={{color:'#e2e8f0'}}>4.</b> <b>Nada de café ni té</b> en las 2 h alrededor del desayuno. Los polifenoles frenan el hierro no hemo hasta un 60-90%, más que todo lo anterior junto.
+        <b style={{color:'#e2e8f0'}}>3.</b> El almuerzo <b>no lleva lácteo</b>. La fruta del almuerzo es libre <i>salvo</i> los días con hierro (Dom · Mar · Jue · Sáb), donde también tiene que ser <b>cítrica</b> — ver regla 6.<br/>
+        <b style={{color:'#e2e8f0'}}>4.</b> <b>Nada de café ni té</b> en las 2 h alrededor del desayuno. Los polifenoles frenan el hierro no hemo hasta un 60-90%, más que todo lo anterior junto.<br/>
+        <b style={{color:'#e2e8f0'}}>5.</b> <b>Nunca dos almuerzos con hierro hemo en días seguidos.</b> Una carga de hierro eleva la hepcidina y frena la absorción de la siguiente ~24 h. Por eso el reparto es <b>Dom → Mar → Jue → Sáb</b>, con 2 días de separación. Es también el motivo de partir el hígado en 2×75g en vez de una ración de 150g.<br/>
+        <b style={{color:'#e2e8f0'}}>6.</b> <b>El hígado responde a la vitamina C.</b> Corrección del 18/08/2026: buena parte de su hierro no es hemo, es no hemo unido a ferritina. Así que en Dom · Mar · Jue · Sáb el cítrico va <b>también en el almuerzo</b>, no solo en el desayuno. Es gratis.
       </div>
 
       {/* Espaciado entre tomas */}
@@ -2754,13 +2774,48 @@ function NutritionTab({ weekIdx }) {
         <div style={{color:'#e2e8f0', fontFamily:'ui-monospace, monospace', fontSize:12.5, lineHeight:2, marginBottom:8}}>
           08:30 · Desayuno <span style={{color:'#64748b'}}>(hora cero)</span><br/>
           10:30 · Skyr <span style={{color:'#64748b'}}>— desayuno + 2 h</span><br/>
-          11:00 · Parmesano <span style={{color:'#64748b'}}>— + 30 min</span><br/>
-          13:00 · Almuerzo <span style={{color:'#64748b'}}>— parmesano + 2 h</span>
+          11:00 · Parmesano <span style={{color:'#64748b'}}>— días C (Dom · Jue)</span><br/>
+          12:00 · Parmesano <span style={{color:'#64748b'}}>— días A (Lun · Mié · Vie)</span><br/>
+          13:00 · Almuerzo
         </div>
         <b style={{color:'#e2e8f0'}}>Son offsets, no horas fijas.</b> Si desayunas a las 9:00, todo corre media hora. La inhibición del calcio es concurrente con la comida: depende de que calcio y hierro coincidan en el duodeno, y ahí <b>2 h es el umbral práctico</b>. Por debajo de 1 h 30 es como tomarlos juntos y no habrás ganado nada.<br/><br/>
         <b style={{color:'#e2e8f0'}}>Por qué el parmesano va segundo:</b> es la carga de calcio más pequeña (~590mg frente a ~675mg del Skyr), así que es la que conviene dejar más cerca del almuerzo. Y separarlos 30 min parte los ~1.265mg en dos dosis, que absorben mejor que una sola — por encima de ~500mg por toma la absorción de calcio cae.<br/><br/>
-        <b style={{color:'#e2e8f0'}}>Si no te cabe:</b> sacrifica los 30 min de separación (junta Skyr y parmesano a las 10:45), nunca las 2 h de margen. Y en los días A el almuerzo es pollo, con hierro casi nulo — ahí puedes ser flexible por el lado del almuerzo. Los días que importan de verdad son <b>miércoles (hígado), viernes y sábado (ternera)</b>: esos respétalos.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Parmesano móvil (18/08/2026):</b> en los días A el almuerzo es pollo, con hierro despreciable, así que el parmesano se va a las <b>12:00</b> — separa las dos cargas de calcio 90 min en vez de 30 y mejora la absorción del propio calcio. En los días C vuelve a las <b>11:00</b> para no comerse las 2 h de margen antes del hígado. Los días B no llevan parmesano.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Si no te cabe:</b> sacrifica la separación entre Skyr y parmesano (júntalos a las 10:45), nunca las 2 h de margen. Los días que importan de verdad son <b>domingo y jueves (hígado), martes y sábado (ternera)</b>: esos respétalos.<br/><br/>
         Agua, la que quieras y cuando quieras. No interfiere con nada.
+      </div>
+
+      {/* Pesos en crudo — aviso */}
+      <div style={{
+        background:'#1c1917', border:'1px solid #F59E0B', borderRadius:10,
+        padding:'12px 14px', marginBottom:16, color:'#fed7aa', fontSize:12.5, lineHeight:1.7
+      }}>
+        <div style={{color:'#fff7ed', fontWeight:700, marginBottom:6, fontSize:13}}>⚖️ Todos los pesos de carne y pescado son EN CRUDO</div>
+        Es lo que compras y lo que dice la lista de la compra. El peso cocido va al lado solo como referencia, para que puedas comprobarlo en el plato si ya lo has cocinado. <b>Los macros corresponden al peso crudo.</b><br/><br/>
+        Rendimientos aproximados usados: <b>pollo 75 %</b> · <b>ternera 73 %</b> · <b>salmón 80 %</b> · <b>hígado 70 %</b>. Varían con el método y el punto de cocción — si asas más, pierdes más agua y el cocido baja. Nunca al revés.<br/><br/>
+
+        <div style={{background:'#0f172a', borderRadius:8, padding:'10px 12px', marginBottom:10, color:'#cbd5e1'}}>
+          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo es el único que se cocina entero el sábado y hay que dividir después.<br/><br/>
+          <b style={{color:'#F59E0B'}}>No persigas un número absoluto: reparte por proporción.</b> El rendimiento real varía cada semana, así que si apuntas a 225 g fijos te quedarás corto o largo en el último tupper.<br/><br/>
+          <b style={{color:'#f8fafc'}}>Regla:</b> pesa TODO el pollo cocido y divídelo en <b>18 partes</b>. Cada <b>día A se lleva 4 partes</b> (22,2 %) y cada <b>día C, 3 partes</b> (16,7 %). 3×4 + 2×3 = 18, cuadra exacto.<br/>
+          <span style={{color:'#64748b'}}>Con 1,35 kg crudo salen ~1.010 g cocidos → 1 parte ≈ 56 g → día A ≈ 225 g · día C ≈ 169 g.</span><br/><br/>
+          Mismo criterio para el <b>arroz y el brócoli</b>: pesa el total cocido y divide entre 5 (arroz) y entre 7 (brócoli). El brócoli asado es el más impredecible de todos — cuanto más seco lo dejes, más peso pierde, y por eso perseguir gramos ahí no tiene sentido.
+        </div>
+
+        <b style={{color:'#FCA5A5'}}>⚠ Pendiente de decidir (18/08/2026):</b> los totales de abajo están escritos a mano y <b>no cuadran con la suma de los ítems</b>. Sumando ítem a ítem salen ~1.907 kcal en día A frente a los 1.975 declarados, y la diferencia mayor está en los carbohidratos (121 g sumados vs 103 g declarados). No se ha tocado nada: cambiar el total mueve el déficit de fase y eso es una decisión, no una limpieza. <b>Hay que reconciliarlo antes de fiarse de la tabla de fases.</b>
+      </div>
+
+      {/* Brócoli — protocolo del horno + mostaza */}
+      <div style={{
+        background:'#052e16', border:'1px solid #22C55E', borderRadius:10,
+        padding:'12px 14px', marginBottom:16, color:'#bbf7d0', fontSize:12.5, lineHeight:1.7
+      }}>
+        <div style={{color:'#f0fdf4', fontWeight:700, marginBottom:6, fontSize:13}}>🥦 Brócoli — horno + mostaza</div>
+        <b style={{color:'#dcfce7'}}>Batch cook:</b> pieza entera, seca, con el aceite, <b>sin sal</b>, en una sola capa sin amontonar. <b>220 °C · 15-20 min.</b> Amontonado se cuece al vapor y no seca. El tallo, cortado más fino (~5-8 mm) que los ramilletes: es más denso y si no queda crudo.<br/><br/>
+        <b style={{color:'#dcfce7'}}>Al servir:</b> recalienta, deja templar 1-2 min y espolvorea <b>1 g de mostaza parda en polvo</b> (Senfmehl braun). Cómetelo, no lo dejes reposar.<br/><br/>
+        <b style={{color:'#f0fdf4'}}>Por qué.</b> El sulforafano no está en el brócoli: lo forma la <b>mirosinasa</b>, una enzima que el horno destruye por completo. La mostaza la repone desde fuera. En el ensayo cruzado de Okunade (2018), 12 adultos con 200 g de brócoli cocido — la misma ración — pasaron de 9,8 a 44,7 µmol de SF-NAC en orina de 24 h: <b>más de 4× más sulforafano biodisponible</b>.<br/><br/>
+        <b style={{color:'#FCA5A5'}}>Los dos errores que lo anulan todo:</b> meter la mostaza <b>antes</b> del horno (su enzima es igual de termolábil: no hace nada) o mezclarla en el <b>batch cook</b> (trabaja toda la semana en la nevera y el sulforafano se degrada antes de comerlo).<br/><br/>
+        <b style={{color:'#dcfce7'}}>Nota del tallo:</b> los ramilletes tienen ~4,7× más glucosinolatos que el tallo por gramo de peso seco. No es motivo para tirarlo — es fibra gratis — pero 200 g de pieza entera rinden menos que 200 g de ramilletes.
       </div>
 
       {/* Meals */}
@@ -2776,7 +2831,16 @@ function NutritionTab({ weekIdx }) {
             }}>
               <div>
                 <span style={{ color: '#f8fafc', fontSize: 14 }}>{item.food}</span>
-                <span style={{ color: '#64748b', fontSize: 13, marginLeft: 8 }}>{item.amount}</span>
+                {item.raw ? (
+                  <span style={{ fontSize: 13, marginLeft: 8 }}>
+                    <b style={{ color: '#F59E0B' }}>{item.raw}g crudo</b>
+                    <span style={{ color: '#475569' }}> → </span>
+                    <span style={{ color: '#64748b' }}>~{item.cooked}g cocido</span>
+                    <span style={{ color: '#475569', fontSize: 11 }}> ({Math.round(item.yield * 100)}%)</span>
+                  </span>
+                ) : (
+                  <span style={{ color: '#64748b', fontSize: 13, marginLeft: 8 }}>{item.amount}</span>
+                )}
               </div>
               <span style={{ color: '#94a3b8', fontSize: 12 }}>{item.macros}</span>
             </div>
@@ -2882,7 +2946,8 @@ function SupplementsTab() {
           <b style={{color:'#f8fafc'}}>Desayuno (~8:30):</b> 1 cáp Omega-3. <b style={{color:'#EF4444'}}>Nada más</b> — el desayuno lleva el hierro no hemo del día y no debe compartir comida con zinc ni con calcio.<br/>
           <b style={{color:'#f8fafc'}}>Media mañana (10:30 / 11:00):</b> Skyr y parmesano, solos. Sin suplementos.<br/>
           <b style={{color:'#f8fafc'}}>Almuerzo:</b> D3+K2 + Magnesio + 2 cáps Omega-3 (con aceite de oliva = absorción óptima).<br/>
-          <b style={{color:'#f8fafc'}}>Zinc:</b> ⏸ suspendido hasta la analítica. Si se retoma, va en el <b>almuerzo</b> (no en el desayuno) y se salta los miércoles.
+          <b style={{color:'#f8fafc'}}>Días B (Mar · Sáb):</b> <b style={{color:'#F59E0B'}}>cero cápsulas de Omega-3</b> — el salmón ya aporta ~5.000mg de EPA+DHA. D3+K2 y magnesio sí, como siempre.<br/>
+          <b style={{color:'#f8fafc'}}>Zinc:</b> ⏸ suspendido hasta la analítica. Si se retoma, va en el <b>almuerzo</b> (no en el desayuno) y se salta los días con hígado (Dom y Jue).
         </div>
       </div>
     </div>
