@@ -815,7 +815,7 @@ const NUTRITION = {
         items: [
           { food: 'Huevos', amount: '4 uds', macros: '28g P · 20g G · 2g C' },
           { food: 'Espinacas', amount: '140g', macros: '4g P · 1g G · 5g C' },
-          { food: 'Semillas de calabaza', amount: '25g', macros: '5g P · 7g G · 2g C' },
+          { food: 'Semillas de calabaza — POR ENCIMA, no dentro de la tortilla', amount: '25g', macros: '5g P · 7g G · 2g C' },
           { food: 'Ajo', amount: 'al gusto', macros: '—' },
           { food: '⚠️ Fruta CÍTRICA (kiwi/mandarina/naranja/fresas)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
         ]
@@ -827,13 +827,13 @@ const NUTRITION = {
         ]
       },
       {
-        name: '🧀 Parmesano — desayuno + 2 h 30 (~11:00)',
+        name: '🧀 Parmesano — desayuno + 3 h 30 (~12:00) · parmesano móvil',
         items: [
           { food: 'Parmesano (en trozo, no dentro del yogur)', amount: '50g', macros: '18g P · 13g G · 2g C' },
         ]
       },
       {
-        name: '🍗 Almuerzo — parmesano + 2 h (~13:00) · sin lácteo',
+        name: '🍗 Almuerzo (~13:00) · sin lácteo · sin hierro que proteger',
         items: [
           { food: 'Pechuga de pollo', amount: '300g', raw: 300, cooked: 225, yield: 0.75, macros: '69g P · 8g G · 0g C' },
           { food: 'Arroz (cocido)', amount: '100g', macros: '3g P · 0g G · 28g C' },
@@ -862,7 +862,7 @@ const NUTRITION = {
         items: [
           { food: 'Huevos', amount: '4 uds', macros: '28g P · 20g G · 2g C' },
           { food: 'Espinacas', amount: '140g', macros: '4g P · 1g G · 5g C' },
-          { food: 'Semillas de calabaza', amount: '25g', macros: '5g P · 7g G · 2g C' },
+          { food: 'Semillas de calabaza — POR ENCIMA, no dentro de la tortilla', amount: '25g', macros: '5g P · 7g G · 2g C' },
           { food: 'Ajo', amount: 'al gusto', macros: '—' },
           { food: '⚠️ Fruta CÍTRICA (kiwi/mandarina/naranja/fresas)', amount: '~150g', macros: '1g P · 0g G · 20g C' },
         ]
@@ -2785,6 +2785,18 @@ function NutritionTab({ weekIdx }) {
         Agua, la que quieras y cuando quieras. No interfiere con nada.
       </div>
 
+      {/* Cocción → pestaña Cocina */}
+      <div style={{
+        background:'#172554', border:'1px solid #3B82F6', borderRadius:10,
+        padding:'12px 14px', marginBottom:16, color:'#bfdbfe', fontSize:12.5, lineHeight:1.7
+      }}>
+        <div style={{color:'#eff6ff', fontWeight:700, marginBottom:6, fontSize:13}}>🔥 Cómo cocinar cada cosa → pestaña <b>👨‍🍳 Cocina</b></div>
+        Métodos por alimento, el batch cook del sábado paso a paso, el protocolo del brócoli con mostaza y
+        el aviso de seguridad por no recalentar viven ahí, para no repetirlos aquí.<br/><br/>
+        <b style={{color:'#FCA5A5'}}>Los dos de memoria:</b> el pollo a <b style={{color:'#dbeafe'}}>150-160 °C hasta 68-70 °C de interior</b>,
+        y <b style={{color:'#dbeafe'}}>congelar los tuppers del día 4 en adelante</b> — el pollo cocido aguanta 3-4 días y tú no recalientas.
+      </div>
+
       {/* Pesos en crudo — aviso */}
       <div style={{
         background:'#1c1917', border:'1px solid #F59E0B', borderRadius:10,
@@ -2795,27 +2807,11 @@ function NutritionTab({ weekIdx }) {
         Rendimientos aproximados usados: <b>pollo 75 %</b> · <b>ternera 73 %</b> · <b>salmón 80 %</b> · <b>hígado 70 %</b>. Varían con el método y el punto de cocción — si asas más, pierdes más agua y el cocido baja. Nunca al revés.<br/><br/>
 
         <div style={{background:'#0f172a', borderRadius:8, padding:'10px 12px', marginBottom:10, color:'#cbd5e1'}}>
-          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo es el único que se cocina entero el sábado y hay que dividir después.<br/><br/>
-          <b style={{color:'#F59E0B'}}>No persigas un número absoluto: reparte por proporción.</b> El rendimiento real varía cada semana, así que si apuntas a 225 g fijos te quedarás corto o largo en el último tupper.<br/><br/>
-          <b style={{color:'#f8fafc'}}>Regla:</b> pesa TODO el pollo cocido y divídelo en <b>18 partes</b>. Cada <b>día A se lleva 4 partes</b> (22,2 %) y cada <b>día C, 3 partes</b> (16,7 %). 3×4 + 2×3 = 18, cuadra exacto.<br/>
-          <span style={{color:'#64748b'}}>Con 1,35 kg crudo salen ~1.010 g cocidos → 1 parte ≈ 56 g → día A ≈ 225 g · día C ≈ 169 g.</span><br/><br/>
-          Mismo criterio para el <b>arroz y el brócoli</b>: pesa el total cocido y divide entre 5 (arroz) y entre 7 (brócoli). El brócoli asado es el más impredecible de todos — cuanto más seco lo dejes, más peso pierde, y por eso perseguir gramos ahí no tiene sentido.
+          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo se cocina entero el sábado y hay que dividirlo después: <b style={{color:'#F59E0B'}}>por proporción, no por gramos</b> — pesa todo el pollo cocido y divídelo en <b style={{color:'#f8fafc'}}>18 partes</b> (día A, 4 partes · día C, 3 partes).<br/>
+          <span style={{color:'#64748b'}}>La regla completa, con el arroz y el brócoli, está en la pestaña <b style={{color:'#94a3b8'}}>👨‍🍳 Cocina</b>.</span>
         </div>
 
         <b style={{color:'#FCA5A5'}}>⚠ Pendiente de decidir (18/08/2026):</b> los totales de abajo están escritos a mano y <b>no cuadran con la suma de los ítems</b>. Sumando ítem a ítem salen ~1.907 kcal en día A frente a los 1.975 declarados, y la diferencia mayor está en los carbohidratos (121 g sumados vs 103 g declarados). No se ha tocado nada: cambiar el total mueve el déficit de fase y eso es una decisión, no una limpieza. <b>Hay que reconciliarlo antes de fiarse de la tabla de fases.</b>
-      </div>
-
-      {/* Brócoli — protocolo del horno + mostaza */}
-      <div style={{
-        background:'#052e16', border:'1px solid #22C55E', borderRadius:10,
-        padding:'12px 14px', marginBottom:16, color:'#bbf7d0', fontSize:12.5, lineHeight:1.7
-      }}>
-        <div style={{color:'#f0fdf4', fontWeight:700, marginBottom:6, fontSize:13}}>🥦 Brócoli — horno + mostaza</div>
-        <b style={{color:'#dcfce7'}}>Batch cook:</b> pieza entera, seca, con el aceite, <b>sin sal</b>, en una sola capa sin amontonar. <b>220 °C · 15-20 min.</b> Amontonado se cuece al vapor y no seca. El tallo, cortado más fino (~5-8 mm) que los ramilletes: es más denso y si no queda crudo.<br/><br/>
-        <b style={{color:'#dcfce7'}}>Al servir:</b> recalienta, deja templar 1-2 min y espolvorea <b>1 g de mostaza parda en polvo</b> (Senfmehl braun). Cómetelo, no lo dejes reposar.<br/><br/>
-        <b style={{color:'#f0fdf4'}}>Por qué.</b> El sulforafano no está en el brócoli: lo forma la <b>mirosinasa</b>, una enzima que el horno destruye por completo. La mostaza la repone desde fuera. En el ensayo cruzado de Okunade (2018), 12 adultos con 200 g de brócoli cocido — la misma ración — pasaron de 9,8 a 44,7 µmol de SF-NAC en orina de 24 h: <b>más de 4× más sulforafano biodisponible</b>.<br/><br/>
-        <b style={{color:'#FCA5A5'}}>Los dos errores que lo anulan todo:</b> meter la mostaza <b>antes</b> del horno (su enzima es igual de termolábil: no hace nada) o mezclarla en el <b>batch cook</b> (trabaja toda la semana en la nevera y el sulforafano se degrada antes de comerlo).<br/><br/>
-        <b style={{color:'#dcfce7'}}>Nota del tallo:</b> los ramilletes tienen ~4,7× más glucosinolatos que el tallo por gramo de peso seco. No es motivo para tirarlo — es fibra gratis — pero 200 g de pieza entera rinden menos que 200 g de ramilletes.
       </div>
 
       {/* Meals */}
@@ -3237,6 +3233,340 @@ function TrackingTab() {
 }
 
 // ─── SECCIONES PRINCIPALES ────────────────────────────────────────────────────
+// ─── COCINA ──────────────────────────────────────────────────────────────────
+// Métodos de cocción por alimento, protocolo del batch cook del sábado y
+// seguridad alimentaria. Añadido 18/08/2026 a partir de memoria.md 6.5 / 6.5b /
+// 6.8, que estaba repartido entre bloques de la pestaña Nutrición.
+//
+// Principio que resuelve la mitad de las decisiones: lo frágil va al plato, no
+// a la sartén; y lo enzimático (ajo, mostaza) necesita esperar ANTES del calor.
+//
+// Dato que condiciona todo lo demás: el usuario NO recalienta nada. Como mucho
+// atempera el tupper fuera de la nevera. Eso (a) hace que la textura en frío
+// importe tanto como el sabor en caliente, (b) hace innecesario esperar a que
+// el plato baje de 60 °C para la mostaza, y (c) abre un problema real de
+// seguridad alimentaria, porque no queda ningún paso de calor que mate nada.
+const COOK_STEPS = [
+  {
+    n: 1, title: 'Horno a 220 °C — brócoli (1,4 kg)',
+    body: 'Trocéalo entero, tallo incluido, cortado más fino (~5-8 mm) que los ramilletes porque es más denso y si no queda crudo. Seco, con el aceite, **sin sal**, en **una sola capa sin amontonar**, **15-20 min**. Amontonado se cuece en su propia humedad y no seca nunca.',
+    warn: 'La sal saca agua: justo lo contrario de lo que buscas. Y la mostaza NO entra aquí — va en el plato, cada día.'
+  },
+  {
+    n: 2, title: 'Baja a 150-160 °C — pollo (1,35 kg)',
+    body: 'Hasta **68-70 °C de temperatura interior**, medida con termómetro de sonda. No 200 °C: a fuego suave pierde menos agua, sube el rendimiento y la textura **en frío** cambia muchísimo — que es como te lo vas a comer los siete días.',
+  },
+  {
+    n: 3, title: 'Arroz — enjuagar, cocer, enfriar',
+    body: 'Enjuágalo hasta que el agua salga clara (reduce arsénico inorgánico, y comes arroz 5 días de cada 7). Cuécelo y **extiéndelo para que enfríe rápido**: al enfriarse genera almidón resistente, así que el batch cook ya juega a tu favor sin hacer nada.',
+  },
+  {
+    n: 4, title: 'Sofrito — largo y con aceite',
+    body: 'Tomate, pimiento, calabacín y ajo. **Como ya lo haces.** Es el único caso de toda la cocina donde cocinar mucho **mejora** la nutrición: el licopeno se vuelve más biodisponible con el calor y es liposoluble, así que el aceite hace falta. Se pierde la vitamina C del pimiento, pero da igual — la que trabaja son los kiwis del desayuno.',
+  },
+  {
+    n: 5, title: 'Tortillas — 7 porciones',
+    body: '4 huevos, espinacas y ajo por porción. **Espinacas trituradas en crudo con el huevo**, como ya lo haces: nunca escurres agua, así que el folato y el magnesio se quedan donde tienen que estar, y es **una sola exposición al calor** (mejor que rehogar y luego cuajar). **Bien hechas** — no hay recalentado que las termine.',
+    warn: 'Sin parmesano (se come a media mañana) y **sin semillas** (van por encima al servir).'
+  },
+  {
+    n: 6, title: 'Reparto del pollo — por proporción, no por gramos',
+    body: 'Pesa **todo** el pollo cocido y divídelo en **18 partes**. Cada **día A se lleva 4 partes** (22,2 %) y cada **día C, 3 partes** (16,7 %). 3×4 + 2×3 = 18, cuadra exacto. Con 1,35 kg crudo salen ~1.010 g cocidos → 1 parte ≈ 56 g → día A ≈ 225 g, día C ≈ 169 g. Mismo criterio con el **arroz** (÷ 5) y el **brócoli** (÷ 7).',
+    warn: 'No persigas 225 g fijos: el rendimiento varía cada semana y el último tupper te saldría corto o largo.'
+  },
+  {
+    n: 7, title: 'Enfriar rápido y montar tuppers',
+    body: 'No dejes 1,35 kg de pollo enfriándose despacio en la encimera: reparte en porciones finas y mételo a la nevera cuanto antes. **Congela los tuppers del día 4 en adelante** y pásalos a la nevera la noche antes.',
+    warn: 'Es el punto crítico de la semana. Ver el aviso de seguridad de arriba.'
+  },
+  {
+    n: 8, title: 'Hígado — partir los 150 g en 2 × 75 g',
+    body: 'La ración del **domingo** va fresca a la nevera (solo tiene que llegar al día siguiente). La del **jueves se congela hoy** y se saca el miércoles por la noche. Congelarlo no le quita hierro.',
+  },
+  {
+    n: 9, title: 'Salmón y ternera — martes y sábado',
+    body: 'La ración del **sábado** se come fresca hoy. La del **martes se congela hoy** y se saca el lunes por la noche. Ambos se cocinan al momento en su día, así que aquí solo hay que pesarlos crudos y repartirlos.',
+  },
+];
+
+const COOK_METHODS = [
+  {
+    food: '🍗 Pollo', when: 'batch',
+    how: 'Horno **150-160 °C hasta 68-70 °C de interior**. Termómetro de sonda.',
+    why: 'A fuego suave pierde menos agua → más rendimiento y mejor textura en frío. A 200 °C se seca y el 75 % de rendimiento deja de cumplirse. El termómetro además hace predecible el reparto de los tuppers.'
+  },
+  {
+    food: '🍳 Tortilla', when: 'batch',
+    how: '**Bien hecha.** Espinacas trituradas en crudo con el huevo.',
+    why: 'No hay recalentado que la termine. Y triturar en crudo es una sola exposición al calor: mejor folato que rehogar y luego cuajar.'
+  },
+  {
+    food: '🥦 Brócoli', when: 'batch',
+    how: '**220 °C, capa única, 15-20 min**, seco, con aceite y **sin sal**. Tallo a ~5-8 mm. Mostaza al servir.',
+    why: 'El horno no lixivia nada al agua, que es la ventaja real frente a hervir. Corrección del 18/08: los "~180 °C" que se recomendaron primero eran un error — a esa temperatura se cuece en su propia humedad y acumula más exposición térmica total.'
+  },
+  {
+    food: '🍚 Arroz', when: 'batch',
+    how: '**Enjuagar bien.** Cocer y enfriar.',
+    why: 'El enjuague reduce arsénico inorgánico y comes arroz 5 días/semana. Enfriarlo genera almidón resistente.'
+  },
+  {
+    food: '🍅 Sofrito', when: 'batch',
+    how: 'Largo y con aceite, **como ya lo haces**.',
+    why: 'Único caso donde cocinar mucho mejora la nutrición: el licopeno se vuelve más biodisponible con el calor y es liposoluble.'
+  },
+  {
+    food: '🫀 Hígado', when: 'día',
+    how: 'Sartén muy caliente, **mínimo aceite**, 4 min, **rosa por dentro**.',
+    why: 'Foods 2020: plancha sin aceite pierde un 8 % del folato, con aceite un 22 %, horno combinado 20-41 %. 75 g dan 350-450 µg de folato: los días de hígado arreglan solos el déficit. Pasado queda seco y arenoso.'
+  },
+  {
+    food: '🥩 Ternera', when: 'día',
+    how: 'Al punto que te guste. Evita solo el churrascado fuerte.',
+    why: '**El grado de cocción NO afecta al hierro hemo** — se comprobó y los datos no lo respaldan (9,6 / 9,2 / 9,0 µg/g en barbacoa, gratinado y sartén, sin patrón). Las razones para no pasarla son textura y aminas heterocíclicas.'
+  },
+  {
+    food: '🐟 Salmón', when: 'día',
+    how: 'Suave: horno **150-160 °C** o vapor. Nunca sartén fuerte.',
+    why: 'EPA y DHA son los ácidos grasos más oxidables que existen, y es tu única fuente alimentaria real de vitamina D.'
+  },
+  {
+    food: '🥔 Patata y boniato', when: 'día',
+    how: 'Cocidos o al vapor. Si los asas, **dorar poco**.',
+    why: 'Es el alimento clásico de la acrilamida, que se forma con el tostado fuerte (al contrario que el brócoli, donde no es problema). El boniato, con algo de grasa por el betacaroteno.'
+  },
+  {
+    food: '🧄 Ajo', when: 'regla',
+    how: 'Picar o aplastar y **esperar 10 min** antes del calor.',
+    why: 'La alicina no está en el ajo: la forma la aliinasa al romper la célula, y el calor mata la enzima. La alicina ya formada sí resiste. Mismo principio que la mostaza.'
+  },
+  {
+    food: '🎃 Semillas de calabaza', when: 'servir',
+    how: '**Por encima al servir**, 25 g. Nunca dentro de la tortilla.',
+    why: 'Su grasa es mayoritariamente poliinsaturada, la más oxidable. Los minerales aguantan el calor; la grasa no. Y en frío quedan mejor de textura.'
+  },
+  {
+    food: '🌱 Mostaza parda', when: 'servir',
+    how: '**1 g en polvo sobre el brócoli, en el plato**, en cada comida.',
+    why: 'Repone la mirosinasa que el horno destruye. Ver el bloque de abajo: es la mejora más grande de toda la cocina.'
+  },
+  {
+    food: '🫒 Aceite de oliva', when: 'servir',
+    how: 'Parte para cocinar, **parte en crudo al servir**.',
+    why: 'Los polifenoles del virgen extra se degradan con el calor, y los 220 °C del brócoli superan su punto de humo. Mismos ml, más polifenoles.'
+  },
+];
+
+const WHEN_TAG = {
+  batch:  { label: 'batch sábado', bg: '#1e3a8a', fg: '#bfdbfe' },
+  'día':  { label: 'al momento',   bg: '#7c2d12', fg: '#fed7aa' },
+  regla:  { label: 'regla',        bg: '#3f3f46', fg: '#e4e4e7' },
+  servir: { label: 'al servir',    bg: '#14532d', fg: '#bbf7d0' },
+};
+
+// Convierte **negritas** en <b>. Mismo criterio que boldParts, pero devolviendo
+// nodos ya listos para pintar dentro de un párrafo.
+function cookBold(text, color = '#f8fafc') {
+  return text.split('**').map((part, i) =>
+    i % 2 === 1
+      ? <b key={i} style={{ color }}>{part}</b>
+      : <span key={i}>{part}</span>
+  );
+}
+
+function CookingTab() {
+  const [open, setOpen] = useState(null);
+
+  return (
+    <div>
+      {/* Seguridad — lo primero porque es lo único con riesgo real */}
+      <div style={{
+        background: '#450a0a', border: '1px solid #EF4444', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#fecaca', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#fff1f2', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          ⚠ Seguridad — no recalientas nada
+        </div>
+        El pollo cocido aguanta <b style={{color:'#fff1f2'}}>3-4 días</b> en nevera y tu semana son <b style={{color:'#fff1f2'}}>7</b>.
+        Sin recalentado no queda ningún paso de calor que mate nada, y la <i>Listeria monocytogenes</i> crece
+        a temperatura de nevera.<br/><br/>
+        <b style={{color:'#fff1f2'}}>Congela los tuppers del día 4 en adelante</b> y pásalos a la nevera la noche antes.
+        Y al cocinar el sábado, <b style={{color:'#fff1f2'}}>enfría rápido y reparte</b>: no dejes 1,35 kg enfriándose
+        despacio en la encimera.
+      </div>
+
+      {/* Principio */}
+      <div style={{
+        background: '#0f172a', border: '1px solid #334155', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          🔥 El principio que resuelve la mitad
+        </div>
+        <b style={{color:'#e2e8f0'}}>Lo frágil va al plato, no a la sartén</b> — semillas, mostaza y parte del aceite.
+        Y <b style={{color:'#e2e8f0'}}>lo enzimático necesita esperar antes del calor</b>: el ajo, 10 min desde que lo
+        picas; la mostaza, directamente nunca ve el horno.<br/><br/>
+        Lo demás es una decisión por alimento, y casi siempre se resume en bajar la temperatura.
+        La excepción es el sofrito, donde cocinar mucho mejora la nutrición, y el brócoli, que quiere
+        220 °C precisamente para pasar el menor tiempo total dentro del horno.
+      </div>
+
+      {/* Tabla por alimento */}
+      <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16, marginBottom: 10 }}>
+        Cómo cocinar cada cosa
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        {COOK_METHODS.map((m, i) => {
+          const tag = WHEN_TAG[m.when];
+          const isOpen = open === i;
+          return (
+            <div key={i} style={{ background: '#1e293b', borderRadius: 8, marginBottom: 6, overflow: 'hidden' }}>
+              <button onClick={() => setOpen(isOpen ? null : i)} style={{
+                width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
+                padding: '10px 14px', color: '#f8fafc'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{m.food}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+                    background: tag.bg, color: tag.fg, whiteSpace: 'nowrap'
+                  }}>{tag.label}</span>
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: 12.5, lineHeight: 1.6, marginTop: 4 }}>
+                  {cookBold(m.how, '#f8fafc')}
+                </div>
+                <div style={{ color: '#475569', fontSize: 11, marginTop: 4 }}>
+                  {isOpen ? '▾ por qué' : '▸ por qué'}
+                </div>
+              </button>
+              {isOpen && (
+                <div style={{
+                  padding: '0 14px 12px', color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7
+                }}>
+                  {cookBold(m.why, '#e2e8f0')}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Brócoli + mostaza */}
+      <div style={{
+        background: '#052e16', border: '1px solid #22C55E', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#bbf7d0', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#f0fdf4', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          🥦 Brócoli + mostaza — la mejora más grande de toda la cocina
+        </div>
+        <b style={{color:'#dcfce7'}}>En el batch cook:</b> pieza entera, seca, con el aceite, <b style={{color:'#f0fdf4'}}>sin sal</b>,
+        en una sola capa sin amontonar, <b style={{color:'#f0fdf4'}}>220 °C · 15-20 min</b>. El tallo, cortado más fino
+        (~5-8 mm) que los ramilletes.<br/><br/>
+        <b style={{color:'#dcfce7'}}>Al servir:</b> espolvorea <b style={{color:'#f0fdf4'}}>1 g de mostaza parda en polvo</b> y
+        cómetelo. Como no recalientas, el plato ya está templado y no hay que esperar nada — solo no dejarlo
+        reposar después de echarla.<br/><br/>
+        <b style={{color:'#f0fdf4'}}>Por qué.</b> El sulforafano no está en el brócoli: lo forma la <b style={{color:'#f0fdf4'}}>mirosinasa</b>,
+        una enzima que el horno destruye por completo. La mostaza la repone desde fuera. En el ensayo cruzado de
+        Okunade (2018), 12 adultos con 200 g de brócoli cocido — la misma ración que tú — pasaron de 9,8 a
+        44,7 µmol de SF-NAC en orina de 24 h: <b style={{color:'#f0fdf4'}}>más de 4× más sulforafano biodisponible</b>.<br/><br/>
+        <b style={{color:'#FCA5A5'}}>Los dos errores que lo anulan todo:</b> meter la mostaza <b>antes</b> del horno
+        (su enzima es igual de termolábil: no hace absolutamente nada) o mezclarla en el <b>batch cook</b>{' '}
+        (trabaja toda la semana en la nevera y el sulforafano, que es inestable, se degrada antes de comerlo).<br/><br/>
+        <b style={{color:'#dcfce7'}}>Nota del tallo:</b> los ramilletes tienen ~4,7× más glucosinolatos que el tallo por
+        gramo de peso seco (Liu 2018). No es motivo para tirarlo — es fibra y potasio gratis — pero 200 g de pieza
+        entera rinden bastante menos sulforafano que 200 g de ramilletes.
+      </div>
+
+      {/* Batch cook paso a paso */}
+      <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+        🍱 Batch cook del sábado — en orden
+      </div>
+      <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
+        El orden no es arbitrario: el horno arranca caliente para el brócoli y luego baja para el pollo,
+        que es lo que más tiempo tarda y lo que peor lleva el exceso de temperatura.
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        {COOK_STEPS.map(s => (
+          <div key={s.n} style={{
+            background: '#1e293b', borderRadius: 8, padding: '11px 14px', marginBottom: 6,
+            display: 'flex', gap: 12, alignItems: 'flex-start'
+          }}>
+            <div style={{
+              minWidth: 24, height: 24, borderRadius: 999, background: '#334155', color: '#f8fafc',
+              fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>{s.n}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
+              <div style={{ color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>
+                {cookBold(s.body, '#e2e8f0')}
+              </div>
+              {s.warn && (
+                <div style={{ color: '#FCA5A5', fontSize: 12, lineHeight: 1.6, marginTop: 5 }}>
+                  ⚠ {cookBold(s.warn, '#fecaca')}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Lo que NUNCA entra en el batch cook */}
+      <div style={{
+        background: '#1c1917', border: '1px solid #F59E0B', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#fed7aa', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#fff7ed', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          🚫 Lo que nunca entra en el batch cook
+        </div>
+        <b style={{color:'#fff7ed'}}>Mostaza</b> — trabajaría toda la semana en la nevera y el sulforafano se degradaría antes de comerlo.<br/>
+        <b style={{color:'#fff7ed'}}>Semillas de calabaza</b> — su grasa poliinsaturada se oxida; van por encima al servir.<br/>
+        <b style={{color:'#fff7ed'}}>Sal en el brócoli</b> — le saca agua durante toda la semana y lo apelmaza.<br/>
+        <b style={{color:'#fff7ed'}}>Parmesano</b> — no va en la tortilla desde el 8/08: se come en trozo a media mañana, aislado de las comidas con hierro.
+      </div>
+
+      {/* Kit */}
+      <div style={{
+        background: '#0f172a', border: '1px solid #334155', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#f8fafc', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          🛒 Lo que falta comprar
+        </div>
+        <b style={{color:'#e2e8f0'}}>Termómetro de sonda.</b> Es lo que hace posible el 68-70 °C y, de paso, lo que hace
+        predecible el rendimiento del pollo y por tanto el reparto de los tuppers.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Mostaza parda en polvo</b> (<i>Brassica juncea</i>, más activa que la amarilla).
+        Buscar <b style={{color:'#e2e8f0'}}>“braune Senfsaat ganz”</b> o <b style={{color:'#e2e8f0'}}>“Senfkörner braun”</b> — grano
+        entero, sin ambigüedad de procesado, y se muele en casa. Si la prefieres molida:
+        <b style={{color:'#e2e8f0'}}> “Senfmehl braun”</b> / <b style={{color:'#e2e8f0'}}>“Senfsaat braun gemahlen”</b>.
+        Comprueba que en los ingredientes ponga <b>solo semilla de mostaza</b>, sin cúrcuma ni especias.<br/><br/>
+        En Braunschweig: <b style={{color:'#e2e8f0'}}>Kaufland</b> la tiene en bote de 70 g; y
+        <b style={{color:'#e2e8f0'}}> SarayMarket</b> y cualquier tienda turca, india o asiática venden semilla parda o
+        negra a granel (<i>rai</i> / <i>sarson</i>) — más barata y más fresca.<br/><br/>
+        <b style={{color:'#FCA5A5'}}>No vale el Senf de tarro</b> (no está ensayado y la acidez reduce la actividad),
+        ni las mezclas con cúrcuma. <b style={{color:'#e2e8f0'}}>“Senfmehl” a secas suele ser amarillo</b> (<i>Sinapis alba</i>):
+        funciona, pero tiene menos mirosinasa.<br/><br/>
+        <span style={{color:'#64748b'}}>Consumo: 1 g por ración × 7 = 7 g/semana. Un bote de 70 g dura 10 semanas.
+        Guardar seco, cerrado y oscuro — el polvo pierde actividad con el tiempo.</span>
+      </div>
+
+      {/* Lo que ya hace bien */}
+      <div style={{
+        background: '#052e16', border: '1px solid #166534', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#bbf7d0', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#f0fdf4', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          ✅ Lo que ya haces bien — no lo toques
+        </div>
+        <b style={{color:'#dcfce7'}}>Trituras las espinacas en crudo con el huevo</b>, así que nunca escurres agua y el folato
+        y el magnesio se quedan dentro. La recomendación de “rehogar y evaporar” que se llegó a dar era para un
+        problema que no tienes, y encima habría añadido una segunda exposición al calor.<br/><br/>
+        <b style={{color:'#dcfce7'}}>El sofrito largo con aceite</b> y <b style={{color:'#dcfce7'}}>el brócoli al horno</b> también
+        están bien como están: el horno no lixivia nada al agua, que es la ventaja real frente a hervir.
+      </div>
+    </div>
+  );
+}
+
 const SECTIONS = [
   { id: 'entrenamiento', label: '🏋️ Entrenamiento', subtabs: [
       { id: 'plan', label: 'Plan' },
@@ -3245,6 +3575,7 @@ const SECTIONS = [
   { id: 'alimentacion', label: '🍽 Alimentación', subtabs: [
       { id: 'compra', label: '🛒 Compra' },
       { id: 'nutricion', label: 'Nutrición' },
+      { id: 'cocina', label: '👨‍🍳 Cocina' },
       { id: 'supps', label: '💊 Suplementos' },
   ]},
   { id: 'seguimiento', label: '📈 Seguimiento', subtabs: [
@@ -3424,6 +3755,7 @@ export default function App() {
       )}
       {section === 'alimentacion' && sub === 'compra' && <ShoppingTab weekIdx={weekIdx} />}
       {section === 'alimentacion' && sub === 'nutricion' && <NutritionTab weekIdx={weekIdx} />}
+      {section === 'alimentacion' && sub === 'cocina' && <CookingTab />}
       {section === 'alimentacion' && sub === 'supps' && <SupplementsTab />}
       {section === 'seguimiento' && <TrackingTab />}
     </div>
