@@ -402,7 +402,7 @@ const DAYS = [
     name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'A',
     special: 'stretch',
     exercises: [
-      { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 160, unit: 'kg',
+      { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 140, unit: 'kg',
         byPhase: VOLUME_SQUAT,
         note: 'Segunda exposición de cuádriceps en la semana. Profundidad completa y controlado — busca 2-3 repeticiones en reserva, no llegues al fallo. Si notas la rodilla, este es el primer bloque que se recorta.' },
     ]
@@ -435,7 +435,7 @@ const DAYS = [
     name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
     exercises: [
       { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
-      { name: 'Squat barbell',      rm: 160, unit: 'kg', testMethod: 'video', mvt: 0.30 },
+      { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30 },
       { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 8,
         note: 'Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio (énfasis en la parte excéntrica) sin necesitar la fuerza de un Nordic curl completo.' },
       { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
@@ -1547,6 +1547,152 @@ function BWRow({ ex, weekIdx, rmStore }) {
   );
 }
 
+// ─── REPETICIONES vs RIR vs VELOCIDAD ────────────────────────────────────────
+// El usuario preguntó el 19/08/2026 si las 10·9·9·8 de la semana 1 son
+// obligatorias o si hay que ir al fallo, porque la app también pide dejar 2
+// repeticiones en reserva y le parecían dos instrucciones contradictorias.
+// No lo son: son la prescripción y su verificación. Se documenta aquí porque es
+// la base de toda la autorregulación del plan, y porque el malentendido es
+// exactamente lo que destapó que el RM de la sentadilla estaba inflado.
+function RepsRirExplainer({ weekIdx }) {
+  const [open, setOpen] = useState(false);
+  const phase = PROG[weekIdx].phase;
+  const vlHeavy = VL_BY_PHASE[phase].heavy;
+  const vlOther = VL_BY_PHASE[phase].other;
+  return (
+    <div style={{
+      marginBottom: 16, background: '#0f172a', border: '1px solid #334155',
+      borderRadius: 10, overflow: 'hidden'
+    }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: '100%', textAlign: 'left', background: 'none', border: 'none',
+        cursor: 'pointer', padding: '10px 12px', color: '#f8fafc'
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>🎯 ¿Las reps son obligatorias o hay que ir al fallo?</span>
+        <span style={{ color: '#64748b', fontSize: 11, marginLeft: 8 }}>{open ? '▾' : '▸'}</span>
+        {!open && (
+          <div style={{ color: '#94a3b8', fontSize: 11.5, marginTop: 3 }}>
+            Ni una cosa ni la otra: las reps son el plan, el RIR es su control de calidad.
+          </div>
+        )}
+      </button>
+      {open && (
+        <div style={{ padding: '0 12px 12px', color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>
+          <b style={{color:'#e2e8f0'}}>Las repeticiones son el plan.</b> Salen de aplicar el porcentaje al RM.
+          Bajan dentro de la sesión (10·9·9·8) porque la fatiga se acumula, y cada número está elegido
+          para que <i>esa</i> serie acabe a ~2 repeticiones en reserva.<br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>El RIR es el control de calidad.</b> Si el RM es correcto, al acabar
+          la repetición prescrita deben quedar 2. Si sobran 6, la carga es blanda y el RM está infraestimado.
+          Si no llegas, o llegas a 0, el RM está inflado. <b style={{color:'#e2e8f0'}}>Eso es exactamente lo que
+          pasó el 19/08/2026</b>: el 10·9·9·8 de sentadilla salió 8/6/6/5 y destapó que los 160 kg eran falsos.
+          Eran 140.<br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>El objetivo NO es el fallo.</b> Y no por precaución vaga: la curva de
+          hipertrofia se aplana al acercarse al fallo mientras la fatiga sigue subiendo recta (Robinson 2024).
+          A 1-3 RIR se obtiene casi toda la ganancia con mucha menos fatiga. En tu caso pesa doble —
+          <b style={{color:'#e2e8f0'}}> siete días de entrenamiento sin ningún descanso real y cuatro cirugías de
+          menisco</b>. Ir al fallo en sentadilla es la peor relación beneficio/riesgo de todo el plan.<br/><br/>
+
+          <div style={{ background:'#1e293b', borderRadius:8, padding:'10px 12px', color:'#cbd5e1' }}>
+            <b style={{color:'#f8fafc'}}>Tres cosas pueden cortar una serie. Manda la que llegue primero:</b><br/>
+            <b style={{color:'#fbbf24'}}>1.</b> las repeticiones del papel ·
+            <b style={{color:'#fbbf24'}}> 2.</b> el RIR (quedan 2-3) ·
+            <b style={{color:'#fbbf24'}}> 3.</b> la pérdida de velocidad
+            (<b style={{color:'#7dd3fc'}}>−{vlHeavy}%</b> en básicos y compuestos, <b style={{color:'#7dd3fc'}}>−{vlOther}%</b> en
+            aislamiento, fase {phase}).<br/><br/>
+            Cuando las tres se contradicen, <b style={{color:'#f8fafc'}}>la contradicción es la señal</b> de que el RM
+            está mal. No es que el sistema falle: el dato de entrada es el malo.
+          </div>
+          <br/>
+          <b style={{color:'#FCA5A5'}}>Dos avisos del 19/08, por si se repiten.</b> Declaraste 2 en reserva con la
+          barra a 0,308 m/s, que <i>es</i> velocidad de 1RM — estabas a 0-1. El RIR percibido se va corto, es un
+          sesgo muy documentado, y conviene recalibrarlo contra la velocidad de vez en cuando. Y la serie 1 perdió
+          un <b>42 %</b> de velocidad contra un umbral de <b>25 %</b>: tocaba cortar en la repetición 5 o 6.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── RM GUARDADOS QUE NO COINCIDEN CON EL PLAN ───────────────────────────────
+// Un RM guardado en localStorage tiene prioridad sobre el valor por defecto del
+// código (ver memoria.md §8). Eso es lo correcto casi siempre —el test manda—
+// pero se vuelve una trampa cuando el plan se corrige a la baja: el 19/08/2026
+// la sentadilla pasó de 160 a 140 kg en el código, y cualquier dispositivo con
+// 160 guardado seguía calculando con 160 sin decir nada. Este banner hace
+// visible la discrepancia y permite volver al valor del plan de un toque.
+function RMMismatchBanner({ rmStore, clearRM }) {
+  const [open, setOpen] = useState(false);
+  const seen = new Set();
+  const rows = [];
+  DAYS.forEach(d => (d.exercises || []).forEach(ex => {
+    const key = ex.rmRef || ex.name;
+    if (seen.has(key) || ex.rm === undefined) return;
+    seen.add(key);
+    const saved = rmStore[key];
+    if (saved && saved.rm !== ex.rm) rows.push({ key, saved, plan: ex.rm, unit: ex.unit });
+  }));
+  if (!rows.length) return null;
+
+  return (
+    <div style={{
+      marginBottom: 16, background: '#1c1917', border: '1px solid #F59E0B',
+      borderRadius: 10, overflow: 'hidden'
+    }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: '100%', textAlign: 'left', background: 'none', border: 'none',
+        cursor: 'pointer', padding: '10px 12px', color: '#fff7ed'
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>
+          ⚠ {rows.length === 1 ? '1 RM guardado no coincide' : `${rows.length} RM guardados no coinciden`} con el plan
+        </span>
+        <span style={{ color: '#fed7aa', fontSize: 11, marginLeft: 8 }}>{open ? '▾' : '▸'}</span>
+        {!open && (
+          <div style={{ color: '#fed7aa', fontSize: 11.5, marginTop: 3 }}>
+            Este dispositivo está calculando con {rows.map(r => r.saved.rm).join(' · ')} y el plan dice {rows.map(r => r.plan).join(' · ')}.
+          </div>
+        )}
+      </button>
+      {open && (
+        <div style={{ padding: '0 12px 12px', color: '#fed7aa', fontSize: 12.5, lineHeight: 1.7 }}>
+          Lo guardado en este navegador <b style={{color:'#fff7ed'}}>gana al valor del código</b>, y no se sincroniza
+          entre dispositivos. Es lo correcto cuando el guardado viene de un test más reciente. Pero si el plan se
+          ha corregido después —como la sentadilla el 19/08/2026, de 160 a <b style={{color:'#fff7ed'}}>140 kg</b>—
+          el valor viejo se queda mandando en silencio.<br/><br/>
+          {rows.map(r => (
+            <div key={r.key} style={{
+              background: '#0f172a', borderRadius: 8, padding: '10px 12px', marginBottom: 6
+            }}>
+              <div style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>{r.key}</div>
+              <div style={{ color: '#94a3b8', fontSize: 12, margin: '4px 0 8px' }}>
+                guardado <b style={{ color: '#F59E0B' }}>{r.saved.rm} {r.saved.unit || r.unit}</b>
+                {r.saved.date && (
+                  <span style={{ color: '#475569' }}>
+                    {' '}el {new Date(r.saved.date).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' })}
+                  </span>
+                )}
+                <span style={{ color: '#475569' }}> · plan </span>
+                <b style={{ color: '#7dd3fc' }}>{r.plan} {r.unit}</b>
+              </div>
+              <button onClick={() => clearRM(r.key)} style={{
+                padding: '7px 12px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                background: '#334155', color: '#f8fafc', fontSize: 12, fontWeight: 600
+              }}>
+                Usar {r.plan} {r.unit} (el del plan)
+              </button>
+            </div>
+          ))}
+          <span style={{ color: '#a8a29e', fontSize: 11.5 }}>
+            Borra el valor guardado en este dispositivo; el historial de tests no se toca.
+            Si el que vale es el guardado, no toques nada.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DayWorkout({ day, weekIdx, rmStore }) {
   if (day.special === 'stretch') {
     return (
@@ -1574,7 +1720,7 @@ function DayWorkout({ day, weekIdx, rmStore }) {
   );
 }
 
-function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore }) {
+function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore, clearRM }) {
   const day = DAYS[dayIdx];
   return (
     <div>
@@ -1597,6 +1743,10 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore 
         <PhasePill weekIdx={weekIdx} />
         <span style={{ color: '#64748b', fontSize: 13 }}>{PROG[weekIdx].sets.length} series · {PROG[weekIdx].sets.join('·')} reps</span>
       </div>
+
+      <RMMismatchBanner rmStore={rmStore} clearRM={clearRM} />
+
+      <RepsRirExplainer weekIdx={weekIdx} />
 
       {/* Leyenda de descansos de la fase actual */}
       <div style={{
@@ -3628,6 +3778,17 @@ export default function App() {
     });
   };
 
+  // Borra el RM guardado de un ejercicio en este dispositivo para volver al
+  // valor por defecto del código (el del plan). El historial no se toca.
+  const clearRM = (name) => {
+    setRmStore(prev => {
+      const next = { ...prev };
+      delete next[name];
+      persistRM(next);
+      return next;
+    });
+  };
+
   // MVT personal: sustituye el valor de literatura de un ejercicio por una
   // velocidad medida directamente en una carga cercana/igual al 1RM real.
   const saveMVT = (name, value) => {
@@ -3748,7 +3909,7 @@ export default function App() {
 
       {/* Content */}
       {section === 'entrenamiento' && sub === 'plan' && (
-        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} />
+        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} clearRM={clearRM} />
       )}
       {section === 'entrenamiento' && sub === 'test' && (
         <TestTab rmStore={rmStore} saveRM={saveRM} rmHistory={rmHistory} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} lastTestDate={lastTestDate} startNewCycle={startNewCycle} />
