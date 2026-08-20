@@ -368,6 +368,47 @@ const PLANK_SECONDS = {  // segundos por serie, 3 series — plancha con disco s
   'Peak':       [50, 45, 40],
 };
 
+// ─── DESCARGA DE CODO (20/08/2026 → revisar el 02/09/2026) ──────────────────
+// El 19/08, primera sesión de tríceps del ciclo nuevo, apareció ardor en la
+// inserción medial del tríceps, en el codo. Solo bajo carga, nada en reposo, y
+// SOLO en las extensiones en polea: press banca, inclinado y fondos fueron
+// perfectos ese mismo día. Eso descarta sobrecarga sistémica del tríceps (los
+// fondos son la carga más alta de la sesión) y apunta al patrón de extensión,
+// donde la polea mantiene tensión máxima en el bloqueo final del codo — que es
+// justo donde trabaja la cabeza medial y donde banca y fondos ya no llegan.
+// Causa más probable: el RM de este ejercicio subió de 30 a 39 kg en el test de
+// agosto (+30 %) y ésta era la primera sesión aplicándolo.
+// Medida: −18 % de carga dos semanas, manteniendo repeticiones. La irritación de
+// inserción responde a bajar el PICO de tensión, no el trabajo total.
+//
+// ⚠ CÓMO SE IMPLEMENTA, Y POR QUÉ ASÍ (corregido 20/08/2026).
+// La primera versión bajaba el `rm` del código de 46,5 a 38 y de 39 a 32. Eso
+// NO funciona en un dispositivo que tenga los RM del test de agosto guardados:
+// `effectiveRM` da prioridad al valor de `localStorage` (§8 de memoria.md), así
+// que el móvil habría seguido calculando con 46,5 y la descarga no habría
+// existido justo donde importa. Y de paso el banner de "RM descuadrado" saltaba
+// contra su propia descarga.
+// Ahora el RM se queda en el REAL y la descarga es un factor aparte que se
+// aplica al peso final. Sobrevive a lo guardado, la pestaña Test sigue
+// mostrando el máximo verdadero y el registro no se ensucia.
+const ELBOW_NOTE = 'NO bloquees el codo del todo al final del recorrido: el pico de tensión en el bloqueo es lo que irrita la inserción. Mantén las repeticiones del plan. Si vuelve a quemar con la carga ya bajada, párate y dilo — entonces el problema es de volumen, no de peso.';
+const DELOAD_ELBOW = {
+  factor: 0.82,               // −18 %
+  until: '2026-09-02',
+  label: 'Descarga de codo',
+  why: 'Irritación de la inserción medial del tríceps (19/08). Baja el pico de tensión, no el volumen.',
+};
+// Devuelve el estado de una descarga: activa siempre (nunca se retira sola —
+// la vuelta se decide mirando el codo, no el calendario), pero avisa cuando la
+// fecha de revisión ya ha pasado.
+function deloadStatus(dl) {
+  if (!dl) return null;
+  const due = new Date(dl.until + 'T00:00:00');
+  const overdue = new Date() >= due;
+  const pct = Math.round((1 - dl.factor) * 100);
+  return { pct, overdue, dateLabel: due.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) };
+}
+
 // ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
 // type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
 // testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
@@ -377,9 +418,13 @@ const DAYS = [
   {
     name: 'Lunes', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
     exercises: [
-      { name: 'Triceps stretches cable pull bar',  rm: 46.5, unit: 'kg',     testMethod: 'repmax' },
-      { name: 'Triceps extension cable pull cord', rm: 39, unit: 'kg',     testMethod: 'repmax' },
-      { name: 'Triceps extension one-armed cable', rm: 28, unit: 'kg/arm', testMethod: 'repmax' },
+      // DESCARGA DE CODO 20/08/2026 → revisar el 02/09. El RM se queda en el real
+      // y el −18 % se aplica como factor, para que no lo pise el valor guardado.
+      { name: 'Triceps stretches cable pull bar',  rm: 46.5, unit: 'kg',   testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
+      { name: 'Triceps extension cable pull cord', rm: 39, unit: 'kg',     testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
+      // SUSPENDIDO 20/08/2026 — irritación de codo + RM sospechoso (28 kg/brazo =
+      // 56 kg a dos manos, más que las versiones bilaterales). Retestear en limpio.
+      // { name: 'Triceps extension one-armed cable', rm: 28, unit: 'kg/arm', testMethod: 'repmax' },
       { name: 'Bicep curls cable pull',            rm: 36, unit: 'kg',     testMethod: 'repmax' },
       { name: 'Bicep curls sitting dumbbell',      rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
       { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
@@ -414,9 +459,16 @@ const DAYS = [
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
       { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
-      { name: 'Triceps extension cable pull cord', rm: 39,   unit: 'kg', testMethod: 'repmax' },
-      { name: 'Triceps extension one-armed cable', rm: 28,   unit: 'kg/arm', testMethod: 'repmax' },
-      { name: 'Shoulder press sitting dumbbell',   rm: 26.5,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      // ORDEN CAMBIADO 20/08/2026: el shoulder press sube por delante del tríceps.
+      // Iba el último de siete, detrás de banca, inclinado, flys, fondos y dos de
+      // tríceps — los seis usan tríceps, así que medía fatiga de tríceps y no
+      // fuerza de hombro (19/08: salió 5-6-5-2 contra un 9-8-8-7 prescrito).
+      { name: 'Shoulder press sitting dumbbell',   rm: 26.5,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
+        note: 'Va antes del tríceps desde el 20/08/2026. Si aun así no salen las repeticiones del plan, entonces sí es el RM y hay que retestearlo en fresco.' },
+      // DESCARGA DE CODO 20/08/2026 → revisar el 02/09. RM real, factor aparte.
+      { name: 'Triceps extension cable pull cord', rm: 39,   unit: 'kg', testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
+      // SUSPENDIDO 20/08/2026 — ver comentario en el bloque del Lunes.
+      // { name: 'Triceps extension one-armed cable', rm: 28,   unit: 'kg/arm', testMethod: 'repmax' },
     ]
   },
   {
@@ -1436,7 +1488,10 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const p = own ? { ...prog, pct: own.pct, sets: own.sets, rir: 2 } : prog;
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
-  let weight = wt(effRM, p.pct);
+  // La descarga multiplica el peso final y NO toca el RM: así sigue valiendo
+  // aunque el dispositivo tenga guardado el RM del último test.
+  const dl = deloadStatus(ex.deload);
+  let weight = wt(effRM * (ex.deload ? ex.deload.factor : 1), p.pct);
   if (ex.dumbbell) weight = nearestDumbbell(weight);
   const isArm = ex.unit === 'kg/arm';
   const backoffWeight = ex.backoff ? wt(effRM, p.pct * ex.backoff.factor) : null;
@@ -1448,6 +1503,18 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
           <div style={{ color: overridden ? '#22C55E' : '#64748b', fontSize: 12 }}>
             RM: {effRM} {ex.unit} {overridden && '✓ test'}
           </div>
+          {dl && (
+            <div style={{
+              display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 999,
+              background: dl.overdue ? '#7c2d12' : '#1c1917',
+              border: `1px solid ${dl.overdue ? '#F59E0B' : '#78350f'}`,
+              color: dl.overdue ? '#fed7aa' : '#d6d3d1', fontSize: 10.5, fontWeight: 600
+            }}>
+              {dl.overdue
+                ? `⏰ ${ex.deload.label} −${dl.pct}% · tocaba revisar el ${dl.dateLabel}`
+                : `🩹 ${ex.deload.label} −${dl.pct}% · revisar el ${dl.dateLabel}`}
+            </div>
+          )}
           {ex.caution && (
             <div style={{ color: '#F59E0B', fontSize: 11.5, lineHeight: 1.4, marginTop: 4, maxWidth: 260 }}>
               ⚠ {ex.caution}
@@ -1460,9 +1527,14 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
           )}
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18 }}>
+          <div style={{ color: dl ? '#fb923c' : '#fbbf24', fontWeight: 700, fontSize: 18 }}>
             {weight} {isArm ? 'kg/arm' : 'kg'}
           </div>
+          {dl && (
+            <div style={{ color: '#78716c', fontSize: 10.5, textDecoration: 'line-through' }}>
+              {wt(effRM, p.pct)} {isArm ? 'kg/arm' : 'kg'} sin descarga
+            </div>
+          )}
           <div style={{ color: '#94a3b8', fontSize: 13 }}>
             {(own ? own.sets : repsForSets(weekIdx, setsCountFor(ex, weekIdx))).join(' · ')} reps
           </div>
