@@ -430,7 +430,8 @@ const DAYS = [
       { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
       { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 6 },
       { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Butterfly reverse cable pull',      rm: 16, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Butterfly reverse cable pull',      rm: 16, unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
+        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg (7,5 · 11,25 · 15). ⚠ PRUEBA PENDIENTE (lunes 24/08): haz este ejercicio EL PRIMERO de la sesión, en fresco, a 11,25 kg, y cuenta repeticiones. 9 o más = el RM está bien y el déficit es de posición en la sesión. 4-6 = el RM de 16 está inflado y baja a ~12,5. 3 o menos = el problema es la fatiga de la semana, no ningún número.' },
     ]
   },
   {
@@ -457,7 +458,8 @@ const DAYS = [
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
+        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg. Al 70 % son 15 kg, no 17,5.' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
       // ORDEN CAMBIADO 20/08/2026: el shoulder press sube por delante del tríceps.
       // Iba el último de siete, detrás de banca, inclinado, flys, fondos y dos de
@@ -480,7 +482,8 @@ const DAYS = [
       { name: 'Seated row cable pull',       rm: 91,  unit: 'kg',     testMethod: 'repmax' },
       { name: 'One-armed row cable pull',    rm: 45.5,  unit: 'kg/arm', testMethod: 'repmax' },
       { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 4 },
-      { name: 'Butterfly reverse cable pull', rm: 16,  unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Butterfly reverse cable pull', rm: 16,  unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
+        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg (7,5 · 11,25 · 15). ⚠ PRUEBA PENDIENTE (lunes 24/08): haz este ejercicio EL PRIMERO de la sesión, en fresco, a 11,25 kg, y cuenta repeticiones. 9 o más = el RM está bien y el déficit es de posición en la sesión. 4-6 = el RM de 16 está inflado y baja a ~12,5. 3 o menos = el problema es la fatiga de la semana, no ningún número.' },
     ]
   },
   {
@@ -510,7 +513,8 @@ const DAYS = [
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
+        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg. Al 70 % son 15 kg, no 17,5.' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
     ]
   },
@@ -1491,8 +1495,15 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   // La descarga multiplica el peso final y NO toca el RM: así sigue valiendo
   // aunque el dispositivo tenga guardado el RM del último test.
   const dl = deloadStatus(ex.deload);
+  const targetKg = effRM * (ex.deload ? ex.deload.factor : 1) * p.pct;
   let weight = wt(effRM * (ex.deload ? ex.deload.factor : 1), p.pct);
   if (ex.dumbbell) weight = nearestDumbbell(weight);
+  // Máquinas con multiplicador ×1,5 (flys y butterfly reverse): la placa va de
+  // 2,5 en 2,5, así que la carga REAL sólo puede ser múltiplo de 3,75 kg. El
+  // redondeo genérico al 2,5 pedía 12,5 y 17,5, que NO EXISTEN en esas máquinas,
+  // y había que elegir a ojo cada vez. Se redondea al múltiplo de `step` más
+  // CERCANO —no hacia arriba— porque hacia arriba se sale del rango útil.
+  else if (ex.step) weight = Math.max(ex.step, Math.round(targetKg / ex.step) * ex.step);
   const isArm = ex.unit === 'kg/arm';
   const backoffWeight = ex.backoff ? wt(effRM, p.pct * ex.backoff.factor) : null;
   return (
