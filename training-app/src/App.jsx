@@ -911,7 +911,7 @@ const NUTRITION = {
     label: 'Días C · Hígado',
     days: 'Dom · Jue',
     color: '#A855F7',
-    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. PARTIDO EN 2 RACIONES DE 75 g (18/08/2026) — mismos 150 g semanales, pero domingo y jueves. La absorción fraccional del hierro cae con el tamaño de la dosis: dos raciones pequeñas separadas 4 días rinden más hierro absorbido que una de 150 g, y cada una queda en ~2.450 µg de retinol, por debajo del límite de 3.000 µg/día (el exceso de vitamina A también provoca caída de pelo). Se compran los 150 g en el batch cook del sábado: la ración del domingo va fresca a la nevera, la del jueves se congela el sábado y se saca el miércoles por la noche. 4 min a fuego fuerte, rosa por dentro. Y OJO: buena parte del hierro del hígado NO es hemo, es no hemo unido a ferritina — por eso la fruta de este almuerzo tiene que ser cítrica.',
+    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. PARTIDO EN 2 RACIONES DE 75 g (18/08/2026) — mismos 150 g semanales, pero domingo y jueves. La absorción fraccional del hierro cae con el tamaño de la dosis: dos raciones pequeñas separadas 4 días rinden más hierro absorbido que una de 150 g, y cada una queda en ~2.450 µg de retinol, por debajo del límite de 3.000 µg/día (el exceso de vitamina A también provoca caída de pelo). Se compran los 150 g el sábado: la del domingo va fresca a la nevera y se cocina el domingo; la del jueves se congela CRUDA el sábado (cocinada y congelada queda arenosa), se descongela el martes por la noche y se cocina el miércoles por la tarde. 4 min a fuego fuerte, mínimo aceite, rosa por dentro. Y OJO: buena parte del hierro del hígado NO es hemo, es no hemo unido a ferritina — por eso la fruta de este almuerzo tiene que ser cítrica.',
     meals: [
       {
         name: '🍳 Desayuno (~8:30) — hora cero · igual que días A',
@@ -3024,7 +3024,7 @@ function NutritionTab({ weekIdx }) {
         padding:'12px 14px', marginBottom:16, color:'#bfdbfe', fontSize:12.5, lineHeight:1.7
       }}>
         <div style={{color:'#eff6ff', fontWeight:700, marginBottom:6, fontSize:13}}>🔥 Cómo cocinar cada cosa → pestaña <b>👨‍🍳 Cocina</b></div>
-        Métodos por alimento, el batch cook del sábado paso a paso, el protocolo del brócoli con mostaza y
+        Métodos por alimento, el reparto semanal de cocina (la sesión grande es el domingo), el protocolo del brócoli con mostaza y
         el aviso de seguridad por no recalentar viven ahí, para no repetirlos aquí.<br/><br/>
         <b style={{color:'#FCA5A5'}}>Los dos de memoria:</b> el pollo a <b style={{color:'#dbeafe'}}>150-160 °C hasta 68-70 °C de interior</b>,
         y <b style={{color:'#dbeafe'}}>congelar los tuppers del día 4 en adelante</b> — el pollo cocido aguanta 3-4 días y tú no recalientas.
@@ -3040,7 +3040,7 @@ function NutritionTab({ weekIdx }) {
         Rendimientos aproximados usados: <b>pollo 75 %</b> · <b>ternera 73 %</b> · <b>salmón 80 %</b> · <b>hígado 70 %</b>. Varían con el método y el punto de cocción — si asas más, pierdes más agua y el cocido baja. Nunca al revés.<br/><br/>
 
         <div style={{background:'#0f172a', borderRadius:8, padding:'10px 12px', marginBottom:10, color:'#cbd5e1'}}>
-          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo se cocina entero el sábado y hay que dividirlo después: <b style={{color:'#F59E0B'}}>por proporción, no por gramos</b> — pesa todo el pollo cocido y divídelo en <b style={{color:'#f8fafc'}}>18 partes</b> (día A, 4 partes · día C, 3 partes).<br/>
+          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo se cocina entero el domingo y hay que dividirlo después: <b style={{color:'#F59E0B'}}>por proporción, no por gramos</b> — pesa todo el pollo cocido y divídelo en <b style={{color:'#f8fafc'}}>18 partes</b> (día A, 4 partes · día C, 3 partes).<br/>
           <span style={{color:'#64748b'}}>La regla completa, con el arroz y el brócoli, está en la pestaña <b style={{color:'#94a3b8'}}>👨‍🍳 Cocina</b>.</span>
         </div>
 
@@ -3467,7 +3467,7 @@ function TrackingTab() {
 
 // ─── SECCIONES PRINCIPALES ────────────────────────────────────────────────────
 // ─── COCINA ──────────────────────────────────────────────────────────────────
-// Métodos de cocción por alimento, protocolo del batch cook del sábado y
+// Métodos de cocción por alimento, reparto semanal de cocina (sesión grande el domingo) y
 // seguridad alimentaria. Añadido 18/08/2026 a partir de memoria.md 6.5 / 6.5b /
 // 6.8, que estaba repartido entre bloques de la pestaña Nutrición.
 //
@@ -3479,46 +3479,62 @@ function TrackingTab() {
 // importe tanto como el sabor en caliente, (b) hace innecesario esperar a que
 // el plato baje de 60 °C para la mostaza, y (c) abre un problema real de
 // seguridad alimentaria, porque no queda ningún paso de calor que mate nada.
-const COOK_STEPS = [
+// Reparto semanal de cocina — reorganizado 22/08/2026.
+// Antes todo era una sesión grande el sábado. No vale: la nevera y el congelador
+// del usuario son pequeños y no cabe la semana entera de una vez, y además no
+// puede pararse a cocinar los miércoles salvo algo corto por la tarde. El plan
+// lo diseñó él; aquí van las tres correcciones que se le hicieron, marcadas.
+const COOK_PLAN = [
   {
-    n: 1, title: 'Horno a 220 °C — brócoli (1,4 kg)',
-    body: 'Trocéalo entero, tallo incluido, cortado más fino (~5-8 mm) que los ramilletes porque es más denso y si no queda crudo. Seco, con el aceite, **sin sal**, en **una sola capa sin amontonar**, **15-20 min**. Amontonado se cuece en su propia humedad y no seca nunca.',
-    warn: 'La sal saca agua: justo lo contrario de lo que buscas. Y la mostaza NO entra aquí — va en el plato, cada día.'
+    day: 'Sábado', color: '#3B82F6', role: 'Día B · compra y primera tanda',
+    items: [
+      'Salmón y ternera **del día**, al momento. Tortilla sencilla.',
+      '**Congela CRUDOS** el salmón (250 g) y la ternera (220 g) **del martes**.',
+      '**Congela CRUDO** el hígado del jueves (75 g).',
+      'Asa brócoli para **sáb · dom · lun · mar · mié** — 5 raciones.',
+      'Compra de la semana.',
+    ],
   },
   {
-    n: 2, title: 'Baja a 150-160 °C — pollo (1,35 kg)',
-    body: 'Hasta **68-70 °C de temperatura interior**, medida con termómetro de sonda. No 200 °C: a fuego suave pierde menos agua, sube el rendimiento y la textura **en frío** cambia muchísimo — que es como te lo vas a comer los siete días.',
+    day: 'Domingo', color: '#A855F7', role: 'Día C · LA SESIÓN GRANDE',
+    items: [
+      '**5 tortillas de espinacas** (días A y C). Las 2 sencillas de los días B se hacen al momento.',
+      '**Arroz ×5**, enjuagado y enfriado rápido.',
+      '**Pollo 1,35 kg al horno**, 150-160 °C hasta 68-70 °C de interior.',
+      'Hígado del domingo, **fresco**, 4 min.',
+      'Reparto → **nevera: dom · lun · mié** · **congelador: jue · vie**.',
+    ],
   },
   {
-    n: 3, title: 'Arroz — enjuagar, cocer, enfriar',
-    body: 'Enjuágalo hasta que el agua salga clara (reduce arsénico inorgánico, y comes arroz 5 días de cada 7). Cuécelo y **extiéndelo para que enfríe rápido**: al enfriarse genera almidón resistente, así que el batch cook ya juega a tu favor sin hacer nada.',
+    day: 'Martes', color: '#F59E0B', role: 'Día B · nada que preparar',
+    items: [
+      'Salmón y ternera **descongelados el lunes por la noche**, cocinados al momento.',
+      'Tortilla sencilla del día.',
+      'Por la noche: **saca el hígado** del congelador para mañana.',
+    ],
   },
   {
-    n: 4, title: 'Sofrito — largo y con aceite',
-    body: 'Tomate, pimiento, calabacín y ajo. **Como ya lo haces.** Es el único caso de toda la cocina donde cocinar mucho **mejora** la nutrición: el licopeno se vuelve más biodisponible con el calor y es liposoluble, así que el aceite hace falta. Se pierde la vitamina C del pimiento, pero da igual — la que trabaja son los kiwis del desayuno.',
+    day: 'Miércoles (tarde)', color: '#22C55E', role: 'Rato corto, dos cosas',
+    items: [
+      '**Hígado del jueves**, 4 min de sartén, a la nevera ya hecho.',
+      'En el mismo horno: **brócoli para jue · vie** (segunda tanda).',
+    ],
+  },
+];
+
+// Las tres correcciones al plan original, que son el "por qué" del reparto.
+const COOK_PLAN_FIXES = [
+  {
+    t: 'El hígado del jueves se congela CRUDO, no cocinado',
+    d: 'Cocido, congelado y comido frío queda arenoso y seco. Son 4 min de sartén el miércoles por la tarde. Si el miércoles se complica, cocinar los dos el domingo y congelar uno hecho **es seguro** — solo se pierde textura.',
   },
   {
-    n: 5, title: 'Tortillas — 7 porciones',
-    body: '4 huevos, espinacas y ajo por porción. **Espinacas trituradas en crudo con el huevo**, como ya lo haces: nunca escurres agua, así que el folato y el magnesio se quedan donde tienen que estar, y es **una sola exposición al calor** (mejor que rehogar y luego cuajar). **Bien hechas** — no hay recalentado que las termine.',
-    warn: 'Sin parmesano (se come a media mañana) y **sin semillas** (van por encima al servir).'
+    t: 'El salmón y la ternera del martes se congelan CRUDOS el sábado',
+    d: 'No cocinados el sábado para el martes. El motivo es específico del salmón: EPA y DHA son los ácidos grasos más oxidables que existen, y cocinado y guardado 3 días se oxidan. Es de donde sale el olor fuerte del pescado del día siguiente — y es justo lo que el salmón aporta.',
   },
   {
-    n: 6, title: 'Reparto del pollo — por proporción, no por gramos',
-    body: 'Pesa **todo** el pollo cocido y divídelo en **18 partes**. Cada **día A se lleva 4 partes** (22,2 %) y cada **día C, 3 partes** (16,7 %). 3×4 + 2×3 = 18, cuadra exacto. Con 1,35 kg crudo salen ~1.010 g cocidos → 1 parte ≈ 56 g → día A ≈ 225 g, día C ≈ 169 g. Mismo criterio con el **arroz** (÷ 5) y el **brócoli** (÷ 7).',
-    warn: 'No persigas 225 g fijos: el rendimiento varía cada semana y el último tupper te saldría corto o largo.'
-  },
-  {
-    n: 7, title: 'Enfriar rápido y montar tuppers',
-    body: 'No dejes 1,35 kg de pollo enfriándose despacio en la encimera: reparte en porciones finas y mételo a la nevera cuanto antes. **Congela los tuppers del día 4 en adelante** y pásalos a la nevera la noche antes.',
-    warn: 'Es el punto crítico de la semana. Ver el aviso de seguridad de arriba.'
-  },
-  {
-    n: 8, title: 'Hígado — partir los 150 g en 2 × 75 g',
-    body: 'La ración del **domingo** va fresca a la nevera (solo tiene que llegar al día siguiente). La del **jueves se congela hoy** y se saca el miércoles por la noche. Congelarlo no le quita hierro.',
-  },
-  {
-    n: 9, title: 'Salmón y ternera — martes y sábado',
-    body: 'La ración del **sábado** se come fresca hoy. La del **martes se congela hoy** y se saca el lunes por la noche. Ambos se cocinan al momento en su día, así que aquí solo hay que pesarlos crudos y repartirlos.',
+    t: 'El brócoli va en dos tandas de horno, no en una',
+    d: 'Asado congela mal (sale blando y aguado, lo contrario de lo que buscas) y de domingo a viernes son demasiados días. Las dos tandas caen en días en los que ya estás cocinando: sábado y miércoles por la tarde. **Máximo 4 días de antigüedad.**',
   },
 ];
 
@@ -3530,12 +3546,12 @@ const COOK_METHODS = [
   },
   {
     food: '🍳 Tortilla', when: 'batch',
-    how: '**Bien hecha.** Espinacas trituradas en crudo con el huevo.',
+    how: '**Bien hecha.** Espinacas trituradas en crudo con el huevo. **5 con espinacas el domingo · las 2 sencillas de los días B, al momento.**',
     why: 'No hay recalentado que la termine. Y triturar en crudo es una sola exposición al calor: mejor folato que rehogar y luego cuajar.'
   },
   {
-    food: '🥦 Brócoli', when: 'batch',
-    how: '**220 °C, capa única, 15-20 min**, seco, con aceite y **sin sal**. Tallo a ~5-8 mm. Mostaza al servir.',
+    food: '🥦 Brócoli', when: 'sabado',
+    how: '**220 °C, capa única, 15-20 min**, seco, con aceite y **sin sal**. Tallo a ~5-8 mm. Mostaza al servir. **Dos tandas: sábado y miércoles.**',
     why: 'El horno no lixivia nada al agua, que es la ventaja real frente a hervir. Corrección del 18/08: los "~180 °C" que se recomendaron primero eran un error — a esa temperatura se cuece en su propia humedad y acumula más exposición térmica total.'
   },
   {
@@ -3549,8 +3565,8 @@ const COOK_METHODS = [
     why: 'Único caso donde cocinar mucho mejora la nutrición: el licopeno se vuelve más biodisponible con el calor y es liposoluble.'
   },
   {
-    food: '🫀 Hígado', when: 'día',
-    how: 'Sartén muy caliente, **mínimo aceite**, 4 min, **rosa por dentro**.',
+    food: '🫀 Hígado', when: 'miercoles',
+    how: 'Sartén muy caliente, **mínimo aceite**, 4 min, **rosa por dentro**. El del domingo, fresco; el del jueves, el miércoles por la tarde.',
     why: 'Foods 2020: plancha sin aceite pierde un 8 % del folato, con aceite un 22 %, horno combinado 20-41 %. 75 g dan 350-450 µg de folato: los días de hígado arreglan solos el déficit. Pasado queda seco y arenoso.'
   },
   {
@@ -3591,7 +3607,9 @@ const COOK_METHODS = [
 ];
 
 const WHEN_TAG = {
-  batch:  { label: 'batch sábado', bg: '#1e3a8a', fg: '#bfdbfe' },
+  batch:  { label: 'domingo', bg: '#2e1065', fg: '#e9d5ff' },
+  sabado: { label: 'sábado', bg: '#1e3a8a', fg: '#bfdbfe' },
+  miercoles: { label: 'miércoles tarde', bg: '#052e16', fg: '#bbf7d0' },
   'día':  { label: 'al momento',   bg: '#7c2d12', fg: '#fed7aa' },
   regla:  { label: 'regla',        bg: '#3f3f46', fg: '#e4e4e7' },
   servir: { label: 'al servir',    bg: '#14532d', fg: '#bbf7d0' },
@@ -3623,9 +3641,14 @@ function CookingTab() {
         El pollo cocido aguanta <b style={{color:'#fff1f2'}}>3-4 días</b> en nevera y tu semana son <b style={{color:'#fff1f2'}}>7</b>.
         Sin recalentado no queda ningún paso de calor que mate nada, y la <i>Listeria monocytogenes</i> crece
         a temperatura de nevera.<br/><br/>
-        <b style={{color:'#fff1f2'}}>Congela los tuppers del día 4 en adelante</b> y pásalos a la nevera la noche antes.
-        Y al cocinar el sábado, <b style={{color:'#fff1f2'}}>enfría rápido y reparte</b>: no dejes 1,35 kg enfriándose
-        despacio en la encimera.
+        Cocinas el domingo y comes hasta el viernes: son <b style={{color:'#fff1f2'}}>5 días</b>. Por eso el reparto es
+        <b style={{color:'#fff1f2'}}> nevera para domingo · lunes · miércoles</b> y
+        <b style={{color:'#fff1f2'}}> congelador para jueves · viernes</b>. Pásalos a la nevera la noche antes.<br/><br/>
+        <b style={{color:'#fff1f2'}}>El arroz va en el mismo tupper y sigue el mismo criterio.</b> Arroz cocido guardado
+        5 días es el caso clásico de <i>Bacillus cereus</i>, cuyas esporas sobreviven a la cocción: enfríalo rápido y
+        mételo en frío <b style={{color:'#fff1f2'}}>dentro de la primera hora</b>.<br/><br/>
+        Al cocinar el domingo, <b style={{color:'#fff1f2'}}>enfría rápido y reparte</b>: no dejes 1,35 kg enfriándose
+        despacio en la encimera. Y descongela <b style={{color:'#fff1f2'}}>siempre en nevera</b>, nunca en la encimera.
       </div>
 
       {/* Principio */}
@@ -3710,37 +3733,101 @@ function CookingTab() {
         entera rinden bastante menos sulforafano que 200 g de ramilletes.
       </div>
 
-      {/* Batch cook paso a paso */}
+      {/* Reparto semanal de cocina */}
       <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
-        🍱 Batch cook del sábado — en orden
+        🗓 Cuándo se cocina cada cosa
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
-        El orden no es arbitrario: el horno arranca caliente para el brócoli y luego baja para el pollo,
-        que es lo que más tiempo tarda y lo que peor lleva el exceso de temperatura.
+        La sesión grande es el <b style={{ color: '#A855F7' }}>domingo</b>, no el sábado: la nevera y el congelador
+        no dan para la semana entera de una vez. El sábado ya estás cocinando lo del día y compras, y el miércoles
+        por la tarde caben dos cosas cortas.
       </div>
+      <div style={{ marginBottom: 14 }}>
+        {COOK_PLAN.map(d => (
+          <div key={d.day} style={{
+            background: '#1e293b', borderRadius: 8, padding: '11px 14px', marginBottom: 6,
+            borderLeft: `3px solid ${d.color}`
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ color: d.color, fontSize: 14, fontWeight: 700 }}>{d.day}</span>
+              <span style={{ color: '#64748b', fontSize: 11 }}>{d.role}</span>
+            </div>
+            <ul style={{ margin: '6px 0 0', paddingLeft: 18, color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>
+              {d.items.map((it, k) => <li key={k}>{cookBold(it, '#e2e8f0')}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        background: '#0f172a', border: '1px solid #334155', borderRadius: 10,
+        padding: '10px 14px', marginBottom: 16, color: '#cbd5e1', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <b style={{ color: '#f8fafc' }}>🌙 Regla diaria:</b> cada noche saca del congelador lo del día siguiente.
+        Descongelar <b style={{ color: '#f8fafc' }}>siempre en nevera</b>, nunca en la encimera.
+      </div>
+
+      {/* Reparto del pollo */}
+      <div style={{
+        background: '#1c1917', border: '1px solid #F59E0B', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#fed7aa', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#fff7ed', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          ⚖️ Reparto del pollo — por proporción, no por gramos
+        </div>
+        El rendimiento varía cada semana: si apuntas a 225 g fijos, el último tupper te sale corto o largo.
+        <b style={{ color: '#fff7ed' }}> Pesa todo el pollo cocido y divídelo en 18 partes.</b> Cada
+        <b style={{ color: '#fff7ed' }}> día A se lleva 4 partes</b> (22,2 %) y cada
+        <b style={{ color: '#fff7ed' }}> día C, 3 partes</b> (16,7 %). 3×4 + 2×3 = 18, cuadra exacto.<br/>
+        <span style={{ color: '#a8a29e' }}>Con 1,35 kg crudo salen ~1.010 g cocidos → 1 parte ≈ 56 g → día A ≈ 225 g · día C ≈ 169 g.</span><br/><br/>
+        <b style={{ color: '#fff7ed' }}>Destino:</b> domingo, lunes y miércoles a la <b style={{ color: '#fff7ed' }}>nevera</b>;
+        jueves y viernes al <b style={{ color: '#fff7ed' }}>congelador</b>, en bolsa plana (~400 g).<br/><br/>
+        Mismo criterio con el <b style={{ color: '#fff7ed' }}>arroz</b> (÷ 5) y el <b style={{ color: '#fff7ed' }}>brócoli</b>
+        (÷ 5 la tanda del sábado, ÷ 2 la del miércoles). El brócoli asado es el más impredecible de todos: cuanto más
+        seco lo dejes, más peso pierde, así que ahí perseguir gramos no tiene sentido.
+      </div>
+
+      {/* Por qué el reparto es así */}
       <div style={{ marginBottom: 20 }}>
-        {COOK_STEPS.map(s => (
-          <div key={s.n} style={{
+        <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
+          Las tres correcciones al plan original
+        </div>
+        {COOK_PLAN_FIXES.map((f, i) => (
+          <div key={i} style={{
             background: '#1e293b', borderRadius: 8, padding: '11px 14px', marginBottom: 6,
             display: 'flex', gap: 12, alignItems: 'flex-start'
           }}>
             <div style={{
               minWidth: 24, height: 24, borderRadius: 999, background: '#334155', color: '#f8fafc',
               fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>{s.n}</div>
+            }}>{i + 1}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
-              <div style={{ color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>
-                {cookBold(s.body, '#e2e8f0')}
-              </div>
-              {s.warn && (
-                <div style={{ color: '#FCA5A5', fontSize: 12, lineHeight: 1.6, marginTop: 5 }}>
-                  ⚠ {cookBold(s.warn, '#fecaca')}
-                </div>
-              )}
+              <div style={{ color: '#f8fafc', fontSize: 13.5, fontWeight: 600, marginBottom: 3 }}>{f.t}</div>
+              <div style={{ color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>{cookBold(f.d, '#e2e8f0')}</div>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Espacio de nevera */}
+      <div style={{
+        background: '#0c4a6e', border: '1px solid #0ea5e9', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#bae6fd', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#f0f9ff', fontWeight: 700, marginBottom: 6, fontSize: 13 }}>
+          🧊 Espacio de nevera — lo que no cuesta nada de tiempo
+        </div>
+        Hazlo antes de reorganizar nada: entre las tres cosas se liberan del orden de
+        <b style={{ color: '#f0f9ff' }}> 8-10 litros</b>.<br/><br/>
+        <b style={{ color: '#f0f9ff' }}>La fruta (2,1 kg) fuera</b>, a la despensa. Manzana, naranja, pera, plátano y
+        kiwi aguantan a temperatura ambiente, y el kiwi madura mejor fuera.<br/>
+        <b style={{ color: '#f0f9ff' }}>Los huevos (28) fuera.</b> En Alemania se venden sin refrigerar porque no se
+        lavan y conservan la cutícula. Regla: no cambiarlos de régimen.<br/>
+        <b style={{ color: '#f0f9ff' }}>Espinacas congeladas en vez de frescas.</b> 700 g de hoja fresca son 5-6 litros
+        de volumen; el congelado, menos de uno. Y como las trituras con el huevo, la textura —único argumento a favor
+        de la fresca— te da igual.<br/><br/>
+        <b style={{ color: '#f0f9ff' }}>Guardar a granel, no en 7 tuppers</b> (paredes y huecos de aire), y lo
+        congelado <b style={{ color: '#f0f9ff' }}>en bolsa plana</b>: se apila como libros y descongela antes.
       </div>
 
       {/* Lo que NUNCA entra en el batch cook */}
