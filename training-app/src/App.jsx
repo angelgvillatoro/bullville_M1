@@ -422,16 +422,19 @@ const DAYS = [
       // y el −18 % se aplica como factor, para que no lo pise el valor guardado.
       { name: 'Triceps stretches cable pull bar',  rm: 46.5, unit: 'kg',   testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
       { name: 'Triceps extension cable pull cord', rm: 39, unit: 'kg',     testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
-      // SUSPENDIDO 20/08/2026 — irritación de codo + RM sospechoso (28 kg/brazo =
-      // 56 kg a dos manos, más que las versiones bilaterales). Retestear en limpio.
-      // { name: 'Triceps extension one-armed cable', rm: 28, unit: 'kg/arm', testMethod: 'repmax' },
+      // ELIMINADO DEL PLAN 24/08/2026 (decisión del usuario). Estuvo suspendido
+      // desde el 20/08 por la irritación de codo. El trabajo directo de tríceps se
+      // queda en barra + cuerda, y los fondos como tercer movimiento.
+      // Nota para el histórico: su RM de 28 kg/brazo parecía imposible (56 kg a dos
+      // manos frente a 46,5 y 39 de las versiones bilaterales). Se explicó el
+      // 24/08: se había anotado aplicando el falso ×1,5. El real serían ~18,7.
       { name: 'Bicep curls cable pull',            rm: 36, unit: 'kg',     testMethod: 'repmax' },
       { name: 'Bicep curls sitting dumbbell',      rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
       { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
       { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 6 },
       { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Butterfly reverse cable pull',      rm: 16, unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
-        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg (7,5 · 11,25 · 15). ⚠ PRUEBA PENDIENTE (lunes 24/08): haz este ejercicio EL PRIMERO de la sesión, en fresco, a 11,25 kg, y cuenta repeticiones. 9 o más = el RM está bien y el déficit es de posición en la sesión. 4-6 = el RM de 16 está inflado y baja a ~12,5. 3 o menos = el problema es la fatiga de la semana, no ningún número.' },
+      { name: 'Butterfly reverse cable pull',      rm: 10.5, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
+        note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
     ]
   },
   {
@@ -458,8 +461,8 @@ const DAYS = [
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
-        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg. Al 70 % son 15 kg, no 17,5.' },
+      { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
+        note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
       // ORDEN CAMBIADO 20/08/2026: el shoulder press sube por delante del tríceps.
       // Iba el último de siete, detrás de banca, inclinado, flys, fondos y dos de
@@ -469,8 +472,7 @@ const DAYS = [
         note: 'Va antes del tríceps desde el 20/08/2026. Si aun así no salen las repeticiones del plan, entonces sí es el RM y hay que retestearlo en fresco.' },
       // DESCARGA DE CODO 20/08/2026 → revisar el 02/09. RM real, factor aparte.
       { name: 'Triceps extension cable pull cord', rm: 39,   unit: 'kg', testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
-      // SUSPENDIDO 20/08/2026 — ver comentario en el bloque del Lunes.
-      // { name: 'Triceps extension one-armed cable', rm: 28,   unit: 'kg/arm', testMethod: 'repmax' },
+      // ELIMINADO DEL PLAN 24/08/2026 — ver comentario en el bloque del Lunes.
     ]
   },
   {
@@ -482,8 +484,8 @@ const DAYS = [
       { name: 'Seated row cable pull',       rm: 91,  unit: 'kg',     testMethod: 'repmax' },
       { name: 'One-armed row cable pull',    rm: 45.5,  unit: 'kg/arm', testMethod: 'repmax' },
       { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 4 },
-      { name: 'Butterfly reverse cable pull', rm: 16,  unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
-        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg (7,5 · 11,25 · 15). ⚠ PRUEBA PENDIENTE (lunes 24/08): haz este ejercicio EL PRIMERO de la sesión, en fresco, a 11,25 kg, y cuenta repeticiones. 9 o más = el RM está bien y el déficit es de posición en la sesión. 4-6 = el RM de 16 está inflado y baja a ~12,5. 3 o menos = el problema es la fatiga de la semana, no ningún número.' },
+      { name: 'Butterfly reverse cable pull', rm: 10.5,  unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
+        note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
     ]
   },
   {
@@ -513,8 +515,8 @@ const DAYS = [
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 23, unit: 'kg/arm', testMethod: 'repmax', step: 3.75,
-        note: 'Máquina con multiplicador ×1,5: la carga real sólo existe en múltiplos de 3,75 kg. Al 70 % son 15 kg, no 17,5.' },
+      { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
+        note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
       { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
     ]
   },
@@ -1498,11 +1500,12 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const targetKg = effRM * (ex.deload ? ex.deload.factor : 1) * p.pct;
   let weight = wt(effRM * (ex.deload ? ex.deload.factor : 1), p.pct);
   if (ex.dumbbell) weight = nearestDumbbell(weight);
-  // Máquinas con multiplicador ×1,5 (flys y butterfly reverse): la placa va de
-  // 2,5 en 2,5, así que la carga REAL sólo puede ser múltiplo de 3,75 kg. El
-  // redondeo genérico al 2,5 pedía 12,5 y 17,5, que NO EXISTEN en esas máquinas,
-  // y había que elegir a ojo cada vez. Se redondea al múltiplo de `step` más
-  // CERCANO —no hacia arriba— porque hacia arriba se sale del rango útil.
+  // Cargas que sólo existen en escalones propios (`step`). En la torre de flys y
+  // butterfly reverse los escalones son de 1,5 kg — corregido el 24/08/2026, antes
+  // ponía 3,75 porque se daba por bueno un multiplicador ×1,5 que no existe.
+  // El redondeo genérico al 2,5 pedía números que no hay en la máquina. Se redondea
+  // al múltiplo de `step` más CERCANO —no hacia arriba— porque hacia arriba se sale
+  // del rango útil.
   else if (ex.step) weight = Math.max(ex.step, Math.round(targetKg / ex.step) * ex.step);
   const isArm = ex.unit === 'kg/arm';
   const backoffWeight = ex.backoff ? wt(effRM, p.pct * ex.backoff.factor) : null;
@@ -2508,14 +2511,20 @@ function CoreLoadTestCard({ ex, rmStore, saveRM, rmHistory }) {
 // Con mancuerna real (peso discreto, ex.dumbbell) o cable/máquina (peso continuo):
 // carga libre en kg en ambos casos — el desplegable de mancuernas se quitó porque
 // no cubría todos los pesos reales disponibles en el gimnasio.
-// Máquinas donde el número de la placa NO es el peso real (hay que multiplicar
-// por 1.5 para obtener los kg reales) — el valor que se introduce aquí siempre
-// es el kg real ya calculado, no el número que marca la máquina.
-const MACHINE_PLATE_NOTE = ['Butterfly reverse cable pull', 'Flys standing cable pull'];
+// Torre de flys / butterfly reverse. Este archivo decía hasta el 24/08/2026 que
+// el número de la placa había que multiplicarlo por 1,5 para obtener kilos
+// reales. ⛔ ERA FALSO, y salió caro: infló los dos RM un 50 % durante semanas y
+// generó una teoría entera sobre "el déficit escala con el puesto en la sesión"
+// que en buena parte lo producía este error.
+// Lo verificado el 24/08: el "1.5 KG" del encabezado del selector es LO QUE PESA
+// CADA PLACA, no un factor; la columna de al lado es la misma carga en libras
+// (7,5 kg ↔ 17 lb) y la estación es 1:1. El número impreso son kilos.
+// Sólo afecta a esta torre — el resto de poleas del plan son otra máquina.
+const TOWER_1TO1 = ['Butterfly reverse cable pull', 'Flys standing cable pull'];
 
 function RepMaxTestCard({ ex, rmStore, saveRM, rmHistory }) {
   const isDumbbell = !!ex.dumbbell;
-  const needsPlateNote = MACHINE_PLATE_NOTE.includes(ex.name);
+  const needsPlateNote = TOWER_1TO1.includes(ex.name);
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const current = rmStore[ex.name];
@@ -2539,9 +2548,11 @@ function RepMaxTestCard({ ex, rmStore, saveRM, rmHistory }) {
       </div>
       {needsPlateNote && (
         <div style={{ color: '#38bdf8', fontSize: 12, marginBottom: 8, lineHeight: 1.5 }}>
-          ⓘ En esta máquina el número que marca la placa NO es el peso real — hay que
-          multiplicarlo ×1.5. Haz esa cuenta antes de escribir el peso abajo: aquí siempre
-          se introduce el kg real, nunca el número que marca la máquina.
+          ⓘ <b>Escribe el número que marca el selector, tal cual.</b> En esta torre son
+          kilos reales (1:1) y sube de <b>1,5 en 1,5</b>. <b style={{ color: '#FCA5A5' }}>No lo
+          multipliques por 1,5</b>: hasta el 24/08/2026 esta app decía que había que hacerlo y
+          era falso — el “1.5 KG” del selector es lo que pesa cada placa, no un factor, y por
+          eso los RM de estos dos ejercicios estuvieron inflados un 50 %.
         </div>
       )}
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
