@@ -857,7 +857,7 @@ function StretchCard({ s }) {
 // 1,35 kg pollo · 150 g hígado · 500 g salmón · 440 g ternera, igual que antes.
 //
 // TRES REGLAS QUE NO SE PUEDEN ROMPER (motivo: absorción de hierro):
-//  1. El Skyr va SOLO a las 11:00, nunca dentro del desayuno. Sus ~675mg de
+//  1. El Skyr va SOLO a las 11:30, nunca dentro del desayuno. Sus ~675mg de
 //     calcio bloqueaban el hierro no hemo de las semillas y las espinacas.
 //  2. La fruta del desayuno debe ser cítrica (kiwi/mandarina/naranja/fresas).
 //     La vitamina C solo potencia el hierro NO hemo, que está todo ahí.
@@ -879,19 +879,19 @@ const NUTRITION = {
         ]
       },
       {
-        name: '🥛 Skyr — desayuno + 2 h (~10:30)',
+        name: '🥛 Skyr — desayuno + 3 h (~11:30)',
         items: [
           { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
         ]
       },
       {
-        name: '🧀 Parmesano — desayuno + 3 h 30 (~12:00) · parmesano móvil',
+        name: '🧀 Parmesano — desayuno + 4 h 30 (~13:00) · parmesano móvil',
         items: [
           { food: 'Parmesano (en trozo, no dentro del yogur)', amount: '50g', macros: '18g P · 13g G · 2g C' },
         ]
       },
       {
-        name: '🍗 Almuerzo (~13:00) · sin lácteo · sin hierro que proteger',
+        name: '🍗 Almuerzo (~14:30) · sin lácteo · sin hierro que proteger',
         items: [
           { food: 'Pechuga de pollo', amount: '300g', raw: 300, cooked: 225, yield: 0.75, macros: '69g P · 8g G · 0g C' },
           { food: 'Arroz (cocido)', amount: '100g', macros: '3g P · 0g G · 28g C' },
@@ -926,19 +926,19 @@ const NUTRITION = {
         ]
       },
       {
-        name: '🥛 Skyr — desayuno + 2 h (~10:30)',
+        name: '🥛 Skyr — desayuno + 3 h (~11:30)',
         items: [
           { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
         ]
       },
       {
-        name: '🧀 Parmesano — desayuno + 2 h 30 (~11:00)',
+        name: '🧀 Parmesano — desayuno + 3 h 30 (~12:00)',
         items: [
           { food: 'Parmesano (en trozo, no dentro del yogur)', amount: '50g', macros: '18g P · 13g G · 2g C' },
         ]
       },
       {
-        name: '🫀 Almuerzo — parmesano + 2 h (~13:00) · día de hierro',
+        name: '🫀 Almuerzo — parmesano + 2 h 30 (~14:30) · día de hierro',
         items: [
           { food: 'Hígado de pollo', amount: '75g', raw: 75, cooked: 52, yield: 0.70, macros: '13g P · 4g G · 1g C' },
           { food: 'Pechuga de pollo', amount: '225g', raw: 225, cooked: 169, yield: 0.75, macros: '52g P · 6g G · 0g C' },
@@ -973,13 +973,13 @@ const NUTRITION = {
         ]
       },
       {
-        name: '🥛 Skyr — desayuno + 2 h (~10:30)',
+        name: '🥛 Skyr — desayuno + 3 h (~11:30)',
         items: [
           { food: 'Arla Skyr', amount: '450g', macros: '50g P · 2g G · 27g C' },
         ]
       },
       {
-        name: '🥩 Almuerzo — Skyr + 2 h 30 (~13:00) · sin lácteo',
+        name: '🥩 Almuerzo — Skyr + 3 h (~14:30) · sin lácteo',
         items: [
           { food: 'Ternera magra', amount: '220g', raw: 220, cooked: 161, yield: 0.73, macros: '46g P · 15g G · 0g C' },
           { food: 'Patata (cocida)', amount: '100g', macros: '2g P · 0g G · 17g C' },
@@ -3017,15 +3017,16 @@ function NutritionTab({ weekIdx }) {
         <div style={{color:'#f8fafc', fontWeight:700, marginBottom:8, fontSize:13}}>⏱ Espaciado entre tomas</div>
         <div style={{color:'#e2e8f0', fontFamily:'ui-monospace, monospace', fontSize:12.5, lineHeight:2, marginBottom:8}}>
           08:30 · Desayuno <span style={{color:'#64748b'}}>(hora cero)</span><br/>
-          10:30 · Skyr <span style={{color:'#64748b'}}>— desayuno + 2 h</span><br/>
-          11:00 · Parmesano <span style={{color:'#64748b'}}>— días C (Dom · Jue)</span><br/>
-          12:00 · Parmesano <span style={{color:'#64748b'}}>— días A (Lun · Mié · Vie)</span><br/>
-          13:00 · Almuerzo
+          11:30 · Skyr <span style={{color:'#64748b'}}>— desayuno + 3 h</span><br/>
+          12:00 · Parmesano <span style={{color:'#64748b'}}>— días C (Dom · Jue)</span><br/>
+          13:00 · Parmesano <span style={{color:'#64748b'}}>— días A (Lun · Mié · Vie)</span><br/>
+          14:30 · Almuerzo
         </div>
         <b style={{color:'#e2e8f0'}}>Son offsets, no horas fijas.</b> Si desayunas a las 9:00, todo corre media hora. La inhibición del calcio es concurrente con la comida: depende de que calcio y hierro coincidan en el duodeno, y ahí <b>2 h es el umbral práctico</b>. Por debajo de 1 h 30 es como tomarlos juntos y no habrás ganado nada.<br/><br/>
         <b style={{color:'#e2e8f0'}}>Por qué el parmesano va segundo:</b> es la carga de calcio más pequeña (~590mg frente a ~675mg del Skyr), así que es la que conviene dejar más cerca del almuerzo. Y separarlos 30 min parte los ~1.265mg en dos dosis, que absorben mejor que una sola — por encima de ~500mg por toma la absorción de calcio cae.<br/><br/>
-        <b style={{color:'#e2e8f0'}}>Parmesano móvil (18/08/2026):</b> en los días A el almuerzo es pollo, con hierro despreciable, así que el parmesano se va a las <b>12:00</b> — separa las dos cargas de calcio 90 min en vez de 30 y mejora la absorción del propio calcio. En los días C vuelve a las <b>11:00</b> para no comerse las 2 h de margen antes del hígado. Los días B no llevan parmesano.<br/><br/>
-        <b style={{color:'#e2e8f0'}}>Si no te cabe:</b> sacrifica la separación entre Skyr y parmesano (júntalos a las 10:45), nunca las 2 h de margen. Los días que importan de verdad son <b>domingo y jueves (hígado), martes y sábado (ternera)</b>: esos respétalos.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Parmesano móvil (18/08/2026):</b> en los días A el almuerzo es pollo, con hierro despreciable, así que el parmesano se va a las <b>13:00</b> — separa las dos cargas de calcio 90 min en vez de 30 y mejora la absorción del propio calcio. En los días C vuelve a las <b>12:00</b> para no comerse las 2 h de margen antes del hígado. Los días B no llevan parmesano.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Re-espaciado del 5/09/2026:</b> con el almuerzo a las 14:30 quedaba un hueco de 3 h 30 antes de comer, así que el Skyr pasó de 10:30 a <b>11:30</b> y el parmesano de 11:00 a <b>12:00</b> (días A, de 12:00 a <b>13:00</b>). Fue <b>por comodidad, no por absorción</b> — las restricciones duras ya se cumplían con el horario viejo. Huecos ahora: 3 h · 30 min · 2 h 30, con el margen calcio→hierro en <b>2 h 30</b>. Si algún día hay que recortar, se recorta de aquí y se vuelve al horario viejo: la regla intocable siguen siendo las 2 h antes del hierro.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Si no te cabe:</b> sacrifica la separación entre Skyr y parmesano (júntalos a las 11:45), nunca las 2 h de margen. Los días que importan de verdad son <b>domingo y jueves (hígado), martes y sábado (ternera)</b>: esos respétalos.<br/><br/>
         Agua, la que quieras y cuando quieras. No interfiere con nada.
       </div>
 
@@ -3184,7 +3185,7 @@ function SupplementsTab() {
       }}>
         <div style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.6 }}>
           <b style={{color:'#f8fafc'}}>Desayuno (~8:30):</b> 1 cáp Omega-3. <b style={{color:'#EF4444'}}>Nada más</b> — el desayuno lleva el hierro no hemo del día y no debe compartir comida con zinc ni con calcio.<br/>
-          <b style={{color:'#f8fafc'}}>Media mañana (10:30 / 11:00):</b> Skyr y parmesano, solos. Sin suplementos.<br/>
+          <b style={{color:'#f8fafc'}}>Media mañana (11:30 / 12:00):</b> Skyr y parmesano, solos. Sin suplementos.<br/>
           <b style={{color:'#f8fafc'}}>Almuerzo:</b> D3+K2 + Magnesio + 2 cáps Omega-3 (con aceite de oliva = absorción óptima).<br/>
           <b style={{color:'#f8fafc'}}>Días B (Mar · Sáb):</b> <b style={{color:'#F59E0B'}}>cero cápsulas de Omega-3</b> — el salmón ya aporta ~5.000mg de EPA+DHA. D3+K2 y magnesio sí, como siempre.<br/>
           <b style={{color:'#f8fafc'}}>Zinc:</b> ⏸ suspendido hasta la analítica. Si se retoma, va en el <b>almuerzo</b> (no en el desayuno) y se salta los días con hígado (Dom y Jue).
