@@ -218,6 +218,30 @@ const VOLUME_SQUAT = {
   'Peak':       { pct: 0.70, sets: [8, 8, 7] },
 };
 
+// ─── LEG CURL DE VOLUMEN (miércoles) — añadido 05/09/2026 ────────────────────
+// Mismo movimiento que se hizo con la sentadilla, y por dos motivos:
+//
+// 1) FRECUENCIA. El leg curl es el único trabajo de FLEXIÓN DE RODILLA del plan;
+//    peso muerto y hip thrust cargan isquios por extensión de cadera, que es otra
+//    función. Tenía una sola exposición semanal, y de ella cuelga el objetivo
+//    terciario (prevención de rodilla, 4 cirugías de menisco).
+// 2) FATIGA PREVIA. En el sábado va el TERCERO, detrás de peso muerto y
+//    sentadilla. Lo que se le pide ahí es el énfasis excéntrico que sustituyó al
+//    Nordic curl, y eso es justo lo que peor sale con los isquios ya fritos.
+//
+// Las 8 series del sábado pasan a 4 + 4. El usuario nunca pasaba de 4 en una
+// sesión, así que en la práctica esto no sube el volumen: lo hace completable.
+// Tabla propia por la misma razón que la sentadilla de volumen: PROG baja a
+// series de 1 repetición en Peak y ocho singles de leg curl no significan nada.
+// Tres puntos más ligera que VOLUME_SQUAT porque es aislamiento y porque la
+// fase excéntrica va frenada.
+const VOLUME_LEGCURL = {
+  'Base':       { pct: 0.65, sets: [10, 9, 9, 8] },
+  'Transición': { pct: 0.68, sets: [10, 9, 9, 8] },
+  'Intensidad': { pct: 0.70, sets: [9, 8, 8, 7] },
+  'Peak':       { pct: 0.68, sets: [8, 8, 7] },
+};
+
 // ─── MANCUERNAS REALES ────────────────────────────────────────────────────────
 // ⚠️ Ajusta este array a las mancuernas que tienes de verdad en el gimnasio.
 const DUMBBELL_WEIGHTS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
@@ -394,7 +418,7 @@ const PLANK_SECONDS = {  // segundos por serie, 3 series — plancha con disco s
 const ELBOW_NOTE = 'NO bloquees el codo del todo al final del recorrido: el pico de tensión en el bloqueo es lo que irrita la inserción. Mantén las repeticiones del plan. Si vuelve a quemar con la carga ya bajada, párate y dilo — entonces el problema es de volumen, no de peso.';
 const DELOAD_ELBOW = {
   factor: 0.82,               // −18 %
-  until: '2026-09-02',
+  until: '2026-09-19',   // pospuesta el 05/09/2026: dos semanas sin entrenar con regularidad, no había nada que revisar
   label: 'Descarga de codo',
   why: 'Irritación de la inserción medial del tríceps (19/08). Baja el pico de tensión, no el volumen.',
 };
@@ -454,6 +478,9 @@ const DAYS = [
       { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 140, unit: 'kg',
         byPhase: VOLUME_SQUAT,
         note: 'Segunda exposición de cuádriceps en la semana. Profundidad completa y controlado — busca 2-3 repeticiones en reserva, no llegues al fallo. Si notas la rodilla, este es el primer bloque que se recorta.' },
+      { name: 'Leg curl machine (volumen)', rmRef: 'Leg curl machine', rm: 97.5, unit: 'kg',
+        byPhase: VOLUME_LEGCURL,
+        note: 'Segunda exposición semanal de FLEXIÓN de rodilla — peso muerto y hip thrust cargan isquios por extensión de cadera, que es otra función. Aquí llegas fresco, así que es donde de verdad puedes frenar la bajada: tirón fuerte para contraer y vuelta lenta y controlada. Ese excéntrico es lo que sustituye al Nordic curl. 2-3 repeticiones en reserva.' },
     ]
   },
   {
@@ -493,8 +520,8 @@ const DAYS = [
     exercises: [
       { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
       { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30 },
-      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 8,
-        note: 'Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio (énfasis en la parte excéntrica) sin necesitar la fuerza de un Nordic curl completo.' },
+      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 4,
+        note: 'De 8 series a 4 el 05/09/2026: las otras 4 se hacen el miércoles, en fresco (ver VOLUME_LEGCURL). Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio sin necesitar la fuerza de un Nordic curl completo. Aquí vas el tercero, detrás de peso muerto y sentadilla: si el excéntrico ya no se puede frenar, corta la serie.' },
       { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
       { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
         equipLabel: 'Anti-rotación · por lado', unitSuffix: 's/lado',
