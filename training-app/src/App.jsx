@@ -91,8 +91,45 @@ function vlFor(ex, weekIdx) {
   return (cat === 'olympic' || cat === 'heavy' || cat === 'compound') ? t.heavy : t.other;
 }
 
-// Weight rounded up to nearest 2.5kg
-const wt = (rm, pct) => Math.ceil(rm * pct / 2.5) * 2.5;
+// ─── REDONDEO A LA BAJA CON TOLERANCIA (decisión del usuario, 17/09/2026) ────
+// Antes redondeaba HACIA ARRIBA al múltiplo de 2,5 (`Math.ceil`). Regla nueva:
+// **se redondea a la baja, salvo que el escalón de arriba se pase del objetivo
+// por menos de ROUND_TOL_KG.** Nunca se fuerza de forma apreciable, y no se tira
+// carga por un artefacto de redondeo.
+//
+// Qué lo motivó: el shoulder press. Su 70 % son 18,55 kg y la app pedía 20 —el
+// 75,5 %— teniendo la mancuerna de 18 al lado. Era el único ejercicio del plan
+// al que el doble redondeo (arriba al 2,5, luego abajo a la mancuerna) le subía
+// la intensidad, y llevaba todo el ciclo entrenándose más pesado de lo previsto.
+//
+// Por qué la tolerancia y no "a la baja" a secas: donde el escalón disponible es
+// grande comparado con la carga, a la baja puro tiraba un 17-20 %. Las
+// elevaciones laterales son el caso claro — su 70 % son 11,90 kg y la mancuerna
+// de 12 se pasa por CIEN GRAMOS: bajar a 10 deja el ejercicio al 58,8 % del RM,
+// y a esa intensidad las repeticiones del plan se hacen solas y el RIR deja de
+// detectar RM inflados, que es justo para lo que está.
+//
+// ⚠ Los olímpicos y el peso muerto NO usan esto: van por `wtOly`, que redondea
+// al más cercano a propósito para respetar la forma de la rampa por series.
+const ROUND_TOL_KG = 1.0;
+
+// Escalón utilizable más cercano por debajo del objetivo, con la tolerancia
+// aplicada hacia arriba. `steps` puede ser un tamaño de escalón (2,5 · 1,5) o
+// una lista de pesos reales disponibles (las mancuernas).
+function roundLoad(target, steps) {
+  if (Array.isArray(steps)) {
+    const below = steps.filter(w => w <= target);
+    const above = steps.filter(w => w > target);
+    const lo = below.length ? below[below.length - 1] : steps[0];
+    const hi = above.length ? above[0] : null;
+    return (hi !== null && hi - target < ROUND_TOL_KG) ? hi : lo;
+  }
+  const lo = Math.max(steps, Math.floor(target / steps) * steps);
+  const hi = lo + steps;
+  return (hi - target < ROUND_TOL_KG) ? hi : lo;
+}
+
+const wt = (rm, pct) => roundLoad(rm * pct, 2.5);
 // Los olímpicos y el peso muerto llevan tabla propia de rampa por series, guardada
 // como % del RM (no en kg): así se recalcula sola al cambiar el RM. Redondeo al
 // 2,5 más cercano, no hacia arriba, para respetar la rampa original.
@@ -245,6 +282,9 @@ const VOLUME_LEGCURL = {
 // ─── MANCUERNAS REALES ────────────────────────────────────────────────────────
 // ⚠️ Ajusta este array a las mancuernas que tienes de verdad en el gimnasio.
 const DUMBBELL_WEIGHTS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
+// ⚠ SUPERADA por `roundLoad(target, DUMBBELL_WEIGHTS)` el 17/09/2026. Se queda
+// porque no molesta, pero NO usarla: redondea siempre a la baja, sin la
+// tolerancia de 1 kg, y volvería a dejar las elevaciones laterales al 58,8 %.
 function nearestDumbbell(target) {
   const avail = DUMBBELL_WEIGHTS.filter(w => w <= target);
   if (avail.length === 0) return DUMBBELL_WEIGHTS[0];
@@ -455,8 +495,14 @@ const DAYS = [
       { name: 'Bicep curls cable pull',            rm: 36, unit: 'kg',     testMethod: 'repmax' },
       { name: 'Bicep curls sitting dumbbell',      rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
       { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
+      // ORDEN CAMBIADO 17/09/2026: el shoulder press sube DELANTE de las
+      // elevaciones laterales. Iba detrás de 6 series de laterales, o sea que
+      // llegaba al compuesto con el deltoides ya cocido — el mismo error que se
+      // corrigió el 20/08 en el jueves, pero aquí con solapamiento muscular
+      // directo. El compuesto va primero; el aislamiento ligero aguanta después.
+      { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
+        note: 'Va delante de las elevaciones laterales desde el 17/09/2026, y su carga baja de 20 a 18 kg con el redondeo a la baja (el 70 % real son 18,55). Si con esto siguen sin salir las repeticiones del plan, entonces sí es el RM de 26,5 y hay que retestearlo en fresco.' },
       { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 6 },
-      { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
       { name: 'Butterfly reverse cable pull',      rm: 10.5, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
         note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
     ]
@@ -490,7 +536,17 @@ const DAYS = [
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
       { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
         note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
-      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
+      // FONDOS ELIMINADOS 17/09/2026 (decisión del usuario).
+      // Para TRÍCEPS eran redundantes: en los fondos el hombro queda extendido
+      // hacia atrás, lo que ACORTA la cabeza larga, así que cargan lateral y
+      // medial en la misma posición articular que el press banca. Y el tríceps ya
+      // recibía 24 series semanales de empuje más 12 directas.
+      // Para PECHO tampoco eran necesarios: banca, inclinado y flys, los tres dos
+      // días por semana. Lo único que se pierde es la posición estirada profunda
+      // del pectoral, que los flys cubren en parte.
+      // Efecto colateral buscado: quitan la carga más alta que recibía el codo en
+      // toda la semana, con la inserción medial aún en descarga.
+      // `DIPS_REPS` se conserva más arriba por si se quieren recuperar.
       // ORDEN CAMBIADO 20/08/2026: el shoulder press sube por delante del tríceps.
       // Iba el último de siete, detrás de banca, inclinado, flys, fondos y dos de
       // tríceps — los seis usan tríceps, así que medía fatiga de tríceps y no
@@ -544,7 +600,9 @@ const DAYS = [
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
       { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
         note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
-      { name: 'Dips',                              type: 'bw', repsByPhase: DIPS_REPS },
+      // FONDOS ELIMINADOS 17/09/2026 — ver el comentario del bloque del Jueves.
+      // El domingo queda en tres ejercicios a propósito: entrenando siete días sin
+      // ningún descanso real, es lo más parecido a un día ligero que hay.
     ]
   },
 ];
@@ -1526,14 +1584,15 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const dl = deloadStatus(ex.deload);
   const targetKg = effRM * (ex.deload ? ex.deload.factor : 1) * p.pct;
   let weight = wt(effRM * (ex.deload ? ex.deload.factor : 1), p.pct);
-  if (ex.dumbbell) weight = nearestDumbbell(weight);
+  // Mancuernas y escalones propios parten del objetivo EXACTO, no del peso ya
+  // redondeado: encadenar dos redondeos daba resultados arbitrarios (era lo que
+  // subía el shoulder press al 75,5 %) y, desde que `wt` va a la baja, redondearía
+  // dos veces hacia abajo.
+  if (ex.dumbbell) weight = roundLoad(targetKg, DUMBBELL_WEIGHTS);
   // Cargas que sólo existen en escalones propios (`step`). En la torre de flys y
   // butterfly reverse los escalones son de 1,5 kg — corregido el 24/08/2026, antes
   // ponía 3,75 porque se daba por bueno un multiplicador ×1,5 que no existe.
-  // El redondeo genérico al 2,5 pedía números que no hay en la máquina. Se redondea
-  // al múltiplo de `step` más CERCANO —no hacia arriba— porque hacia arriba se sale
-  // del rango útil.
-  else if (ex.step) weight = Math.max(ex.step, Math.round(targetKg / ex.step) * ex.step);
+  else if (ex.step) weight = roundLoad(targetKg, ex.step);
   const isArm = ex.unit === 'kg/arm';
   const backoffWeight = ex.backoff ? wt(effRM, p.pct * ex.backoff.factor) : null;
   return (
