@@ -166,7 +166,7 @@ const REST_HEAVY = ['Bench press barbell', 'Squat barbell', 'Deadlift', 'Hip thr
 const REST_COMPOUND = [
   'Bench press inclined', 'Latzug breit', 'Leg curl',
   'Dips', 'Shoulder press sitting dumbbell', 'Seated row cable pull',
-  'One-armed row cable pull',
+  'One-armed row',                      // cable o mancuerna: mismo descanso
 ];
 
 function restCategory(ex) {
@@ -512,9 +512,12 @@ const DAYS = [
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
       { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
-      { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder' },
-      { name: 'Seated row cable pull',       rm: 91,  unit: 'kg',     testMethod: 'repmax' },
-      { name: 'One-armed row cable pull',    rm: 45.5,  unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder', step: 5,
+        note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
+      { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
+        note: 'Torre de latzug/poleas de espalda: escalones de 5 kg (confirmado 18/09/2026). RM corregido de 91 a 80 el 18/09: con los 91 la app pedía 60 kg y el usuario sacaba las repeticiones justas, o sea 0-1 en reserva contra los 3 de la semana 1 — eso pone los 60 kg en el ~76 % y no en el 70 %. El 91 venía de repmax (Epley).' },
+      { name: 'One-armed row dumbbell',      rm: 40,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
+        note: 'Cambiado de polea a MANCUERNA el 18/09/2026. En la torre los escalones son de 5 kg, lo que sobre un máximo de ~40 son saltos del 12,5 % y dejaban la carga clavada cuatro semanas seguidas; con mancuerna son de 2 kg, o sea un 5 %. Apoya mano y rodilla del lado contrario en un banco, espalda plana y tira con el codo pegado al cuerpo. ⚠ RM 40 HEREDADO de la versión en polea — es una estimación, no una medida. La primera serie de la semana 1 son 28 kg y deben salir 9 repeticiones dejándote 3 en reserva: si no cuadra, dilo y se ajusta. ⚠ TECHO: las mancuernas llegan a 32 kg, o sea el 80 % de ese RM, así que a partir de la semana 7 la carga se queda corta. Ese es el plazo natural para pasar este ejercicio a rango de repeticiones.' },
     ]
   },
   {
@@ -524,9 +527,9 @@ const DAYS = [
       { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 140, unit: 'kg',
         byPhase: VOLUME_SQUAT,
         note: 'Segunda exposición de cuádriceps en la semana. Profundidad completa y controlado — busca 2-3 repeticiones en reserva, no llegues al fallo. Si notas la rodilla, este es el primer bloque que se recorta.' },
-      { name: 'Leg curl machine (volumen)', rmRef: 'Leg curl machine', rm: 97.5, unit: 'kg',
+      { name: 'Leg curl machine (volumen)', rmRef: 'Leg curl machine', rm: 97.5, unit: 'kg', step: 5,
         byPhase: VOLUME_LEGCURL,
-        note: 'Segunda exposición semanal de FLEXIÓN de rodilla — peso muerto y hip thrust cargan isquios por extensión de cadera, que es otra función. Aquí llegas fresco, así que es donde de verdad puedes frenar la bajada: tirón fuerte para contraer y vuelta lenta y controlada. Ese excéntrico es lo que sustituye al Nordic curl. 2-3 repeticiones en reserva.' },
+        note: 'Segunda exposición semanal de FLEXIÓN de rodilla — peso muerto y hip thrust cargan isquios por extensión de cadera, que es otra función. Aquí llegas fresco, así que es donde de verdad puedes frenar la bajada: tirón fuerte para contraer y vuelta lenta y controlada. Ese excéntrico es lo que sustituye al Nordic curl. 2-3 repeticiones en reserva. La máquina va de 5 en 5 kg (confirmado 21/09/2026), así que con esta tabla la carga se queda en 60 kg las semanas 1-4 y 65 el resto: el escalón se come el matiz entre fases, y no pasa nada porque aquí se busca estímulo constante, no subir intensidad. ⚠ El RM de 97,5 viene de repmax, el método que lleva 6 de 6 fallando: si a 60 kg te sobran muchas repeticiones, dilo.' },
     ]
   },
   {
@@ -563,9 +566,12 @@ const DAYS = [
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
       { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
-      { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder' },
-      { name: 'Seated row cable pull',       rm: 91,  unit: 'kg',     testMethod: 'repmax' },
-      { name: 'One-armed row cable pull',    rm: 45.5,  unit: 'kg/arm', testMethod: 'repmax' },
+      { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder', step: 5,
+        note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
+      { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
+        note: 'Torre de latzug/poleas de espalda: escalones de 5 kg (confirmado 18/09/2026). RM corregido de 91 a 80 el 18/09: con los 91 la app pedía 60 kg y el usuario sacaba las repeticiones justas, o sea 0-1 en reserva contra los 3 de la semana 1 — eso pone los 60 kg en el ~76 % y no en el 70 %. El 91 venía de repmax (Epley).' },
+      { name: 'One-armed row dumbbell',      rm: 40,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
+        note: 'Cambiado de polea a MANCUERNA el 18/09/2026. En la torre los escalones son de 5 kg, lo que sobre un máximo de ~40 son saltos del 12,5 % y dejaban la carga clavada cuatro semanas seguidas; con mancuerna son de 2 kg, o sea un 5 %. Apoya mano y rodilla del lado contrario en un banco, espalda plana y tira con el codo pegado al cuerpo. ⚠ RM 40 HEREDADO de la versión en polea — es una estimación, no una medida. La primera serie de la semana 1 son 28 kg y deben salir 9 repeticiones dejándote 3 en reserva: si no cuadra, dilo y se ajusta. ⚠ TECHO: las mancuernas llegan a 32 kg, o sea el 80 % de ese RM, así que a partir de la semana 7 la carga se queda corta. Ese es el plazo natural para pasar este ejercicio a rango de repeticiones.' },
       { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 4 },
       { name: 'Butterfly reverse cable pull', rm: 10.5,  unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
         note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
@@ -576,7 +582,7 @@ const DAYS = [
     exercises: [
       { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
       { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30 },
-      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 4,
+      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 4, step: 5,
         note: 'De 8 series a 4 el 05/09/2026: las otras 4 se hacen el miércoles, en fresco (ver VOLUME_LEGCURL). Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio sin necesitar la fuerza de un Nordic curl completo. Aquí vas el tercero, detrás de peso muerto y sentadilla: si el excéntrico ya no se puede frenar, corta la serie.' },
       { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
       { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
@@ -650,7 +656,7 @@ const MUSCLE_TAG = {
   'Flys standing cable pull':          'pecho',
   'Leg curl machine':                  'isquios',
   'Seated row cable pull':             'espalda',
-  'One-armed row cable pull':          'espalda',
+  'One-armed row dumbbell':            'espalda',
 };
 
 function interleaveByMuscle(list) {
