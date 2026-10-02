@@ -248,6 +248,9 @@ function setsCountFor(ex, weekIdx) {
 // la tabla PROG baja a series de 1 en Peak, y aquí lo que se busca es estímulo
 // de hipertrofia constante a 2-3 RIR, no intensidad. Sábado→miércoles son 4 días
 // y miércoles→sábado 3: el reparto más simétrico posible en la semana.
+// ⚠ SIN USO desde el 02/10/2026: las series extra de sentadilla del miércoles se
+// eliminaron al reorganizar la semana. Se conserva la tabla por si se recuperan —
+// bastaría con volver a añadir la fila `Squat barbell (volumen)` a un día.
 const VOLUME_SQUAT = {
   'Base':       { pct: 0.68, sets: [10, 9, 9, 8] },
   'Transición': { pct: 0.70, sets: [10, 9, 9, 8] },
@@ -305,9 +308,18 @@ function loadRM() {
 function persistRM(store) {
   try { localStorage.setItem('ta_rm', JSON.stringify(store)); } catch {}
 }
+// ─── POLÍTICA DE RM — CAMBIADA EL 02/10/2026 ────────────────────────────────
+// Antes: un RM guardado en el `localStorage` del dispositivo PISABA el valor del
+// código. Eso produjo meses de contradicciones — el móvil calculando con un RM y
+// el plan con otro, en silencio, y hubo que inventar un banner de aviso para
+// detectarlo.
+// Ahora: **el plan usa SIEMPRE el RM del código.** Los RM se fijan aquí, a mano,
+// después de que el usuario y Claude revisen juntos el resultado de la semana de
+// test. La pestaña Test sigue midiendo y guardando su estimación, pero como
+// REGISTRO para comentarlo, no como fuente de verdad. Una sola versión de cada
+// número, y la decisión de cambiarlo deja de ser accidental.
 function effectiveRM(ex, rmStore) {
-  const o = rmStore[ex.rmRef || ex.name];
-  return o ? o.rm : ex.rm;
+  return ex.rm;
 }
 
 // ─── HISTORIAL DE RM: cada test guardado se acumula aquí (no se sobrescribe),
@@ -432,38 +444,30 @@ const PLANK_SECONDS = {  // segundos por serie, 3 series — plancha con disco s
   'Peak':       [50, 45, 40],
 };
 
-// ─── DESCARGA DE CODO (20/08/2026 → revisar el 02/09/2026) ──────────────────
-// El 19/08, primera sesión de tríceps del ciclo nuevo, apareció ardor en la
-// inserción medial del tríceps, en el codo. Solo bajo carga, nada en reposo, y
-// SOLO en las extensiones en polea: press banca, inclinado y fondos fueron
-// perfectos ese mismo día. Eso descarta sobrecarga sistémica del tríceps (los
-// fondos son la carga más alta de la sesión) y apunta al patrón de extensión,
-// donde la polea mantiene tensión máxima en el bloqueo final del codo — que es
-// justo donde trabaja la cabeza medial y donde banca y fondos ya no llegan.
-// Causa más probable: el RM de este ejercicio subió de 30 a 39 kg en el test de
-// agosto (+30 %) y ésta era la primera sesión aplicándolo.
-// Medida: −18 % de carga dos semanas, manteniendo repeticiones. La irritación de
-// inserción responde a bajar el PICO de tensión, no el trabajo total.
+// ─── CODO: LAS CARGAS REDUCIDAS PASAN A SER LOS RM BUENOS (02/10/2026) ──────
+// Historia: el 19/08/2026, primera sesión de tríceps del ciclo, apareció ardor
+// en la inserción medial del tríceps. Causa probable: el RM de la cuerda había
+// subido de 30 a 39 kg en el test de agosto (+30 % de golpe) por la fórmula de
+// Epley. Se aplicó una descarga del 18 % como medida temporal.
 //
-// ⚠ CÓMO SE IMPLEMENTA, Y POR QUÉ ASÍ (corregido 20/08/2026).
-// La primera versión bajaba el `rm` del código de 46,5 a 38 y de 39 a 32. Eso
-// NO funciona en un dispositivo que tenga los RM del test de agosto guardados:
-// `effectiveRM` da prioridad al valor de `localStorage` (§8 de memoria.md), así
-// que el móvil habría seguido calculando con 46,5 y la descarga no habría
-// existido justo donde importa. Y de paso el banner de "RM descuadrado" saltaba
-// contra su propia descarga.
-// Ahora el RM se queda en el REAL y la descarga es un factor aparte que se
-// aplica al peso final. Sobrevive a lo guardado, la pestaña Test sigue
-// mostrando el máximo verdadero y el registro no se ensucia.
-const ELBOW_NOTE = 'NO bloquees el codo del todo al final del recorrido: el pico de tensión en el bloqueo es lo que irrita la inserción. Mantén las repeticiones del plan. Si vuelve a quemar con la carga ya bajada, párate y dilo — entonces el problema es de volumen, no de peso.';
+// Seis semanas después el codo ha mejorado pero NO está limpio. El usuario
+// decide **adoptar las cargas reducidas como las definitivas** en vez de volver
+// a subir. Los RM pasan de 46,5 → 38 y de 39 → 32, que son exactamente los
+// valores que la descarga venía aplicando: los kilos en pantalla no cambian
+// (27,5 y 22,5 en la semana 1), lo que cambia es que ya no son "temporales".
+//
+// `DELOAD_ELBOW` y `deloadStatus` quedan SIN USO. Se conservan porque el
+// mecanismo es correcto y sirve para la próxima lesión: multiplica el peso
+// final y no el RM.
+const ELBOW_NOTE = 'RM bajado a su valor definitivo el 02/10/2026 tras seis semanas de irritación en la inserción medial (antes 46,5 / 39 kg, con una descarga temporal del 18 %). NO bloquees el codo del todo al final del recorrido: el pico de tensión en el bloqueo es lo que irrita la inserción. Si vuelve a quemar con esta carga, párate y dilo.';
 const DELOAD_ELBOW = {
-  factor: 0.82,               // −18 %
-  until: '2026-09-19',   // pospuesta el 05/09/2026: dos semanas sin entrenar con regularidad, no había nada que revisar
+  factor: 0.82,
+  until: '2026-09-19',
   label: 'Descarga de codo',
   why: 'Irritación de la inserción medial del tríceps (19/08). Baja el pico de tensión, no el volumen.',
 };
 // Devuelve el estado de una descarga: activa siempre (nunca se retira sola —
-// la vuelta se decide mirando el codo, no el calendario), pero avisa cuando la
+// la vuelta se decide mirando la lesión, no el calendario), pero avisa cuando la
 // fecha de revisión ya ha pasado.
 function deloadStatus(dl) {
   if (!dl) return null;
@@ -473,38 +477,32 @@ function deloadStatus(dl) {
   return { pct, overdue, dateLabel: due.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) };
 }
 
-// ─── DAY DEFINITIONS ─────────────────────────────────────────────────────────
-// type: 'non-olympic' | 'olympic' | 'bw' (bodyweight)
-// testMethod: 'video' (velocidad + regresión carga-velocidad) · 'ladder' (registro
-// directo del peso máximo con técnica limpia) · 'repmax' (test de reps + fórmula,
-// para ejercicios de mancuerna con pesos disponibles discretos)
 const DAYS = [
+  // ─── REPARTO SEMANAL REORGANIZADO 02/10/2026 ───────────────────────────────
+  // Motivo: el glúteo se cargaba CUATRO días de siete (martes y viernes por los
+  // olímpicos, miércoles por la sentadilla de volumen, sábado por el LegDay), con
+  // dos pares consecutivos: martes-miércoles y viernes-sábado. El descanso más
+  // largo que tenía era de dos días. El usuario llegó al viernes de la semana 3
+  // sin poder hacer los olímpicos por el glúteo derecho cargado.
+  // Causa de fondo que nadie había visto: clean & jerk y power snatch son trabajo
+  // de extensión de cadera, pero estaban archivados como "día de espalda" y no
+  // contaban como pierna en ninguna cuenta de volumen del plan.
+  // Reparto nuevo: la cadera se carga martes, viernes y domingo, con al menos un
+  // día libre entre todos.
   {
-    name: 'Lunes', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
+    name: 'Lunes', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
+    // El día de pecho COMPLETO va el lunes y no el jueves a propósito: el día de
+    // brazos es el miércoles, y colgar shoulder press + tríceps del jueves los
+    // dejaría dos días seguidos — el riesgo de codo de agosto. Desde el lunes
+    // quedan separados por el martes.
     exercises: [
-      // DESCARGA DE CODO 20/08/2026 → revisar el 02/09. El RM se queda en el real
-      // y el −18 % se aplica como factor, para que no lo pise el valor guardado.
-      { name: 'Triceps stretches cable pull bar',  rm: 46.5, unit: 'kg',   testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
-      { name: 'Triceps extension cable pull cord', rm: 39, unit: 'kg',     testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
-      // ELIMINADO DEL PLAN 24/08/2026 (decisión del usuario). Estuvo suspendido
-      // desde el 20/08 por la irritación de codo. El trabajo directo de tríceps se
-      // queda en barra + cuerda, y los fondos como tercer movimiento.
-      // Nota para el histórico: su RM de 28 kg/brazo parecía imposible (56 kg a dos
-      // manos frente a 46,5 y 39 de las versiones bilaterales). Se explicó el
-      // 24/08: se había anotado aplicando el falso ×1,5. El real serían ~18,7.
-      { name: 'Bicep curls cable pull',            rm: 36, unit: 'kg',     testMethod: 'repmax' },
-      { name: 'Bicep curls sitting dumbbell',      rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true },
-      // ORDEN CAMBIADO 17/09/2026: el shoulder press sube DELANTE de las
-      // elevaciones laterales. Iba detrás de 6 series de laterales, o sea que
-      // llegaba al compuesto con el deltoides ya cocido — el mismo error que se
-      // corrigió el 20/08 en el jueves, pero aquí con solapamiento muscular
-      // directo. El compuesto va primero; el aislamiento ligero aguanta después.
-      { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
-        note: 'Va delante de las elevaciones laterales desde el 17/09/2026, y su carga baja de 20 a 18 kg con el redondeo a la baja (el 70 % real son 18,55). Si con esto siguen sin salir las repeticiones del plan, entonces sí es el RM de 26,5 y hay que retestearlo en fresco.' },
-      { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 6 },
-      { name: 'Butterfly reverse cable pull',      rm: 10.5, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
-        note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
+      { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
+      { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
+      { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', repRange: true, step: 1.5,
+        note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
+      { name: 'Shoulder press sitting dumbbell',   rm: 26.5,   unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true,
+        note: 'Va antes del tríceps desde el 20/08/2026. Si aun así no salen las repeticiones del plan, entonces sí es el RM y hay que retestearlo en fresco.' },
+      { name: 'Triceps extension cable pull cord', rm: 32,   unit: 'kg', testMethod: 'repmax', repRange: true, note: ELBOW_NOTE },
     ]
   },
   {
@@ -516,17 +514,33 @@ const DAYS = [
         note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
       { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
         note: 'Torre de latzug/poleas de espalda: escalones de 5 kg (confirmado 18/09/2026). RM corregido de 91 a 80 el 18/09: con los 91 la app pedía 60 kg y el usuario sacaba las repeticiones justas, o sea 0-1 en reserva contra los 3 de la semana 1 — eso pone los 60 kg en el ~76 % y no en el 70 %. El 91 venía de repmax (Epley).' },
-      { name: 'One-armed row dumbbell',      rm: 40,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
-        note: 'Cambiado de polea a MANCUERNA el 18/09/2026. En la torre los escalones son de 5 kg, lo que sobre un máximo de ~40 son saltos del 12,5 % y dejaban la carga clavada cuatro semanas seguidas; con mancuerna son de 2 kg, o sea un 5 %. Apoya mano y rodilla del lado contrario en un banco, espalda plana y tira con el codo pegado al cuerpo. ⚠ RM 40 HEREDADO de la versión en polea — es una estimación, no una medida. La primera serie de la semana 1 son 28 kg y deben salir 9 repeticiones dejándote 3 en reserva: si no cuadra, dilo y se ajusta. ⚠ TECHO: las mancuernas llegan a 32 kg, o sea el 80 % de ese RM, así que a partir de la semana 7 la carga se queda corta. Ese es el plazo natural para pasar este ejercicio a rango de repeticiones.' },
+      { name: 'One-armed row cable pull',    rm: 40,  unit: 'kg/arm', testMethod: 'repmax', step: 5, repRange: true,
+        note: 'Vuelta a POLEA el 03/10/2026: se probó con mancuerna y al usuario no le convence. El motivo del cambio se cae solo — se pasó a mancuerna porque el escalón de 5 kg de la torre daba saltos del 12,5 % y dejaba la carga clavada semanas, y con rango de repeticiones eso deja de importar: si 30 kg se quedan cortos, subes repeticiones hasta el tope del rango y entonces cambias de escalón. ⚠ Su RM de 40 nunca se ha medido en limpio, pero con rango de repeticiones ya no manda: solo siembra el peso inicial.' },
     ]
   },
   {
-    name: 'Miércoles', label: 'Piernas ligeras & Movilidad', emoji: '🦵', nutriDay: 'A',
-    special: 'stretch',
+    name: 'Miércoles', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
     exercises: [
-      { name: 'Squat barbell (volumen)', rmRef: 'Squat barbell', rm: 140, unit: 'kg',
-        byPhase: VOLUME_SQUAT,
-        note: 'Segunda exposición de cuádriceps en la semana. Profundidad completa y controlado — busca 2-3 repeticiones en reserva, no llegues al fallo. Si notas la rodilla, este es el primer bloque que se recorta.' },
+      { name: 'Triceps stretches cable pull bar',  rm: 38, unit: 'kg',     testMethod: 'repmax', repRange: true, note: ELBOW_NOTE },
+      { name: 'Triceps extension cable pull cord', rm: 32, unit: 'kg',     testMethod: 'repmax', repRange: true, note: ELBOW_NOTE },
+      { name: 'Bicep curls cable pull',            rm: 36, unit: 'kg',     testMethod: 'repmax', repRange: true },
+      // CURL DE MANCUERNA SENTADO ELIMINADO 03/10/2026 (lo propuso el usuario).
+      // Era redundante: supinado igual que el de polea y sobre el mismo músculo en
+      // la misma posición — sólo cambiaba la curva de resistencia. Los dos que
+      // quedan NO se solapan: polea (supinado, bíceps braquial, tensión constante)
+      // y martillo (agarre neutro, braquial y braquiorradial).
+      // Bíceps directo: 12 → 8 series semanales. Sigue sobrando, porque martes y
+      // viernes suman ~24 series de tracción (latzug, seated row, remo a un brazo
+      // y los tirones de clean y snatch) donde el bíceps trabaja de ayudante.
+      { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true },
+      { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true,
+        note: 'Va delante de las elevaciones laterales desde el 17/09/2026, y su carga baja de 20 a 18 kg con el redondeo a la baja (el 70 % real son 18,55). Si con esto siguen sin salir las repeticiones del plan, entonces sí es el RM de 26,5 y hay que retestearlo en fresco.' },
+      { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true, setCount: 6 },
+      { name: 'Butterfly reverse cable pull',      rm: 10.5, unit: 'kg/arm', testMethod: 'repmax', repRange: true, step: 1.5,
+        note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
+      // El leg curl de volumen se queda en el día de brazos: la FLEXIÓN de rodilla
+      // no carga glúteo (eso es extensión de cadera), así que no toca el problema
+      // de espaciado y conserva las dos exposiciones semanales de isquios.
       { name: 'Leg curl machine (volumen)', rmRef: 'Leg curl machine', rm: 97.5, unit: 'kg', step: 5,
         byPhase: VOLUME_LEGCURL,
         note: 'Segunda exposición semanal de FLEXIÓN de rodilla — peso muerto y hip thrust cargan isquios por extensión de cadera, que es otra función. Aquí llegas fresco, así que es donde de verdad puedes frenar la bajada: tirón fuerte para contraer y vuelta lenta y controlada. Ese excéntrico es lo que sustituye al Nordic curl. 2-3 repeticiones en reserva. La máquina va de 5 en 5 kg (confirmado 21/09/2026), así que con esta tabla la carga se queda en 60 kg las semanas 1-4 y 65 el resto: el escalón se come el matiz entre fases, y no pasa nada porque aquí se busca estímulo constante, no subir intensidad. ⚠ El RM de 97,5 viene de repmax, el método que lleva 6 de 6 fallando: si a 60 kg te sobran muchas repeticiones, dilo.' },
@@ -537,28 +551,8 @@ const DAYS = [
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
+      { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', repRange: true, step: 1.5,
         note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
-      // FONDOS ELIMINADOS 17/09/2026 (decisión del usuario).
-      // Para TRÍCEPS eran redundantes: en los fondos el hombro queda extendido
-      // hacia atrás, lo que ACORTA la cabeza larga, así que cargan lateral y
-      // medial en la misma posición articular que el press banca. Y el tríceps ya
-      // recibía 24 series semanales de empuje más 12 directas.
-      // Para PECHO tampoco eran necesarios: banca, inclinado y flys, los tres dos
-      // días por semana. Lo único que se pierde es la posición estirada profunda
-      // del pectoral, que los flys cubren en parte.
-      // Efecto colateral buscado: quitan la carga más alta que recibía el codo en
-      // toda la semana, con la inserción medial aún en descarga.
-      // `DIPS_REPS` se conserva más arriba por si se quieren recuperar.
-      // ORDEN CAMBIADO 20/08/2026: el shoulder press sube por delante del tríceps.
-      // Iba el último de siete, detrás de banca, inclinado, flys, fondos y dos de
-      // tríceps — los seis usan tríceps, así que medía fatiga de tríceps y no
-      // fuerza de hombro (19/08: salió 5-6-5-2 contra un 9-8-8-7 prescrito).
-      { name: 'Shoulder press sitting dumbbell',   rm: 26.5,   unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
-        note: 'Va antes del tríceps desde el 20/08/2026. Si aun así no salen las repeticiones del plan, entonces sí es el RM y hay que retestearlo en fresco.' },
-      // DESCARGA DE CODO 20/08/2026 → revisar el 02/09. RM real, factor aparte.
-      { name: 'Triceps extension cable pull cord', rm: 39,   unit: 'kg', testMethod: 'repmax', deload: DELOAD_ELBOW, note: ELBOW_NOTE },
-      // ELIMINADO DEL PLAN 24/08/2026 — ver comentario en el bloque del Lunes.
     ]
   },
   {
@@ -570,18 +564,28 @@ const DAYS = [
         note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
       { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
         note: 'Torre de latzug/poleas de espalda: escalones de 5 kg (confirmado 18/09/2026). RM corregido de 91 a 80 el 18/09: con los 91 la app pedía 60 kg y el usuario sacaba las repeticiones justas, o sea 0-1 en reserva contra los 3 de la semana 1 — eso pone los 60 kg en el ~76 % y no en el 70 %. El 91 venía de repmax (Epley).' },
-      { name: 'One-armed row dumbbell',      rm: 40,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true,
-        note: 'Cambiado de polea a MANCUERNA el 18/09/2026. En la torre los escalones son de 5 kg, lo que sobre un máximo de ~40 son saltos del 12,5 % y dejaban la carga clavada cuatro semanas seguidas; con mancuerna son de 2 kg, o sea un 5 %. Apoya mano y rodilla del lado contrario en un banco, espalda plana y tira con el codo pegado al cuerpo. ⚠ RM 40 HEREDADO de la versión en polea — es una estimación, no una medida. La primera serie de la semana 1 son 28 kg y deben salir 9 repeticiones dejándote 3 en reserva: si no cuadra, dilo y se ajusta. ⚠ TECHO: las mancuernas llegan a 32 kg, o sea el 80 % de ese RM, así que a partir de la semana 7 la carga se queda corta. Ese es el plazo natural para pasar este ejercicio a rango de repeticiones.' },
-      { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', dumbbell: true, setCount: 4 },
-      { name: 'Butterfly reverse cable pull', rm: 10.5,  unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
+      { name: 'One-armed row cable pull',    rm: 40,  unit: 'kg/arm', testMethod: 'repmax', step: 5, repRange: true,
+        note: 'Vuelta a POLEA el 03/10/2026: se probó con mancuerna y al usuario no le convence. El motivo del cambio se cae solo — se pasó a mancuerna porque el escalón de 5 kg de la torre daba saltos del 12,5 % y dejaba la carga clavada semanas, y con rango de repeticiones eso deja de importar: si 30 kg se quedan cortos, subes repeticiones hasta el tope del rango y entonces cambias de escalón. ⚠ Su RM de 40 nunca se ha medido en limpio, pero con rango de repeticiones ya no manda: solo siembra el peso inicial.' },
+      { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true, setCount: 4 },
+      { name: 'Butterfly reverse cable pull', rm: 10.5,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, step: 1.5,
         note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
     ]
   },
   {
-    name: 'Sábado', label: 'LegDay', emoji: '🦵', nutriDay: 'B',
+    name: 'Sábado', label: 'Descanso & Movilidad', emoji: '🧘', nutriDay: 'B',
+    special: 'stretch',
+    // Único día sin entrenamiento de la semana. Lleva los 10 estiramientos que
+    // antes vivían en el miércoles, el solárium y la SAUNA con contraste.
+    exercises: []
+  },
+  {
+    name: 'Domingo', label: 'LegDay', emoji: '🦵', nutriDay: 'C',
+    // Las series extra de sentadilla del miércoles se ELIMINAN (02/10/2026):
+    // la sentadilla se queda en 4 series. Ver la nota del ejercicio.
     exercises: [
       { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
-      { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30 },
+      { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30,
+        note: 'Las series extra de volumen que estaban en el miércoles se eliminaron el 02/10/2026: la sentadilla se queda en 4 series. ⚠ CONSECUENCIA: el cuádriceps vuelve a UNA exposición semanal, que es lo que la segunda exposición del 6/08 vino a resolver. Y ojo con el motivo: los olímpicos NO sustituyen trabajo de cuádriceps — está comprobado y documentado (network meta-analysis Frontiers 2025: halterofilia SUCRA 0,13 en fuerza máxima de tren inferior frente a 0,95 del entrenamiento tradicional), y además hace POWER clean y POWER snatch, que ni siquiera bajan a sentadilla. La decisión se sostiene por duración de sesión y por espaciado de cadera, no porque los olímpicos cubran el cuádriceps.' },
       { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 4, step: 5,
         note: 'De 8 series a 4 el 05/09/2026: las otras 4 se hacen el miércoles, en fresco (ver VOLUME_LEGCURL). Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio sin necesitar la fuerza de un Nordic curl completo. Aquí vas el tercero, detrás de peso muerto y sentadilla: si el excéntrico ya no se puede frenar, corta la serie.' },
       { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
@@ -599,23 +603,11 @@ const DAYS = [
         formCue: 'caiga la cadera' },
     ]
   },
-  {
-    name: 'Domingo', label: 'ChestDay', emoji: '🏋️', nutriDay: 'C',
-    exercises: [
-      { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
-      { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
-      { name: 'Flys standing cable pull',          rm: 15, unit: 'kg/arm', testMethod: 'repmax', step: 1.5,
-        note: 'Misma torre que el butterfly reverse: escalones de 1,5 kg, número impreso = kilos reales (1:1, verificado 24/08/2026). RM corregido de 23 a 15 el 24/08 — el 23 se había anotado aplicando un ×1,5 que no existe.' },
-      // FONDOS ELIMINADOS 17/09/2026 — ver el comentario del bloque del Jueves.
-      // El domingo queda en tres ejercicios a propósito: entrenando siete días sin
-      // ningún descanso real, es lo más parecido a un día ligero que hay.
-    ]
-  },
 ];
 
 // Días de test (semana 16) — Miércoles, Viernes y Domingo quedan como descanso
 // porque repiten ejercicios ya cubiertos en Lunes/Martes/Jueves/Sábado.
-const TEST_DAY_NAMES = ['Lunes', 'Martes', 'Jueves', 'Sábado'];
+const TEST_DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Domingo'];
 
 // ─── ORDEN DE TEST: SEPARAR EJERCICIOS DEL MISMO MÚSCULO ─────────────────────
 // El orden del día de ENTRENAMIENTO (arriba, en DAYS) está pensado para la
@@ -646,7 +638,6 @@ const MUSCLE_TAG = {
   'Triceps extension cable pull cord': 'triceps',
   'Triceps extension one-armed cable': 'triceps',
   'Bicep curls cable pull':            'biceps',
-  'Bicep curls sitting dumbbell':      'biceps',
   'Bicep curls hammer grip seated':    'biceps',
   'Seated lateral raises dumbbell':    'hombro',
   'Shoulder press sitting dumbbell':   'hombro',
@@ -656,7 +647,7 @@ const MUSCLE_TAG = {
   'Flys standing cable pull':          'pecho',
   'Leg curl machine':                  'isquios',
   'Seated row cable pull':             'espalda',
-  'One-armed row dumbbell':            'espalda',
+  'One-armed row cable pull':          'espalda',
 };
 
 function interleaveByMuscle(list) {
@@ -695,7 +686,12 @@ function interleaveByMuscle(list) {
 // (también interleaveable). El orden de visualización en la pestaña de test
 // sigue siendo Lunes→Martes→Jueves→Sábado; esto solo cambia a quién se le
 // "asigna" cada ejercicio repetido antes de intercalar.
-const TEST_CLAIM_ORDER = ['Jueves', 'Lunes', 'Martes', 'Sábado'];
+// Actualizado 02/10/2026 con el reparto nuevo: el día de pecho es ahora el LUNES,
+// y es el que tiene que reclamar primero el shoulder press y el tríceps — si no,
+// se quedaría con banca + inclinado + flys seguidos y nada con que intercalar.
+// Al miércoles (brazos) le sobran ejercicios: tríceps de barra, 3 de bíceps,
+// laterales y butterfly.
+const TEST_CLAIM_ORDER = ['Lunes', 'Miércoles', 'Martes', 'Domingo'];
 
 function buildTestPlan() {
   const seen = new Set();
@@ -1577,6 +1573,136 @@ function OlympicTable({ ex, weekIdx, rmStore }) {
   );
 }
 
+// ─── EJERCICIOS POR RANGO DE REPETICIONES (03/10/2026) ──────────────────────
+// Diez ejercicios dejan de prescribirse como % de un RM y pasan a progresión
+// doble. Motivo: su RM salía de `repmax` (fórmula de Epley sobre una serie de
+// muchas repeticiones) y ESE MÉTODO HA FALLADO SEIS DE SEIS VECES, con errores
+// del 15 al 50 %. En uno de ellos (tríceps, +30 % de golpe) el resultado fue una
+// irritación de la inserción que lleva seis semanas sin resolverse.
+//
+// Con rango de repeticiones un RM inflado no puede hacer daño, porque no existe:
+// la carga sale de lo que haces hoy, no de una estimación de hace meses.
+//
+// RANGO FIJO TODO EL CICLO, a propósito. La estructura de fases existe para
+// llegar afilado a un test de 1RM en la semana 15, y estos ejercicios ya no
+// tienen 1RM ni lo van a tener: un pico que no termina en un test es ceremonia.
+// Además, estrechar el rango significaría bajar a 8-10 repeticiones con más
+// carga en las semanas 9-15 — justo la dirección contraria a lo que le conviene
+// a una inserción irritada.
+const REP_RANGE = { min: 12, max: 15, rir: '2-3' };
+
+// Peso elegido por el usuario en cada ejercicio de rango. Se siembra la primera
+// vez con el % de la tabla (para tener de dónde salir) y a partir de ahí manda
+// lo que puso la última vez — que es una referencia real y se autocorrige, al
+// contrario que un porcentaje de un RM dudoso.
+function loadLoads() {
+  try { const v = localStorage.getItem('ta_load'); return v ? JSON.parse(v) : {}; }
+  catch { return {}; }
+}
+function saveLoads(store) {
+  try { localStorage.setItem('ta_load', JSON.stringify(store)); } catch {}
+}
+// Escalón real de cada ejercicio, para los botones de + y −.
+function stepFor(ex) {
+  if (ex.dumbbell) return null;        // la lista de mancuernas no es regular
+  return ex.step || 2.5;
+}
+function bumpLoad(ex, current, dir) {
+  if (ex.dumbbell) {
+    const i = DUMBBELL_WEIGHTS.indexOf(current);
+    if (i === -1) return roundLoad(current, DUMBBELL_WEIGHTS);
+    const j = Math.min(DUMBBELL_WEIGHTS.length - 1, Math.max(0, i + dir));
+    return DUMBBELL_WEIGHTS[j];
+  }
+  const st = stepFor(ex);
+  return Math.max(st, Math.round((current + dir * st) / st) * st);
+}
+
+// ─── NOTA PLEGABLE (02/10/2026) ─────────────────────────────────────────────
+// Las notas de los ejercicios se han ido llenando del porqué de cada decisión
+// —correcciones de RM, escalones de máquina, avisos de lesión— y ocupaban más
+// que el propio ejercicio. Ahora van detrás de una ⓘ: visible que hay algo que
+// leer, sin que estorbe cuando ya te lo sabes.
+function NoteToggle({ text, color = '#7dd3fc' }) {
+  const [open, setOpen] = useState(false);
+  if (!text) return null;
+  return (
+    <div style={{ marginTop: 4 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          background: open ? color + '22' : 'none',
+          border: '1px solid ' + color + '55', borderRadius: 999,
+          color, fontSize: 11, lineHeight: 1, cursor: 'pointer',
+          padding: '4px 9px', minHeight: 26,
+        }}>
+        <span style={{ fontWeight: 700 }}>ⓘ</span>
+        <span>{open ? 'ocultar' : 'por qué'}</span>
+      </button>
+      {open && (
+        <div style={{ color, fontSize: 11.5, lineHeight: 1.5, marginTop: 5, maxWidth: 300 }}>
+          {text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Fila de un ejercicio por rango de repeticiones. No muestra un peso calculado:
+// muestra EL TUYO, con botones en el escalón real de esa máquina.
+function RepRangeRow({ ex, weekIdx, loads, setLoad }) {
+  const p = PROG[weekIdx];
+  const key = ex.rmRef || ex.name;
+  // Siembra: la primera vez se parte del % de la tabla, solo para tener de dónde
+  // salir. A partir de ahí manda lo que el usuario puso la última vez.
+  const seedTarget = ex.rm * p.pct;
+  const seed = ex.dumbbell ? roundLoad(seedTarget, DUMBBELL_WEIGHTS)
+             : ex.step     ? roundLoad(seedTarget, ex.step)
+             : wt(ex.rm, p.pct);
+  const weight = loads[key] !== undefined ? loads[key] : seed;
+  const chosen = loads[key] !== undefined;
+  const nSets = ex.setCount || 4;
+  const isArm = ex.unit === 'kg/arm';
+  return (
+    <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 500 }}>{ex.name}</div>
+          <div style={{ color: '#a78bfa', fontSize: 12, marginTop: 2 }}>
+            {REP_RANGE.min}–{REP_RANGE.max} reps · {REP_RANGE.rir} en reserva · {nSets} series
+          </div>
+          <div style={{ color: '#475569', fontSize: 11, marginTop: 2 }}>
+            {chosen ? `Referencia de la tabla: ${seed} ${isArm ? 'kg/arm' : 'kg'} (${Math.round(p.pct*100)}%)`
+                    : 'Peso de partida sugerido — ajústalo en la primera serie'}
+          </div>
+          <NoteToggle text={ex.note} />
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => setLoad(key, bumpLoad(ex, weight, -1))} style={{
+              background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 8,
+              width: 34, height: 34, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>−</button>
+            <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: 18, minWidth: 58 }}>{weight}</div>
+            <button onClick={() => setLoad(key, bumpLoad(ex, weight, +1))} style={{
+              background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 8,
+              width: 34, height: 34, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>+</button>
+          </div>
+          <div style={{ color: '#64748b', fontSize: 11, marginTop: 3 }}>{isArm ? 'kg/arm' : 'kg'}</div>
+          <div style={{ marginTop: 6 }}><RestButton ex={ex} weekIdx={weekIdx} compact /></div>
+        </div>
+      </div>
+      <div style={{ color: '#64748b', fontSize: 11, marginTop: 8, lineHeight: 1.5 }}>
+        Busca el máximo de repeticiones de cada serie <b style={{color:'#94a3b8'}}>parando con {REP_RANGE.rir} en
+        reserva</b>. Las series 2, 3 y 4 caerán por debajo de {REP_RANGE.min}: es normal y no hay que forzarlas.
+        Cuando <b style={{color:'#94a3b8'}}>la primera serie llegue a {REP_RANGE.max}</b> con esas 2-3 en reserva,
+        sube un escalón la próxima sesión.
+      </div>
+    </div>
+  );
+}
+
 function NonOlympicRow({ ex, weekIdx, rmStore }) {
   const prog = PROG[weekIdx];
   // Un ejercicio puede llevar su propia intensidad/repeticiones por fase
@@ -1621,16 +1747,13 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
                 : `🩹 ${ex.deload.label} −${dl.pct}% · revisar el ${dl.dateLabel}`}
             </div>
           )}
+          {/* La precaución se queda VISIBLE: es un aviso, no una explicación. */}
           {ex.caution && (
             <div style={{ color: '#F59E0B', fontSize: 11.5, lineHeight: 1.4, marginTop: 4, maxWidth: 260 }}>
               ⚠ {ex.caution}
             </div>
           )}
-          {ex.note && (
-            <div style={{ color: '#7dd3fc', fontSize: 11.5, lineHeight: 1.4, marginTop: 4, maxWidth: 260 }}>
-              ⓘ {ex.note}
-            </div>
-          )}
+          <NoteToggle text={ex.note} />
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: dl ? '#fb923c' : '#fbbf24', fontWeight: 700, fontSize: 18 }}>
@@ -1718,9 +1841,7 @@ function BWRow({ ex, weekIdx, rmStore }) {
           </div>
         ))}
       </div>
-      <div style={{ color: '#64748b', fontSize: 11, marginTop: 6 }}>
-        {note}
-      </div>
+      <NoteToggle text={note} color="#64748b" />
     </div>
   );
 }
@@ -1732,6 +1853,64 @@ function BWRow({ ex, weekIdx, rmStore }) {
 // No lo son: son la prescripción y su verificación. Se documenta aquí porque es
 // la base de toda la autorregulación del plan, y porque el malentendido es
 // exactamente lo que destapó que el RM de la sentadilla estaba inflado.
+// Explicación del método de rango, en la pestaña Plan junto a la de reps vs RIR.
+function RepRangeExplainer() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      marginBottom: 16, background: '#0f172a', border: '1px solid #334155',
+      borderRadius: 10, overflow: 'hidden'
+    }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: '100%', textAlign: 'left', background: 'none', border: 'none',
+        cursor: 'pointer', padding: '10px 12px', color: '#f8fafc'
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>🔁 Los ejercicios de {REP_RANGE.min}–{REP_RANGE.max} reps: cómo se progresa</span>
+        <span style={{ color: '#64748b', fontSize: 11, marginLeft: 8 }}>{open ? '▾' : '▸'}</span>
+        {!open && (
+          <div style={{ color: '#94a3b8', fontSize: 11.5, marginTop: 3 }}>
+            El peso lo eliges tú. Sube cuando la primera serie llega a {REP_RANGE.max}.
+          </div>
+        )}
+      </button>
+      {open && (
+        <div style={{ padding: '0 12px 12px', color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>
+          <b style={{color:'#e2e8f0'}}>Diez ejercicios ya no llevan porcentaje del RM.</b> Son los que tenían el
+          máximo estimado con la fórmula de Epley, el método que ha fallado seis de seis veces con errores del 15
+          al 50 % — y uno de esos fallos acabó en la irritación del codo. Aquí no hay RM que pueda estar mal:
+          la carga sale de lo que haces hoy.<br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>La regla, en tres líneas:</b><br/>
+          1. En <b style={{color:'#e2e8f0'}}>cada serie</b> haces el máximo de repeticiones que puedas
+          <b style={{color:'#e2e8f0'}}> parando con {REP_RANGE.rir} en reserva</b>. Nunca al fallo.<br/>
+          2. Si <b style={{color:'#e2e8f0'}}>la primera serie llega a {REP_RANGE.max}</b> y aún te sobran esas 2-3,
+          la próxima sesión subes un escalón de peso.<br/>
+          3. Al subir volverás a {REP_RANGE.min} o menos. Es lo esperado: vuelves a subir repeticiones hasta
+          {' '}{REP_RANGE.max} y repites el ciclo. Eso es <i>progresión doble</i>: primero repeticiones, luego peso.<br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>Lo que más se malinterpreta:</b> el rango {REP_RANGE.min}–{REP_RANGE.max}
+          {' '}describe <b style={{color:'#e2e8f0'}}>la primera serie</b>, no todas. Las series 2, 3 y 4 van a caer
+          por debajo de {REP_RANGE.min} por la fatiga acumulada, y <b style={{color:'#e2e8f0'}}>eso está bien</b>.
+          Si intentas hacer {REP_RANGE.min} en las cuatro, acabarás eligiendo un peso demasiado bajo.<br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>De dónde sale el peso que ves.</b> La primera vez, del porcentaje de la
+          tabla, solo para tener de dónde salir. A partir de ahí, <b style={{color:'#e2e8f0'}}>del que pusiste la
+          última vez</b> — que es un dato real y se corrige solo, al contrario que un porcentaje de un RM
+          estimado hace meses. Los botones + y − se mueven en el escalón real de cada máquina.<br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>El rango no cambia en todo el ciclo</b>, y es a propósito. Las fases
+          existen para llegar afilado a un test de 1RM en la semana 15, y estos ejercicios ya no tienen 1RM ni lo
+          van a tener. Lo que progresa es el peso, y progresa cuando te lo ganas, no cuando lo dice el calendario.
+          <br/><br/>
+
+          <b style={{color:'#e2e8f0'}}>Si te estancas:</b> el sistema te sigue, no te empuja. Si acabas la primera
+          serie con cinco repeticiones de margen, el peso está bajo — sube aunque no hayas llegado a {REP_RANGE.max}.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RepsRirExplainer({ weekIdx }) {
   const [open, setOpen] = useState(false);
   const phase = PROG[weekIdx].phase;
@@ -1815,63 +1994,46 @@ function RMMismatchBanner({ rmStore, clearRM }) {
 
   return (
     <div style={{
-      marginBottom: 16, background: '#1c1917', border: '1px solid #F59E0B',
+      marginBottom: 16, background: '#1c1917', border: '1px solid #475569',
       borderRadius: 10, overflow: 'hidden'
     }}>
       <button onClick={() => setOpen(!open)} style={{
         width: '100%', textAlign: 'left', background: 'none', border: 'none',
-        cursor: 'pointer', padding: '10px 12px', color: '#fff7ed'
+        cursor: 'pointer', padding: '10px 12px', color: '#e2e8f0'
       }}>
         <span style={{ fontSize: 13, fontWeight: 700 }}>
-          ⚠ {rows.length === 1 ? '1 RM guardado no coincide' : `${rows.length} RM guardados no coinciden`} con el plan
+          ⓘ {rows.length === 1 ? '1 test guardado' : `${rows.length} tests guardados`} en este dispositivo, sin aplicar
         </span>
-        <span style={{ color: '#fed7aa', fontSize: 11, marginLeft: 8 }}>{open ? '▾' : '▸'}</span>
+        <span style={{ color: '#94a3b8', fontSize: 11, marginLeft: 8 }}>{open ? '▾' : '▸'}</span>
         {!open && (
-          <div style={{ color: '#fed7aa', fontSize: 11.5, marginTop: 3 }}>
-            Este dispositivo está calculando con {rows.map(r => r.saved.rm).join(' · ')} y el plan dice {rows.map(r => r.plan).join(' · ')}.
+          <div style={{ color: '#94a3b8', fontSize: 11.5, marginTop: 3 }}>
+            El plan usa los RM del código. Esto es solo el resultado de tus tests.
           </div>
         )}
       </button>
       {open && (
-        <div style={{ padding: '0 12px 12px', color: '#fed7aa', fontSize: 12.5, lineHeight: 1.7 }}>
-          Lo guardado en este navegador <b style={{color:'#fff7ed'}}>gana al valor del código</b>, y no se sincroniza
-          entre dispositivos. Es lo correcto cuando el guardado viene de un test más reciente. Pero si el plan se
-          ha corregido después —como la sentadilla el 19/08/2026, de 160 a <b style={{color:'#fff7ed'}}>140 kg</b>—
-          el valor viejo se queda mandando en silencio.<br/><br/>
+        <div style={{ padding: '0 12px 12px', color: '#94a3b8', fontSize: 12.5, lineHeight: 1.7 }}>
+          <b style={{color:'#e2e8f0'}}>Desde el 02/10/2026 el plan usa siempre el RM del código</b>, nunca lo
+          guardado en el navegador. Antes era al revés y eso provocaba que el móvil calculara con un número y el
+          plan con otro, en silencio.<br/><br/>
+          Lo de abajo es lo que midió tu último test en ESTE dispositivo. No se aplica a nada:
+          <b style={{color:'#e2e8f0'}}> pásaselo a Claude</b>, lo revisáis juntos y se fija en el plan.<br/><br/>
           {rows.map(r => (
-            <div key={r.key} style={{
-              background: '#0f172a', borderRadius: 8, padding: '10px 12px', marginBottom: 6
-            }}>
-              <div style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>{r.key}</div>
-              <div style={{ color: '#94a3b8', fontSize: 12, margin: '4px 0 8px' }}>
-                guardado <b style={{ color: '#F59E0B' }}>{r.saved.rm} {r.saved.unit || r.unit}</b>
-                {r.saved.date && (
-                  <span style={{ color: '#475569' }}>
-                    {' '}el {new Date(r.saved.date).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' })}
-                  </span>
-                )}
-                <span style={{ color: '#475569' }}> · plan </span>
-                <b style={{ color: '#7dd3fc' }}>{r.plan} {r.unit}</b>
-              </div>
-              <button onClick={() => clearRM(r.key)} style={{
-                padding: '7px 12px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                background: '#334155', color: '#f8fafc', fontSize: 12, fontWeight: 600
-              }}>
-                Usar {r.plan} {r.unit} (el del plan)
-              </button>
+            <div key={r.key} style={{ marginBottom: 6 }}>
+              <b style={{color:'#e2e8f0'}}>{r.key}</b><br/>
+              Test: {r.saved.rm} {r.unit} {r.saved.date ? `(${r.saved.date})` : ''} · En el plan: {r.plan} {r.unit}
             </div>
           ))}
-          <span style={{ color: '#a8a29e', fontSize: 11.5 }}>
-            Borra el valor guardado en este dispositivo; el historial de tests no se toca.
-            Si el que vale es el guardado, no toques nada.
-          </span>
+          <button onClick={clearRM} style={{
+            marginTop: 8, background: '#334155', color: '#e2e8f0', border: 'none',
+            borderRadius: 6, padding: '8px 12px', fontSize: 12.5, cursor: 'pointer'
+          }}>Borrar los tests guardados de este dispositivo</button>
         </div>
       )}
     </div>
   );
 }
-
-function DayWorkout({ day, weekIdx, rmStore }) {
+function DayWorkout({ day, weekIdx, rmStore, loads, setLoad }) {
   if (day.special === 'stretch') {
     return (
       <div>
@@ -1892,13 +2054,14 @@ function DayWorkout({ day, weekIdx, rmStore }) {
       {day.exercises.map((ex, i) => {
         if (ex.type === 'olympic') return <OlympicTable key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
         if (ex.type === 'bw') return <BWRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
+        if (ex.repRange) return <RepRangeRow key={i} ex={ex} weekIdx={weekIdx} loads={loads} setLoad={setLoad} />;
         return <NonOlympicRow key={i} ex={ex} weekIdx={weekIdx} rmStore={rmStore} />;
       })}
     </div>
   );
 }
 
-function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore, clearRM }) {
+function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore, clearRM, loads, setLoad }) {
   const day = DAYS[dayIdx];
   return (
     <div>
@@ -1925,6 +2088,7 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
       <RMMismatchBanner rmStore={rmStore} clearRM={clearRM} />
 
       <RepsRirExplainer weekIdx={weekIdx} />
+      <RepRangeExplainer />
 
       {/* Leyenda de descansos de la fase actual */}
       <div style={{
@@ -2017,7 +2181,7 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
         </div>
       </div>
 
-      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} />
+      <DayWorkout day={day} weekIdx={weekIdx} rmStore={rmStore} loads={loads} setLoad={setLoad} />
 
       {/* Condicionamiento añadido */}
       {CONDITIONING[day.name] && (
@@ -2048,7 +2212,7 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
       )}
 
       {/* Wellness */}
-      {day.name !== 'Miércoles' && (
+      {day.name !== 'Sábado' && (
         <div style={{ marginTop: 18, background: '#0f172a', borderRadius: 10, padding: '12px 16px' }}>
           <div style={{ color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
             Post-entrenamiento
@@ -2085,20 +2249,29 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
   );
 }
 
+// ─── BIENESTAR — CORREGIDO 02/10/2026 ───────────────────────────────────────
+// Lo que había aquí prescribía SAUNA en miércoles, jueves, sábado y domingo.
+// Era FALSO y llevaba así desde el principio: el 8/08/2026 se corrigió en
+// memoria.md (§5, "el usuario NO hace sauna", con un "no volver a asumirlo")
+// y nadie lo corrigió nunca en la app. El usuario llevaba meses con una pantalla
+// que se la prescribía — probablemente de ahí salió que la diera por hecha.
+// AHORA SÍ, pero solo el sábado: con el reparto nuevo el sábado es día de
+// descanso y ya hay tiempo. 3 rondas × 15 min alternadas con 1-3 min de baño
+// frío. El resto de días, nada de sauna.
 const WELLNESS = [
-  { day: 'Lun · Mar · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
-  { day: 'Miércoles', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas (10–15min/ronda)' },
-  { day: 'Jueves', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna opcional 1 ronda' },
-  { day: 'Sábado', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas' },
-  { day: 'Domingo', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · 🔥 Sauna 3 rondas · ☀️ UV 10–12min (vitamina D)' },
+  { day: 'Lun · Mar · Mié · Jue · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
+  { day: 'Sábado', protocol: '🔴 Luz roja 15min · 🔥🧊 Contraste: 3 × (15min sauna + 1–3min baño frío) · 💧 +0,5 L de agua ese día' },
+  { day: 'Domingo', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · ☀️ UV 10–12min (vitamina D)' },
 ];
 
 // ─── CONDICIONAMIENTO AÑADIDO ────────────────────────────────────────────────
 // Assault bike / Airdyne — mejor relación condicionamiento/kcal de las opciones
 // disponibles en el gimnasio: brazos + piernas a la vez, sin técnica que
 // aprender (a diferencia del remo), resistencia autorregulada por tu propio
-// esfuerzo, sentado y sin impacto. Nunca en Martes/Viernes (oly) ni Sábado
-// (LegDay), que ya cargan la rodilla ese día.
+// esfuerzo, sentado y sin impacto. Nunca en días que ya cargan la rodilla:
+// Martes/Viernes (olímpicos) ni Domingo (LegDay). Remapeado el 02/10/2026 con el
+// reparto nuevo — antes estaba en Lunes/Jueves/Domingo, y el domingo pasó a ser
+// precisamente el día de piernas, con lo que incumplía su propia regla.
 // Alternativa (si el gimnasio no tiene assault bike ese día): remo. Es la
 // segunda mejor opción del gimnasio porque también es full-body (piernas +
 // espalda + brazos), sin impacto y con resistencia autorregulada por el
@@ -2106,12 +2279,12 @@ const WELLNESS = [
 // inclinación máxima queda descartada como alternativa porque solo trabaja
 // piernas y es menos eficiente en tiempo para el mismo objetivo.
 const CONDITIONING = {
-  'Lunes':   { label: '🚲 Assault bike — intervalos',    detail: '8–10 × (20s esfuerzo máximo / 100s suave) · ~15min total · post-entreno de brazo',
+  'Lunes':   { label: '🚲 Assault bike — intervalos',    detail: '8–10 × (20s esfuerzo máximo / 100s suave) · ~15min total · post-entreno de pecho',
                alt: { label: '🚣 Remo — intervalos',    detail: 'Mismo esquema: 8–10 × (20s esfuerzo máximo / 100s suave) · ~15min total' } },
   'Jueves':  { label: '🚲 Assault bike — zona 2',         detail: '20–25min ritmo continuo moderado',
                alt: { label: '🚣 Remo — zona 2',         detail: '20–25min ritmo continuo moderado (conversacional, ~18-20 paladas/min)' } },
-  'Domingo': { label: '🚲 Assault bike — zona 2 suave',   detail: '15–20min suave · pierna descargada tras el sábado',
-               alt: { label: '🚣 Remo — zona 2 suave',   detail: '15–20min suave · pierna descargada tras el sábado' } },
+  'Miércoles': { label: '🚲 Assault bike — zona 2 suave', detail: '15–20min suave · post-entreno de brazo',
+               alt: { label: '🚣 Remo — zona 2 suave',   detail: '15–20min suave · post-entreno de brazo' } },
 };
 
 // ─── TEST TAB (Semana 16) ─────────────────────────────────────────────────────
@@ -4022,6 +4195,13 @@ export default function App() {
   const [rmStore, setRmStore] = useState(loadRM);
   const [rmHistory, setRmHistory] = useState(loadRMHistory);
   const [mvtStore, setMvtStore] = useState(loadMVT);
+  // Peso elegido por el usuario en los ejercicios de rango de repeticiones.
+  const [loads, setLoads] = useState(loadLoads);
+  const setLoad = (key, value) => setLoads(prev => {
+    const next = { ...prev, [key]: value };
+    saveLoads(next);
+    return next;
+  });
 
   const [section, setSection] = useState('entrenamiento');
   const [sub, setSub] = useState('plan');
@@ -4183,7 +4363,7 @@ export default function App() {
 
       {/* Content */}
       {section === 'entrenamiento' && sub === 'plan' && (
-        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} clearRM={clearRM} />
+        <TrainingTab weekIdx={weekIdx} dayIdx={dayIdx} setDayIdx={saveDay} completed={completed} markDone={markDone} rmStore={rmStore} clearRM={clearRM} loads={loads} setLoad={setLoad} />
       )}
       {section === 'entrenamiento' && sub === 'test' && (
         <TestTab rmStore={rmStore} saveRM={saveRM} rmHistory={rmHistory} mvtStore={mvtStore} saveMVT={saveMVT} clearMVT={clearMVT} lastTestDate={lastTestDate} startNewCycle={startNewCycle} />
