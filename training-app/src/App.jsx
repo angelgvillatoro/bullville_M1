@@ -358,13 +358,16 @@ const CJ_PCT = [   // [% del RM, reps] x 4 series
   [84,3,84,3,89,2,95,1],       // W6
   [84,3,84,3,91,1,95,1],       // W7
   [84,3,86,3,91,1,98,1],       // W8
-  [84,3,86,3,95,1,98,1],       // W9
-  [84,3,86,3,95,1,98,1],       // W10
-  [84,3,89,2,95,1,100,1],      // W11
-  [86,3,91,1,98,1,100,1],      // W12
-  [86,2,91,1,98,1,100,1],      // W13
-  [91,1,95,1,98,1,100,1],      // W14
-  [91,1,95,1,98,1,105,1],      // W15
+  // ── 10/11/2026: de W9 en adelante, MANTENIMIENTO. En deficit calorico y con
+  // BJJ 3 dias/semana no hay margen para seguir subiendo: se congela la carga
+  // en la fila de W7 (92,5 - 92,5 - 100 - 105 con RM 110). El RM sigue en 110.
+  [84,3,84,3,91,1,95,1],       // W9  mantenimiento
+  [84,3,84,3,91,1,95,1],       // W10 mantenimiento
+  [84,3,84,3,91,1,95,1],       // W11 mantenimiento
+  [84,3,84,3,91,1,95,1],       // W12 mantenimiento
+  [84,3,84,3,91,1,95,1],       // W13 mantenimiento
+  [80,3,84,3,86,2,89,1],       // W14 descarga (semana de viaje prevista)
+  [84,3,84,3,91,1,95,1],       // W15 mantenimiento
 ];
 
 const PS_PCT = [   // [% del RM, reps] x 4 series
@@ -376,13 +379,16 @@ const PS_PCT = [   // [% del RM, reps] x 4 series
   [83,3,83,3,90,2,97,1],       // W6
   [83,3,83,3,90,1,97,1],       // W7
   [83,3,87,3,90,1,100,1],      // W8
-  [83,3,87,3,97,1,100,1],      // W9
-  [83,3,87,3,97,1,100,1],      // W10
-  [83,3,87,2,97,1,100,1],      // W11
-  [87,3,90,1,100,1,100,1],     // W12
-  [87,2,90,1,100,1,100,1],     // W13
-  [90,1,97,1,100,1,100,1],     // W14
-  [90,1,97,1,100,1,103,1],     // W15
+  // ── 10/11/2026: de W9 en adelante, MANTENIMIENTO (misma razon que el C&J).
+  // Se congela en la fila de W7 (62,5 - 62,5 - 67,5 - 72,5 con RM 75).
+  // OJO: 75 no es un 1RM medido, es el techo tecnico comodo. Ver nota.
+  [83,3,83,3,90,1,97,1],       // W9  mantenimiento
+  [83,3,83,3,90,1,97,1],       // W10 mantenimiento
+  [83,3,83,3,90,1,97,1],       // W11 mantenimiento
+  [83,3,83,3,90,1,97,1],       // W12 mantenimiento
+  [83,3,83,3,90,1,97,1],       // W13 mantenimiento
+  [80,3,83,3,85,2,87,1],       // W14 descarga (semana de viaje prevista)
+  [83,3,83,3,90,1,97,1],       // W15 mantenimiento
 ];
 
 const DL_PCT = [   // [% del RM, reps] x 4 series
@@ -508,8 +514,10 @@ const DAYS = [
   {
     name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
+      { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder',
+        note: 'En MANTENIMIENTO desde el 10/11/2026 hasta el final del ciclo. Se repite la carga de la semana 7 (92,5 - 92,5 - 100 - 105) todas las semanas. Motivo: estas en deficit calorico y con BJJ lunes-miercoles-viernes; subir el olimpico ahora es pedirle al sistema nervioso algo que la recuperacion no puede pagar. El objetivo aqui es conservar la tecnica y la fuerza que ya tienes, no progresar. La semana 14 es descarga (viaje previsto). El RM se queda en 110 y se vuelve a medir en el test de final de ciclo.' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder',
+        note: 'En MANTENIMIENTO desde el 10/11/2026 hasta el final del ciclo: se repite la carga de la semana 7 (62,5 - 62,5 - 67,5 - 72,5) todas las semanas, por la misma razon que el C&J (deficit + BJJ 3 dias). La semana 14 es descarga (viaje previsto). IMPORTANTE sobre el RM: los 75 kg NO son un 1RM medido, son el TECHO TECNICO COMODO - el peso por encima del cual la tecnica se rompe antes de que falle la fuerza. Por eso los porcentajes de esta tabla no significan lo mismo que en los demas ejercicios: aqui manda la tecnica. No lo subas sin medirlo contigo en el test de final de ciclo.' },
       { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder', step: 5,
         note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
       { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
@@ -558,8 +566,10 @@ const DAYS = [
   {
     name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
-      { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder' },
-      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder' },
+      { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder',
+        note: 'En MANTENIMIENTO desde el 10/11/2026 hasta el final del ciclo. Se repite la carga de la semana 7 (92,5 - 92,5 - 100 - 105) todas las semanas. Motivo: estas en deficit calorico y con BJJ lunes-miercoles-viernes; subir el olimpico ahora es pedirle al sistema nervioso algo que la recuperacion no puede pagar. El objetivo aqui es conservar la tecnica y la fuerza que ya tienes, no progresar. La semana 14 es descarga (viaje previsto). El RM se queda en 110 y se vuelve a medir en el test de final de ciclo.' },
+      { name: 'Power snatch barbell',        rm: 75,  unit: 'kg', type: 'olympic', sets: PS_PCT, testMethod: 'ladder',
+        note: 'En MANTENIMIENTO desde el 10/11/2026 hasta el final del ciclo: se repite la carga de la semana 7 (62,5 - 62,5 - 67,5 - 72,5) todas las semanas, por la misma razon que el C&J (deficit + BJJ 3 dias). La semana 14 es descarga (viaje previsto). IMPORTANTE sobre el RM: los 75 kg NO son un 1RM medido, son el TECHO TECNICO COMODO - el peso por encima del cual la tecnica se rompe antes de que falle la fuerza. Por eso los porcentajes de esta tabla no significan lo mismo que en los demas ejercicios: aqui manda la tecnica. No lo subas sin medirlo contigo en el test de final de ciclo.' },
       { name: 'Latzug breit (lat pulldown)', rm: 97.5,unit: 'kg', testMethod: 'ladder', step: 5,
         note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
       { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
@@ -585,7 +595,7 @@ const DAYS = [
     exercises: [
       { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
       { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30,
-        note: 'Las series extra de volumen que estaban en el miércoles se eliminaron el 02/10/2026: la sentadilla se queda en 4 series. ⚠ CONSECUENCIA: el cuádriceps vuelve a UNA exposición semanal, que es lo que la segunda exposición del 6/08 vino a resolver. Y ojo con el motivo: los olímpicos NO sustituyen trabajo de cuádriceps — está comprobado y documentado (network meta-analysis Frontiers 2025: halterofilia SUCRA 0,13 en fuerza máxima de tren inferior frente a 0,95 del entrenamiento tradicional), y además hace POWER clean y POWER snatch, que ni siquiera bajan a sentadilla. La decisión se sostiene por duración de sesión y por espaciado de cadera, no porque los olímpicos cubran el cuádriceps.' },
+        note: 'Las series extra de volumen que estaban en el miércoles se eliminaron el 02/10/2026: la sentadilla se queda en 4 series. ⚠ CONSECUENCIA: el cuádriceps vuelve a UNA exposición semanal, que es lo que la segunda exposición del 6/08 vino a resolver. Y ojo con el motivo: los olímpicos NO sustituyen trabajo de cuádriceps — está comprobado y documentado (network meta-analysis Frontiers 2025: halterofilia SUCRA 0,13 en fuerza máxima de tren inferior frente a 0,95 del entrenamiento tradicional), aunque el matiz importa: recoge la barra en sentadilla COMPLETA en los dos levantamientos, asi que los olimpicos SI dan 64 repeticiones semanales de salir de una sentadilla profunda frente a las 32 de la sesion de pierna (corregido el 10/11/2026; antes aqui se afirmaba por error que hacia power clean y power snatch). Lo que no dan es tension mecanica alta sostenida en el cuadriceps: son rapidos y ligeros en relacion al squat. La decisión se sostiene por duración de sesión y por espaciado de cadera, no porque los olímpicos cubran el cuádriceps.' },
       { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 4, step: 5,
         note: 'De 8 series a 4 el 05/09/2026: las otras 4 se hacen el miércoles, en fresco (ver VOLUME_LEGCURL). Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio sin necesitar la fuerza de un Nordic curl completo. Aquí vas el tercero, detrás de peso muerto y sentadilla: si el excéntrico ya no se puede frenar, corta la serie.' },
       { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
@@ -1569,6 +1579,7 @@ function OlympicTable({ ex, weekIdx, rmStore }) {
           </div>
         ))}
       </div>
+      <NoteToggle text={ex.note} />
     </div>
   );
 }
@@ -2258,10 +2269,17 @@ function TrainingTab({ weekIdx, dayIdx, setDayIdx, completed, markDone, rmStore,
 // AHORA SÍ, pero solo el sábado: con el reparto nuevo el sábado es día de
 // descanso y ya hay tiempo. 3 rondas × 15 min alternadas con 1-3 min de baño
 // frío. El resto de días, nada de sauna.
+// BAÑO FRÍO POST-ENTRENO (04/10/2026): el usuario lo hace a diario justo
+// después de entrenar. La inmersión fría inmediata atenúa la hipertrofia
+// (Roberts 2015, Fyfe 2019, Fuchs 2020; metaanálisis 2024: efecto pequeño pero
+// consistente, menor sobre fuerza). Sus 5 min a 10-15 °C son menos dosis que
+// los estudios (10-20 min a 8-10 °C). Informado, decide MANTENERLO. Queda
+// anotado como primer sospechoso si el rendimiento o la masa muscular se
+// estancan: la corrección sería separarlo 4-6 h del entreno (no justo antes).
 const WELLNESS = [
-  { day: 'Lun · Mar · Mié · Jue · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min' },
+  { day: 'Lun · Mar · Mié · Jue · Vie', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · ⚠️ Lo haces justo después de entrenar: el frío post-entreno atenúa algo la hipertrofia (Roberts 2015, metaanálisis 2024). Decisión tuya: se mantiene. Si el rendimiento o el músculo se estancan, primer sospechoso → separarlo 4-6 h (p. ej. por la mañana)' },
   { day: 'Sábado', protocol: '🔴 Luz roja 15min · 🔥🧊 Contraste: 3 × (15min sauna + 1–3min baño frío) · 💧 +0,5 L de agua ese día' },
-  { day: 'Domingo', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · ☀️ UV 10–12min (vitamina D)' },
+  { day: 'Domingo', protocol: '🔴 Luz roja 15min · 🧊 Baño frío 5min · ☀️ UV 10–12min (vitamina D) · ⚠️ Lo haces justo después de entrenar: el frío post-entreno atenúa algo la hipertrofia (Roberts 2015, metaanálisis 2024). Decisión tuya: se mantiene. Si el rendimiento o el músculo se estancan, primer sospechoso → separarlo 4-6 h (p. ej. por la mañana)' },
 ];
 
 // ─── CONDICIONAMIENTO AÑADIDO ────────────────────────────────────────────────
