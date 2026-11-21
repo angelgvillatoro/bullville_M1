@@ -4094,6 +4094,55 @@ function CookingTab() {
         })}
       </div>
 
+{/* Marinada del pollo */}
+      <div style={{
+        background: '#1c1917', border: '1px solid #F59E0B', borderRadius: 10,
+        padding: '12px 14px', marginBottom: 16, color: '#fed7aa', fontSize: 12.5, lineHeight: 1.7
+      }}>
+        <div style={{ color: '#fff7ed', fontWeight: 700, marginBottom: 2, fontSize: 13 }}>
+          🍗 Marinada del pollo — estilo asiático
+        </div>
+        <div style={{ color: '#a8a29e', fontSize: 11, marginBottom: 8 }}>
+          EN PRUEBA · no fijada en el plan todavía
+        </div>
+
+        <b style={{ color: '#fff7ed' }}>Para 1,35 kg de pollo</b> (la tanda entera del sábado):
+        <div style={{ background: '#0f172a', borderRadius: 8, padding: '10px 12px', margin: '8px 0', color: '#cbd5e1' }}>
+          {[
+            ['Salsa de soja baja en sal', '52 g'],
+            ['Jengibre fresco', '20 g'],
+            ['Ajo', '15 g · unos 3 dientes'],
+            ['Vinagre de arroz o zumo de lima', '15 g'],
+            ['Aceite de sésamo tostado', '9 g'],
+            ['Miel', '7 g · opcional'],
+            ['Maicena', '8 g · opcional, para el velveting'],
+          ].map(([k, v], i) => (
+            <div key={i} style={{
+              display: 'flex', justifyContent: 'space-between', gap: 10,
+              padding: '3px 0', borderTop: i ? '1px solid #1e293b' : 'none'
+            }}>
+              <span style={{ color: '#f8fafc' }}>{k}</span>
+              <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        <b style={{ color: '#fff7ed' }}>Cómo:</b> jengibre pelado con una cucharilla y rallado fino, ajo picado o
+        prensado. Mezcla todo, embadurna el pollo y <b style={{ color: '#fff7ed' }}>2-12 h en la nevera</b>. Al horno
+        igual que siempre: 150-160 °C hasta 68-70 °C de interior.<br/><br/>
+
+        <b style={{ color: '#FCA5A5' }}>Sin sal añadida.</b> La soja ya la trae. El salado en seco al 1 % te quedó
+        <b> muy salado</b>; si lo repites, 0,7 % y pesado — no a ojo.<br/>
+        <b style={{ color: '#fed7aa' }}>El sésamo cuenta:</b> esos 9 g salen del aceite del día, no se suman.<br/>
+        <b style={{ color: '#fed7aa' }}>Nada de lácteos</b> en la marinada (el yogur se descartó): el calcio frena el
+        hierro y el pollo se come en días C, con hígado.<br/>
+        <b style={{ color: '#fed7aa' }}>Cocina el pollo aparte del brócoli</b> — se reparten en 18 y 7 partes, tienen
+        caducidades distintas y el horno no da para los dos a la vez.<br/><br/>
+
+        <span style={{ color: '#a8a29e' }}>Coste nutricional: menos de 10 kcal al día. No está en la lista de la
+        compra porque sigue en prueba; si la adoptas, se añade.</span>
+      </div>
+
       {/* Brócoli + mostaza */}
       <div style={{
         background: '#052e16', border: '1px solid #22C55E', borderRadius: 10,
