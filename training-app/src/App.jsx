@@ -525,7 +525,7 @@ const DAYS = [
   // Reparto nuevo: la cadera se carga martes, viernes y domingo, con al menos un
   // día libre entre todos.
   {
-    name: 'Lunes', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
+    name: 'Lunes', label: 'ChestDay', emoji: '🏋️', nutriDay: 'B',
     // El día de pecho COMPLETO va el lunes y no el jueves a propósito: el día de
     // brazos es el miércoles, y colgar shoulder press + tríceps del jueves los
     // dejaría dos días seguidos — el riesgo de codo de agosto. Desde el lunes
@@ -541,7 +541,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'B',
+    name: 'Martes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder',
         note: 'En MANTENIMIENTO desde el 10/11/2026 hasta el final del ciclo. Se repite la carga de la semana 7 (92,5 - 92,5 - 100 - 105) todas las semanas. Motivo: estas en deficit calorico y con BJJ lunes-miercoles-viernes; subir el olimpico ahora es pedirle al sistema nervioso algo que la recuperacion no puede pagar. El objetivo aqui es conservar la tecnica y la fuerza que ya tienes, no progresar. La semana 14 es descarga (viaje previsto). El RM se queda en 110 y se vuelve a medir en el test de final de ciclo.' },
@@ -570,7 +570,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Miércoles', label: 'ArmDay', emoji: '💪', nutriDay: 'A',
+    name: 'Miércoles', label: 'ArmDay', emoji: '💪', nutriDay: 'C',
     exercises: [
       { name: 'Triceps stretches cable pull bar',  rm: 38, unit: 'kg',     testMethod: 'repmax', repRange: true, note: ELBOW_NOTE },
       { name: 'Triceps extension cable pull cord', rm: 32, unit: 'kg',     testMethod: 'repmax', repRange: true, note: ELBOW_NOTE },
@@ -604,7 +604,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'C',
+    name: 'Jueves', label: 'ChestDay', emoji: '🏋️', nutriDay: 'A',
     exercises: [
       { name: 'Bench press barbell',               rm: 102,  unit: 'kg', testMethod: 'video', mvt: 0.17 },
       { name: 'Bench press inclined barbell',      rm: 85, unit: 'kg', testMethod: 'ladder' },
@@ -613,7 +613,7 @@ const DAYS = [
     ]
   },
   {
-    name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'A',
+    name: 'Viernes', label: 'BackDay', emoji: '🏋️', nutriDay: 'B',
     exercises: [
       { name: 'Clean & jerk barbell',        rm: 110, unit: 'kg', type: 'olympic', sets: CJ_PCT, testMethod: 'ladder',
         note: 'En MANTENIMIENTO desde el 10/11/2026 hasta el final del ciclo. Se repite la carga de la semana 7 (92,5 - 92,5 - 100 - 105) todas las semanas. Motivo: estas en deficit calorico y con BJJ lunes-miercoles-viernes; subir el olimpico ahora es pedirle al sistema nervioso algo que la recuperacion no puede pagar. El objetivo aqui es conservar la tecnica y la fuerza que ya tienes, no progresar. La semana 14 es descarga (viaje previsto). El RM se queda en 110 y se vuelve a medir en el test de final de ciclo.' },
@@ -647,14 +647,14 @@ const DAYS = [
     ]
   },
   {
-    name: 'Sábado', label: 'Descanso & Movilidad', emoji: '🧘', nutriDay: 'B',
+    name: 'Sábado', label: 'Descanso & Movilidad', emoji: '🧘', nutriDay: 'C',
     special: 'stretch',
     // Único día sin entrenamiento de la semana. Lleva los 10 estiramientos que
     // antes vivían en el miércoles, el solárium y la SAUNA con contraste.
     exercises: []
   },
   {
-    name: 'Domingo', label: 'LegDay', emoji: '🦵', nutriDay: 'C',
+    name: 'Domingo', label: 'LegDay', emoji: '🦵', nutriDay: 'A',
     // Las series extra de sentadilla del miércoles se ELIMINAN (02/10/2026):
     // la sentadilla se queda en 4 series. Ver la nota del ejercicio.
     exercises: [
@@ -1014,7 +1014,13 @@ function StretchCard({ s }) {
 // ─── NUTRITION DATA ───────────────────────────────────────────────────────────
 // REORGANIZADO 18/08/2026 por espaciado de absorción. Antes: 4 A + 1 C + 2 B con
 // los dos días B pegados (Vie-Sáb). Ahora: 3 A + 2 B + 2 C, con los cuatro
-// almuerzos de hierro hemo separados 2 días entre sí — Dom → Mar → Jue → Sáb.
+// almuerzos de hierro hemo repartidos — Lun → Mié → Vie → Sáb.
+// 21/11/2026: el reparto se ADELANTA UN DÍA (antes Dom C · Lun A · Mar B · Mié A ·
+// Jue C · Vie A · Sáb B) para que el día de salmón y ternera caiga en viernes y
+// la cocina se concentre el sábado. Mismas cantidades, misma compra.
+// Con 4 comidas de hierro en 7 días SIEMPRE hay un par consecutivo (6.8): aquí es
+// viernes→sábado, y el orden importa — primero la carga grande (ternera 220 g) y
+// detrás la pequeña (hígado 75 g), que es justo el criterio que se fijó en agosto.
 // Motivo: una carga de hierro eleva la hepcidina y frena la absorción de la
 // siguiente ~24 h, así que días consecutivos se aprovechan a medias.
 // LAS CANTIDADES SEMANALES DE COMPRA NO CAMBIAN. Es puro reordenamiento:
@@ -1029,7 +1035,7 @@ function StretchCard({ s }) {
 const NUTRITION = {
   A: {
     label: 'Días A',
-    days: 'Lun · Mié · Vie',
+    days: 'Dom · Mar · Jue',
     color: '#3B82F6',
     meals: [
       {
@@ -1075,9 +1081,9 @@ const NUTRITION = {
   },
   C: {
     label: 'Días C · Hígado',
-    days: 'Dom · Jue',
+    days: 'Mié · Sáb',
     color: '#A855F7',
-    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. PARTIDO EN 2 RACIONES DE 75 g (18/08/2026) — mismos 150 g semanales, pero domingo y jueves. La absorción fraccional del hierro cae con el tamaño de la dosis: dos raciones pequeñas separadas 4 días rinden más hierro absorbido que una de 150 g, y cada una queda en ~2.450 µg de retinol, por debajo del límite de 3.000 µg/día (el exceso de vitamina A también provoca caída de pelo). Se compran los 150 g el sábado: la del domingo va fresca a la nevera y se cocina el domingo; la del jueves se congela CRUDA el sábado (cocinada y congelada queda arenosa), se descongela el martes por la noche y se cocina el miércoles por la tarde. 4 min a fuego fuerte, mínimo aceite, rosa por dentro. Y OJO: buena parte del hierro del hígado NO es hemo, es no hemo unido a ferritina — por eso la fruta de este almuerzo tiene que ser cítrica.',
+    note: 'Hígado DE POLLO, no de ternera: casi el doble de hierro (~12 vs ~6,5 mg/100g) y un tercio de la vitamina A preformada. PARTIDO EN 2 RACIONES DE 75 g (18/08/2026) — mismos 150 g semanales, pero miércoles y sábado. La absorción fraccional del hierro cae con el tamaño de la dosis: dos raciones pequeñas separadas 4 días rinden más hierro absorbido que una de 150 g, y cada una queda en ~2.450 µg de retinol, por debajo del límite de 3.000 µg/día (el exceso de vitamina A también provoca caída de pelo). Se compran los 150 g el sábado: la del sábado se cocina fresca ese mismo día, que ya estás en la cocina; la del miércoles se congela CRUDA el sábado (cocinada y congelada queda arenosa), se descongela el lunes por la noche y se cocina el martes por la tarde, a la nevera lista para el miércoles. 4 min a fuego fuerte, mínimo aceite, rosa por dentro. Y OJO: buena parte del hierro del hígado NO es hemo, es no hemo unido a ferritina — por eso la fruta de este almuerzo tiene que ser cítrica.',
     meals: [
       {
         name: '🍳 Desayuno (~8:30) — hora cero · igual que días A',
@@ -1123,7 +1129,7 @@ const NUTRITION = {
   },
   B: {
     label: 'Días B',
-    days: 'Mar · Sáb',
+    days: 'Lun · Vie',
     color: '#F59E0B',
     meals: [
       {
@@ -1219,7 +1225,7 @@ const SUPPS = [
   {
     name: 'Omega-3',
     brand: 'Natural Elements',
-    dose: '3 cáps / día — ⏭ NINGUNA los días B (Mar y Sáb)',
+    dose: '3 cáps / día — ⏭ NINGUNA los días B (Lun y Vie)',
     timing: 'Desayuno: 1 cáp · Almuerzo: 2 cáps (con D3+K2 y magnesio). Días de salmón: saltarlas enteras.',
     detail: '1.000mg aceite de pescado/cápsula · forma triglicérido (TG) · 800mg EPA+DHA/cáp',
     why: '2,4g EPA+DHA diarios. Forma TG = mejor absorción que ésteres etílicos. Cubre los días SIN salmón — y solo esos: 18/08/2026 se retiran los días B, porque 250g de salmón ya dan ~5.000mg de EPA+DHA frente a un objetivo de 2.000. Tomarlas ahí era desperdicio puro. Son 6 cápsulas menos por semana: el bote de 120 pasa de ~40 a ~57 días.',
@@ -1240,7 +1246,7 @@ const SUPPS = [
     dose: '⏸ SUSPENDIDO — no tomar hasta la analítica',
     timing: '—',
     detail: '25mg/comprimido · Albion® Zinc Bisglicinato (en pausa desde 8/08/2026)',
-    why: 'Dos motivos. (1) Interfiere con el hierro: el zinc y el hierro no hemo compiten por el mismo transportador (DMT1), y 12,5mg en el desayuno chocaban de frente con las semillas de calabaza y las espinacas — justo lo que se está intentando proteger. (2) Suplementar a ciegas induce déficit de cobre, y el déficit de cobre da anemia Y caída de pelo, o sea el síntoma que se quiere arreglar. La dieta aporta 8-9mg contra un objetivo de 11: hay hueco, pero pequeño, y el hígado de domingo y jueves (~2mg de zinc por ración de 75g, y de las mejores fuentes de cobre que existen) más el parmesano (~2mg) y la ternera de martes y sábado (~10mg) lo cubren casi entero. Retomar solo si la analítica lo justifica; si se retoma, va en el ALMUERZO y saltándolo los días con hígado (Dom y Jue). NOTA 18/08/2026: con el zinc fuera, los días A se quedan en ~8,3mg frente a un objetivo de 12-15 y la media semanal en ~9,6mg. Es el único hueco real que deja la suspensión, y es el primer parámetro a mirar cuando llegue la analítica.',
+    why: 'Dos motivos. (1) Interfiere con el hierro: el zinc y el hierro no hemo compiten por el mismo transportador (DMT1), y 12,5mg en el desayuno chocaban de frente con las semillas de calabaza y las espinacas — justo lo que se está intentando proteger. (2) Suplementar a ciegas induce déficit de cobre, y el déficit de cobre da anemia Y caída de pelo, o sea el síntoma que se quiere arreglar. La dieta aporta 8-9mg contra un objetivo de 11: hay hueco, pero pequeño, y el hígado de miércoles y sábado (~2mg de zinc por ración de 75g, y de las mejores fuentes de cobre que existen) más el parmesano (~2mg) y la ternera de lunes y viernes (~10mg) lo cubren casi entero. Retomar solo si la analítica lo justifica; si se retoma, va en el ALMUERZO y saltándolo los días con hígado (Mié y Sáb). NOTA 18/08/2026: con el zinc fuera, los días A se quedan en ~8,3mg frente a un objetivo de 12-15 y la media semanal en ~9,6mg. Es el único hueco real que deja la suspensión, y es el primer parámetro a mirar cuando llegue la analítica.',
     color: '#64748b',
     paused: true
   },
@@ -3140,7 +3146,7 @@ const PB = [
   { cat:'🫙 Despensa',         name:'Senfmehl braun (mostaza parda)', qty:1, unit:'g' },
   { cat:'🍓 Fruta',            name:'Fruta variada',             qty:300, unit:'g' },
 ];
-// Día C — domingo y jueves, días de hígado. Igual que PA pero con 75g de pollo
+// Día C — miércoles y sábado, días de hígado. Igual que PA pero con 75g de pollo
 // sustituidos por 75g de hígado y algo menos de aceite, porque el hígado ya trae
 // grasa. La proteína queda igual que un día A. Actualizado 18/08/2026: antes era
 // un solo día con 150g; ahora dos días con 75g — mismo total semanal, mejor
@@ -3361,10 +3367,10 @@ function NutritionTab({ weekIdx }) {
         <div style={{color:'#f8fafc', fontWeight:700, marginBottom:6, fontSize:13}}>🩸 Reglas del hierro — no romperlas</div>
         <b style={{color:'#e2e8f0'}}>1.</b> <b>Todo el calcio fuera de las comidas con hierro.</b> Skyr y parmesano van solos, a media mañana. El calcio es el único inhibidor que frena el hierro hemo <i>y</i> el no hemo.<br/>
         <b style={{color:'#e2e8f0'}}>2.</b> La fruta del desayuno tiene que ser <b>cítrica</b> — 2 kiwis son la mejor opción (~140mg de vitamina C). No es opcional: es lo que compensa la fosvitina de la yema del huevo, que también bloquea hierro.<br/>
-        <b style={{color:'#e2e8f0'}}>3.</b> El almuerzo <b>no lleva lácteo</b>. La fruta del almuerzo es libre <i>salvo</i> los días con hierro (Dom · Mar · Jue · Sáb), donde también tiene que ser <b>cítrica</b> — ver regla 6.<br/>
+        <b style={{color:'#e2e8f0'}}>3.</b> El almuerzo <b>no lleva lácteo</b>. La fruta del almuerzo es libre <i>salvo</i> los días con hierro (Lun · Mié · Vie · Sáb), donde también tiene que ser <b>cítrica</b> — ver regla 6.<br/>
         <b style={{color:'#e2e8f0'}}>4.</b> <b>Nada de café ni té</b> en las 2 h alrededor del desayuno. Los polifenoles frenan el hierro no hemo hasta un 60-90%, más que todo lo anterior junto.<br/>
-        <b style={{color:'#e2e8f0'}}>5.</b> <b>Nunca dos almuerzos con hierro hemo en días seguidos.</b> Una carga de hierro eleva la hepcidina y frena la absorción de la siguiente ~24 h. Por eso el reparto es <b>Dom → Mar → Jue → Sáb</b>, con 2 días de separación. Es también el motivo de partir el hígado en 2×75g en vez de una ración de 150g.<br/>
-        <b style={{color:'#e2e8f0'}}>6.</b> <b>El hígado responde a la vitamina C.</b> Corrección del 18/08/2026: buena parte de su hierro no es hemo, es no hemo unido a ferritina. Así que en Dom · Mar · Jue · Sáb el cítrico va <b>también en el almuerzo</b>, no solo en el desayuno. Es gratis.
+        <b style={{color:'#e2e8f0'}}>5.</b> <b>Nunca dos almuerzos con hierro hemo en días seguidos.</b> Una carga de hierro eleva la hepcidina y frena la absorción de la siguiente ~24 h. El reparto es <b>Lun → Mié → Vie → Sáb</b>. Con cuatro comidas de hierro en siete días <b>siempre</b> queda un par pegado: aquí es <b>viernes → sábado</b>, y está puesto en ese orden a propósito — primero la carga grande (ternera 220 g) y detrás la pequeña (hígado 75 g), nunca al revés. Es también el motivo de partir el hígado en 2×75g en vez de una ración de 150g.<br/>
+        <b style={{color:'#e2e8f0'}}>6.</b> <b>El hígado responde a la vitamina C.</b> Corrección del 18/08/2026: buena parte de su hierro no es hemo, es no hemo unido a ferritina. Así que en Lun · Mié · Vie · Sáb el cítrico va <b>también en el almuerzo</b>, no solo en el desayuno. Es gratis.
       </div>
 
       {/* Espaciado entre tomas */}
@@ -3376,15 +3382,15 @@ function NutritionTab({ weekIdx }) {
         <div style={{color:'#e2e8f0', fontFamily:'ui-monospace, monospace', fontSize:12.5, lineHeight:2, marginBottom:8}}>
           08:30 · Desayuno <span style={{color:'#64748b'}}>(hora cero)</span><br/>
           11:30 · Skyr <span style={{color:'#64748b'}}>— desayuno + 3 h</span><br/>
-          12:00 · Parmesano <span style={{color:'#64748b'}}>— días C (Dom · Jue)</span><br/>
-          13:00 · Parmesano <span style={{color:'#64748b'}}>— días A (Lun · Mié · Vie)</span><br/>
+          12:00 · Parmesano <span style={{color:'#64748b'}}>— días C (Mié · Sáb)</span><br/>
+          13:00 · Parmesano <span style={{color:'#64748b'}}>— días A (Dom · Mar · Jue)</span><br/>
           14:30 · Almuerzo
         </div>
         <b style={{color:'#e2e8f0'}}>Son offsets, no horas fijas.</b> Si desayunas a las 9:00, todo corre media hora. La inhibición del calcio es concurrente con la comida: depende de que calcio y hierro coincidan en el duodeno, y ahí <b>2 h es el umbral práctico</b>. Por debajo de 1 h 30 es como tomarlos juntos y no habrás ganado nada.<br/><br/>
         <b style={{color:'#e2e8f0'}}>Por qué el parmesano va segundo:</b> es la carga de calcio más pequeña (~590mg frente a ~675mg del Skyr), así que es la que conviene dejar más cerca del almuerzo. Y separarlos 30 min parte los ~1.265mg en dos dosis, que absorben mejor que una sola — por encima de ~500mg por toma la absorción de calcio cae.<br/><br/>
         <b style={{color:'#e2e8f0'}}>Parmesano móvil (18/08/2026):</b> en los días A el almuerzo es pollo, con hierro despreciable, así que el parmesano se va a las <b>13:00</b> — separa las dos cargas de calcio 90 min en vez de 30 y mejora la absorción del propio calcio. En los días C vuelve a las <b>12:00</b> para no comerse las 2 h de margen antes del hígado. Los días B no llevan parmesano.<br/><br/>
         <b style={{color:'#e2e8f0'}}>Re-espaciado del 5/09/2026:</b> con el almuerzo a las 14:30 quedaba un hueco de 3 h 30 antes de comer, así que el Skyr pasó de 10:30 a <b>11:30</b> y el parmesano de 11:00 a <b>12:00</b> (días A, de 12:00 a <b>13:00</b>). Fue <b>por comodidad, no por absorción</b> — las restricciones duras ya se cumplían con el horario viejo. Huecos ahora: 3 h · 30 min · 2 h 30, con el margen calcio→hierro en <b>2 h 30</b>. Si algún día hay que recortar, se recorta de aquí y se vuelve al horario viejo: la regla intocable siguen siendo las 2 h antes del hierro.<br/><br/>
-        <b style={{color:'#e2e8f0'}}>Si no te cabe:</b> sacrifica la separación entre Skyr y parmesano (júntalos a las 11:45), nunca las 2 h de margen. Los días que importan de verdad son <b>domingo y jueves (hígado), martes y sábado (ternera)</b>: esos respétalos.<br/><br/>
+        <b style={{color:'#e2e8f0'}}>Si no te cabe:</b> sacrifica la separación entre Skyr y parmesano (júntalos a las 11:45), nunca las 2 h de margen. Los días que importan de verdad son <b>miércoles y sábado (hígado), lunes y viernes (ternera)</b>: esos respétalos.<br/><br/>
         Agua, la que quieras y cuando quieras. No interfiere con nada.
       </div>
 
@@ -3394,7 +3400,7 @@ function NutritionTab({ weekIdx }) {
         padding:'12px 14px', marginBottom:16, color:'#bfdbfe', fontSize:12.5, lineHeight:1.7
       }}>
         <div style={{color:'#eff6ff', fontWeight:700, marginBottom:6, fontSize:13}}>🔥 Cómo cocinar cada cosa → pestaña <b>👨‍🍳 Cocina</b></div>
-        Métodos por alimento, el reparto semanal de cocina (la sesión grande es el domingo), el protocolo del brócoli con mostaza y
+        Métodos por alimento, el reparto semanal de cocina (la sesión grande es el sábado), el protocolo del brócoli con mostaza y
         el aviso de seguridad por no recalentar viven ahí, para no repetirlos aquí.<br/><br/>
         <b style={{color:'#FCA5A5'}}>Los dos de memoria:</b> el pollo a <b style={{color:'#dbeafe'}}>150-160 °C hasta 68-70 °C de interior</b>,
         y <b style={{color:'#dbeafe'}}>congelar los tuppers del día 4 en adelante</b> — el pollo cocido aguanta 3-4 días y tú no recalientas.
@@ -3410,7 +3416,7 @@ function NutritionTab({ weekIdx }) {
         Rendimientos aproximados usados: <b>pollo 75 %</b> · <b>ternera 73 %</b> · <b>salmón 80 %</b> · <b>hígado 70 %</b>. Varían con el método y el punto de cocción — si asas más, pierdes más agua y el cocido baja. Nunca al revés.<br/><br/>
 
         <div style={{background:'#0f172a', borderRadius:8, padding:'10px 12px', marginBottom:10, color:'#cbd5e1'}}>
-          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo se cocina entero el domingo y hay que dividirlo después: <b style={{color:'#F59E0B'}}>por proporción, no por gramos</b> — pesa todo el pollo cocido y divídelo en <b style={{color:'#f8fafc'}}>18 partes</b> (día A, 4 partes · día C, 3 partes).<br/>
+          <b style={{color:'#f8fafc'}}>🍱 Reparto del batch cook — solo el pollo lo necesita.</b> Ternera, salmón e hígado se cocinan al momento en su día, así que ahí basta con pesarlos crudos. El pollo se cocina entero el sábado y hay que dividirlo después: <b style={{color:'#F59E0B'}}>por proporción, no por gramos</b> — pesa todo el pollo cocido y divídelo en <b style={{color:'#f8fafc'}}>18 partes</b> (día A, 4 partes · día C, 3 partes).<br/>
           <span style={{color:'#64748b'}}>La regla completa, con el arroz y el brócoli, está en la pestaña <b style={{color:'#94a3b8'}}>👨‍🍳 Cocina</b>.</span>
         </div>
 
@@ -3545,8 +3551,8 @@ function SupplementsTab() {
           <b style={{color:'#f8fafc'}}>Desayuno (~8:30):</b> 1 cáp Omega-3. <b style={{color:'#EF4444'}}>Nada más</b> — el desayuno lleva el hierro no hemo del día y no debe compartir comida con zinc ni con calcio.<br/>
           <b style={{color:'#f8fafc'}}>Media mañana (11:30 / 12:00):</b> Skyr y parmesano, solos. Sin suplementos.<br/>
           <b style={{color:'#f8fafc'}}>Almuerzo:</b> D3+K2 + Magnesio + 2 cáps Omega-3 (con aceite de oliva = absorción óptima).<br/>
-          <b style={{color:'#f8fafc'}}>Días B (Mar · Sáb):</b> <b style={{color:'#F59E0B'}}>cero cápsulas de Omega-3</b> — el salmón ya aporta ~5.000mg de EPA+DHA. D3+K2 y magnesio sí, como siempre.<br/>
-          <b style={{color:'#f8fafc'}}>Zinc:</b> ⏸ suspendido hasta la analítica. Si se retoma, va en el <b>almuerzo</b> (no en el desayuno) y se salta los días con hígado (Dom y Jue).
+          <b style={{color:'#f8fafc'}}>Días B (Lun · Vie):</b> <b style={{color:'#F59E0B'}}>cero cápsulas de Omega-3</b> — el salmón ya aporta ~5.000mg de EPA+DHA. D3+K2 y magnesio sí, como siempre.<br/>
+          <b style={{color:'#f8fafc'}}>Zinc:</b> ⏸ suspendido hasta la analítica. Si se retoma, va en el <b>almuerzo</b> (no en el desayuno) y se salta los días con hígado (Mié y Sáb).
         </div>
       </div>
     </div>
@@ -3852,59 +3858,70 @@ function TrackingTab() {
 // Reparto semanal de cocina — reorganizado 22/08/2026.
 // Antes todo era una sesión grande el sábado. No vale: la nevera y el congelador
 // del usuario son pequeños y no cabe la semana entera de una vez, y además no
-// puede pararse a cocinar los miércoles salvo algo corto por la tarde. El plan
+// puede pararse a cocinar entre semana salvo algo corto por la tarde. El plan
 // lo diseñó él; aquí van las tres correcciones que se le hicieron, marcadas.
+//
+// 21/11/2026: el reparto de menús se adelantó un día y la sesión grande pasó del
+// DOMINGO al SÁBADO — el usuario quería cocinarlo todo el sábado y descansar el
+// domingo, y que el día de salmón y ternera cayera en viernes. El sábado es ahora
+// día C, así que el hígado de ese día se hace fresco mientras cocina el resto.
 const COOK_PLAN = [
   {
-    day: 'Sábado', color: '#3B82F6', role: 'Día B · compra y primera tanda',
+    day: 'Sábado', color: '#A855F7', role: 'Día C · compra y LA SESIÓN GRANDE',
     items: [
-      'Salmón y ternera **del día**, al momento. Tortilla sencilla.',
-      '**Congela CRUDOS** el salmón (250 g) y la ternera (220 g) **del martes**.',
-      '**Congela CRUDO** el hígado del jueves (75 g).',
-      'Asa brócoli para **sáb · dom · lun · mar · mié** — 5 raciones.',
       'Compra de la semana.',
-    ],
-  },
-  {
-    day: 'Domingo', color: '#A855F7', role: 'Día C · LA SESIÓN GRANDE',
-    items: [
       '**5 tortillas de espinacas** (días A y C). Las 2 sencillas de los días B se hacen al momento.',
       '**Arroz ×5**, enjuagado y enfriado rápido.',
       '**Pollo 1,35 kg al horno**, 150-160 °C hasta 68-70 °C de interior.',
-      'Hígado del domingo, **fresco**, 4 min.',
-      'Reparto → **nevera: dom · lun · mié** · **congelador: jue · vie**.',
+      'Hígado **del sábado, fresco**, 4 min — hoy ya estás en la cocina.',
+      'Asa brócoli para **sáb · dom · lun · mar** — 4 raciones.',
+      '**Congela CRUDOS:** el hígado del miércoles (75 g) y, si no los compras el jueves, el salmón (250 g) y la ternera (220 g) del viernes.',
+      'Reparto de pollo y arroz → **nevera: sáb · dom · mar** · **congelador: mié · jue**.',
     ],
   },
   {
-    day: 'Martes', color: '#F59E0B', role: 'Día B · nada que preparar',
+    day: 'Domingo', color: '#3B82F6', role: 'Día A · descanso de cocina',
     items: [
-      'Salmón y ternera **descongelados el lunes por la noche**, cocinados al momento.',
+      'No se cocina nada: comes del tupper de ayer.',
+      'Es el día libre de cocina de la semana, y por eso la sesión grande es el sábado.',
+    ],
+  },
+  {
+    day: 'Lunes', color: '#F59E0B', role: 'Día B · al momento',
+    items: [
+      'Salmón y ternera **del día**, de la compra del sábado — dos días de nevera, van frescos.',
       'Tortilla sencilla del día.',
-      'Por la noche: **saca el hígado** del congelador para mañana.',
+      'Por la noche: **saca el hígado del congelador** para mañana.',
     ],
   },
   {
-    day: 'Miércoles (tarde)', color: '#22C55E', role: 'Rato corto, dos cosas',
+    day: 'Martes (tarde)', color: '#22C55E', role: 'Rato corto, dos cosas',
     items: [
-      '**Hígado del jueves**, 4 min de sartén, a la nevera ya hecho.',
-      'En el mismo horno: **brócoli para jue · vie** (segunda tanda).',
+      '**Hígado del miércoles**, 4 min de sartén, a la nevera ya hecho.',
+      'En el mismo horno: **brócoli para mié · jue · vie** (segunda tanda).',
+    ],
+  },
+  {
+    day: 'Viernes', color: '#F59E0B', role: 'Día B · al momento',
+    items: [
+      'Salmón y ternera **del día**: comprados el jueves, o descongelados el jueves por la noche si los congelaste el sábado.',
+      'Tortilla sencilla del día.',
     ],
   },
 ];
-
 // Las tres correcciones al plan original, que son el "por qué" del reparto.
 const COOK_PLAN_FIXES = [
   {
-    t: 'El hígado del jueves se congela CRUDO, no cocinado',
-    d: 'Cocido, congelado y comido frío queda arenoso y seco. Son 4 min de sartén el miércoles por la tarde. Si el miércoles se complica, cocinar los dos el domingo y congelar uno hecho **es seguro** — solo se pierde textura.',
+    t: 'El hígado del miércoles se congela CRUDO, no cocinado',
+    d: 'Cocido, congelado y comido frío queda arenoso y seco. Son 4 min de sartén el martes por la tarde. Si el martes se complica, cocinar los dos el sábado y congelar uno hecho **es seguro** — solo se pierde textura.',
   },
   {
-    t: 'El salmón y la ternera del martes se congelan CRUDOS el sábado',
-    d: 'No cocinados el sábado para el martes. El motivo es específico del salmón: EPA y DHA son los ácidos grasos más oxidables que existen, y cocinado y guardado 3 días se oxidan. Es de donde sale el olor fuerte del pescado del día siguiente — y es justo lo que el salmón aporta.',
+    t: 'El salmón y la ternera del viernes se congelan CRUDOS el sábado',
+    d: 'No cocinados el sábado para el viernes — y mejor aún, comprados el jueves. El motivo es específico del salmón: EPA y DHA son los ácidos grasos más oxidables que existen, y cocinado y guardado 3 días se oxidan. Es de donde sale el olor fuerte del pescado del día siguiente — y es justo lo que el salmón aporta.',
   },
   {
     t: 'El brócoli va en dos tandas de horno, no en una',
-    d: 'Asado congela mal (sale blando y aguado, lo contrario de lo que buscas) y de domingo a viernes son demasiados días. Las dos tandas caen en días en los que ya estás cocinando: sábado y miércoles por la tarde. **Máximo 4 días de antigüedad.**',
+    d: 'Asado congela mal (sale blando y aguado, lo contrario de lo que buscas) y de sábado a viernes son demasiados días. Las dos tandas caen en días en los que ya estás cocinando: sábado y martes por la tarde. **Máximo 4 días de antigüedad** — sáb·dom·lun·mar en la primera, mié·jue·vie en la segunda.',
   },
 ];
 
@@ -3916,12 +3933,12 @@ const COOK_METHODS = [
   },
   {
     food: '🍳 Tortilla', when: 'batch',
-    how: '**Bien hecha.** Espinacas trituradas en crudo con el huevo. **5 con espinacas el domingo · las 2 sencillas de los días B, al momento.**',
+    how: '**Bien hecha.** Espinacas trituradas en crudo con el huevo. **5 con espinacas el sábado · las 2 sencillas de los días B, al momento.**',
     why: 'No hay recalentado que la termine. Y triturar en crudo es una sola exposición al calor: mejor folato que rehogar y luego cuajar.'
   },
   {
     food: '🥦 Brócoli', when: 'sabado',
-    how: '**220 °C, capa única, 15-20 min**, seco, con aceite y **sin sal**. Tallo a ~5-8 mm. Mostaza al servir. **Dos tandas: sábado y miércoles.**',
+    how: '**220 °C, capa única, 15-20 min**, seco, con aceite y **sin sal**. Tallo a ~5-8 mm. Mostaza al servir. **Dos tandas: sábado y martes.**',
     why: 'El horno no lixivia nada al agua, que es la ventaja real frente a hervir. Corrección del 18/08: los "~180 °C" que se recomendaron primero eran un error — a esa temperatura se cuece en su propia humedad y acumula más exposición térmica total.'
   },
   {
@@ -3936,7 +3953,7 @@ const COOK_METHODS = [
   },
   {
     food: '🫀 Hígado', when: 'miercoles',
-    how: 'Sartén muy caliente, **mínimo aceite**, 4 min, **rosa por dentro**. El del domingo, fresco; el del jueves, el miércoles por la tarde.',
+    how: 'Sartén muy caliente, **mínimo aceite**, 4 min, **rosa por dentro**. El del sábado, fresco; el del miércoles, cocinado el martes por la tarde.',
     why: 'Foods 2020: plancha sin aceite pierde un 8 % del folato, con aceite un 22 %, horno combinado 20-41 %. 75 g dan 350-450 µg de folato: los días de hígado arreglan solos el déficit. Pasado queda seco y arenoso.'
   },
   {
@@ -3977,9 +3994,9 @@ const COOK_METHODS = [
 ];
 
 const WHEN_TAG = {
-  batch:  { label: 'domingo', bg: '#2e1065', fg: '#e9d5ff' },
+  batch:  { label: 'sábado', bg: '#2e1065', fg: '#e9d5ff' },
   sabado: { label: 'sábado', bg: '#1e3a8a', fg: '#bfdbfe' },
-  miercoles: { label: 'miércoles tarde', bg: '#052e16', fg: '#bbf7d0' },
+  miercoles: { label: 'martes tarde', bg: '#052e16', fg: '#bbf7d0' },
   'día':  { label: 'al momento',   bg: '#7c2d12', fg: '#fed7aa' },
   regla:  { label: 'regla',        bg: '#3f3f46', fg: '#e4e4e7' },
   servir: { label: 'al servir',    bg: '#14532d', fg: '#bbf7d0' },
@@ -4011,13 +4028,13 @@ function CookingTab() {
         El pollo cocido aguanta <b style={{color:'#fff1f2'}}>3-4 días</b> en nevera y tu semana son <b style={{color:'#fff1f2'}}>7</b>.
         Sin recalentado no queda ningún paso de calor que mate nada, y la <i>Listeria monocytogenes</i> crece
         a temperatura de nevera.<br/><br/>
-        Cocinas el domingo y comes hasta el viernes: son <b style={{color:'#fff1f2'}}>5 días</b>. Por eso el reparto es
-        <b style={{color:'#fff1f2'}}> nevera para domingo · lunes · miércoles</b> y
-        <b style={{color:'#fff1f2'}}> congelador para jueves · viernes</b>. Pásalos a la nevera la noche antes.<br/><br/>
+        Cocinas el sábado y el pollo tiene que llegar al jueves: son <b style={{color:'#fff1f2'}}>6 días</b>. Por eso el
+        reparto es <b style={{color:'#fff1f2'}}>nevera para sábado · domingo · martes</b> y
+        <b style={{color:'#fff1f2'}}>congelador para miércoles · jueves</b>. Pásalos a la nevera la noche antes.<br/><br/>
         <b style={{color:'#fff1f2'}}>El arroz va en el mismo tupper y sigue el mismo criterio.</b> Arroz cocido guardado
         5 días es el caso clásico de <i>Bacillus cereus</i>, cuyas esporas sobreviven a la cocción: enfríalo rápido y
         mételo en frío <b style={{color:'#fff1f2'}}>dentro de la primera hora</b>.<br/><br/>
-        Al cocinar el domingo, <b style={{color:'#fff1f2'}}>enfría rápido y reparte</b>: no dejes 1,35 kg enfriándose
+        Al cocinar el sábado, <b style={{color:'#fff1f2'}}>enfría rápido y reparte</b>: no dejes 1,35 kg enfriándose
         despacio en la encimera. Y descongela <b style={{color:'#fff1f2'}}>siempre en nevera</b>, nunca en la encimera.
       </div>
 
@@ -4115,9 +4132,10 @@ function CookingTab() {
         🗓 Cuándo se cocina cada cosa
       </div>
       <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
-        La sesión grande es el <b style={{ color: '#A855F7' }}>domingo</b>, no el sábado: la nevera y el congelador
-        no dan para la semana entera de una vez. El sábado ya estás cocinando lo del día y compras, y el miércoles
-        por la tarde caben dos cosas cortas.
+        La sesión grande es el <b style={{ color: '#A855F7' }}>sábado</b> — compras y cocinas el mismo día, y el
+        domingo descansas. El sábado es además día C, así que el hígado de ese día sale fresco mientras haces el resto.
+        La nevera y el congelador no dan para la semana entera, por eso el brócoli va en dos tandas y el martes por la
+        tarde caben dos cosas cortas.
       </div>
       <div style={{ marginBottom: 14 }}>
         {COOK_PLAN.map(d => (
@@ -4157,10 +4175,10 @@ function CookingTab() {
         <b style={{ color: '#fff7ed' }}> día A se lleva 4 partes</b> (22,2 %) y cada
         <b style={{ color: '#fff7ed' }}> día C, 3 partes</b> (16,7 %). 3×4 + 2×3 = 18, cuadra exacto.<br/>
         <span style={{ color: '#a8a29e' }}>Con 1,35 kg crudo salen ~1.010 g cocidos → 1 parte ≈ 56 g → día A ≈ 225 g · día C ≈ 169 g.</span><br/><br/>
-        <b style={{ color: '#fff7ed' }}>Destino:</b> domingo, lunes y miércoles a la <b style={{ color: '#fff7ed' }}>nevera</b>;
-        jueves y viernes al <b style={{ color: '#fff7ed' }}>congelador</b>, en bolsa plana (~400 g).<br/><br/>
+        <b style={{ color: '#fff7ed' }}>Destino:</b> sábado, domingo y martes a la <b style={{ color: '#fff7ed' }}>nevera</b>;
+        miércoles y jueves al <b style={{ color: '#fff7ed' }}>congelador</b>, en bolsa plana (~400 g).<br/><br/>
         Mismo criterio con el <b style={{ color: '#fff7ed' }}>arroz</b> (÷ 5) y el <b style={{ color: '#fff7ed' }}>brócoli</b>
-        (÷ 5 la tanda del sábado, ÷ 2 la del miércoles). El brócoli asado es el más impredecible de todos: cuanto más
+        (÷ 4 la tanda del sábado, ÷ 3 la del martes). El brócoli asado es el más impredecible de todos: cuanto más
         seco lo dejes, más peso pierde, así que ahí perseguir gramos no tiene sentido.
       </div>
 
