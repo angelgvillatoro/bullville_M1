@@ -60,7 +60,9 @@ const PROG = [
   { pct: 0.925, sets: [2, 2, 2, 2],  rir: 1, phase: 'Intensidad', color: '#EF4444' }, // W11
   { pct: 0.950, sets: [2, 2, 1, 1],  rir: 0, phase: 'Intensidad', color: '#EF4444' }, // W12
   { pct: 0.975, sets: [1, 1, 1, 1],  rir: 0, phase: 'Peak',       color: '#22C55E' }, // W13
-  { pct: 0.850, sets: [3, 3, 3],     rir: 3, phase: 'Peak',       color: '#22C55E' }, // W14 · descarga
+  // `deload: true` es la ÚNICA marca de semana de descarga del plan. Todo lo que
+  // reduzca carga en la descarga tiene que leerla de aquí y no reimplementarla.
+  { pct: 0.850, sets: [3, 3, 3],     rir: 3, phase: 'Peak',       color: '#22C55E', deload: true }, // W14 · descarga
   { pct: 1.000, sets: [1, 1, 1],     rir: 0, phase: 'Peak',       color: '#22C55E' }, // W15 · intento de récord
 ];
 // Repeticiones para un número de series distinto de 4 (ej. leg curl con 8):
@@ -230,16 +232,33 @@ function fmtClock(s) {
 
 // Nº de series que muestra cada tipo de fila, para que el contador sepa cuántas
 // rondas de descanso quedan.
+// ─── DESCARGA: UN SOLO SITIO QUE LA DECIDE ───────────────────────────────────
+// 11/11/2026. Antes la descarga de la semana 14 solo llegaba a lo que salía de
+// `PROG`. Todo lo que llevaba su propia cuenta de series se la saltaba sin que se
+// viera en pantalla: los nueve ejercicios de rango (`setCount || 4`), el leg curl
+// del domingo (`setCount: 4`) y las tres tablas por fase (leg curl de volumen,
+// Pallof, plancha), que en 'Peak' daban lo mismo en la 13, la 14 y la 15.
+// Regla única: **en la semana de descarga, una serie menos.** Y el RIR de la
+// semana manda sobre el RIR propio del ejercicio.
+function isDeloadWeek(weekIdx) {
+  return !!(PROG[weekIdx] || {}).deload;
+}
+function trimForDeload(arr, weekIdx) {
+  if (!Array.isArray(arr) || !isDeloadWeek(weekIdx)) return arr;
+  return arr.length > 1 ? arr.slice(0, -1) : arr;
+}
 function setsCountFor(ex, weekIdx) {
   if (ex.byPhase) {
     const b = ex.byPhase[(PROG[weekIdx] || PROG[0]).phase];
-    if (b) return b.sets.length;
+    if (b) return trimForDeload(b.sets, weekIdx).length;
   }
   if (ex.type === 'bw' && ex.repsByPhase) {
     const r = ex.repsByPhase[(PROG[weekIdx] || PROG[0]).phase];
-    return Array.isArray(r) ? r.length : 4;
+    return Array.isArray(r) ? trimForDeload(r, weekIdx).length : 4;
   }
-  if (ex.setCount) return ex.setCount;
+  // Serie fija declarada en el ejercicio. Hoy no la usa ninguno —se quitaron el
+  // 11/11/2026— pero si vuelve a aparecer, que descargue como todo lo demás.
+  if (ex.setCount) return Math.max(1, ex.setCount - (isDeloadWeek(weekIdx) ? 1 : 0));
   return (PROG[weekIdx] || PROG[0]).sets.length;   // varía por semana (4, y 3 en descarga y test)
 }
 
@@ -405,7 +424,17 @@ const DL_PCT = [   // [% del RM, reps] x 4 series
   [81,3,88,2,96,1,100,1],      // W11
   [85,3,92,1,98,1,100,1],      // W12
   [85,2,92,1,98,1,100,1],      // W13
-  [92,1,96,1,98,1,100,1],      // W14
+  // 12/11/2026: W14 pasa a ser DESCARGA de verdad. Antes era `[92,1,96,1,98,1,100,1]`
+  // → 165 · 172,5 · 177,5 · 180 kg, cuatro singles acabando en el 100 %: el día más
+  // pesado del ciclo justo en la semana en que la sentadilla baja a 3×3 al 85 %, los
+  // olímpicos descargan y el aislamiento pierde una serie. Era la última cosa que
+  // se saltaba la descarga, y la más cara de recuperar de todo el plan.
+  // ⚠ La primera fila propuesta era `[81,3,85,3,88,2,92,1]` (145×3 · 152,5×3 ·
+  // 157,5×2 · 165×1). Al calcular el tonelaje se vio que NO era una descarga:
+  // 1.372 kg en 9 repeticiones frente a los 827 kg y 5 repeticiones de la W13, y
+  // más incluso que la W9 (1.240 kg). Bajaba la intensidad y casi doblaba el
+  // volumen. Corregida: baja el tope al 88 % Y recorta a 5 repeticiones, 730 kg.
+  [77,2,81,1,85,1,88,1],       // W14 · descarga → 137,5×2 · 145×1 · 152,5×1 · 157,5×1
   [92,1,96,1,98,1,104,1],      // W15
 ];
 
@@ -522,8 +551,22 @@ const DAYS = [
         note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
       { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
         note: 'Torre de latzug/poleas de espalda: escalones de 5 kg (confirmado 18/09/2026). RM corregido de 91 a 80 el 18/09: con los 91 la app pedía 60 kg y el usuario sacaba las repeticiones justas, o sea 0-1 en reserva contra los 3 de la semana 1 — eso pone los 60 kg en el ~76 % y no en el 70 %. El 91 venía de repmax (Epley).' },
-      { name: 'One-armed row cable pull',    rm: 40,  unit: 'kg/arm', testMethod: 'repmax', step: 5, repRange: true,
-        note: 'Vuelta a POLEA el 03/10/2026: se probó con mancuerna y al usuario no le convence. El motivo del cambio se cae solo — se pasó a mancuerna porque el escalón de 5 kg de la torre daba saltos del 12,5 % y dejaba la carga clavada semanas, y con rango de repeticiones eso deja de importar: si 30 kg se quedan cortos, subes repeticiones hasta el tope del rango y entonces cambias de escalón. ⚠ Su RM de 40 nunca se ha medido en limpio, pero con rango de repeticiones ya no manda: solo siembra el peso inicial.' },
+      // ─── REMO A UN BRAZO EN POLEA: ELIMINADO EL 21/11/2026 ──────────────────
+      // Lo pidió el usuario: "con el remo normal ya vale". Correcto, y además ya
+      // estaba dicho en la memoria el 18/09, cuando se añadió: el patrón NO se
+      // queda cojo, porque la tracción vertical la cubre el latzug y la
+      // horizontal bilateral el seated row. Lo único que aportaba el unilateral
+      // era corregir descompensaciones entre lados y algo más de recorrido de
+      // escápula, y su RM de 40 nunca se midió en limpio.
+      // Efecto: la espalda pasa de 24 a 16 series semanales (latzug 4 + seated
+      // row 4, martes y viernes), dentro del rango razonable de 10-20. Y el
+      // martes se queda en cuatro ejercicios.
+      // ⚠ Consecuencia que hay que tener presente: el recorte de bíceps directo
+      // de 12 a 8 series (03/10) se justificó contando ~24 series semanales de
+      // tracción donde el bíceps hace de ayudante, y el remo a un brazo era una
+      // de ellas. Ahora son ~16. Sigue habiendo de sobra (8 directas + 16
+      // indirectas), así que el bíceps no se toca, pero si en algún momento se
+      // queda atrás, este es el motivo y el sitio donde mirar.
     ]
   },
   {
@@ -543,7 +586,13 @@ const DAYS = [
       { name: 'Bicep curls hammer grip seated',    rm: 17.5,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true },
       { name: 'Shoulder press sitting dumbbell',   rm: 26.5, unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true,
         note: 'Va delante de las elevaciones laterales desde el 17/09/2026, y su carga baja de 20 a 18 kg con el redondeo a la baja (el 70 % real son 18,55). Si con esto siguen sin salir las repeticiones del plan, entonces sí es el RM de 26,5 y hay que retestearlo en fresco.' },
-      { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true, setCount: 6 },
+      // 11/11/2026: de 6 series a 4. El reparto 6 (miércoles) + 4 (viernes) venía
+      // del reequilibrio de agosto —de 4 series en un solo día a 10 en dos— y el
+      // 6+4 nunca tuvo motivo escrito: todo lo demás que pasó a dos frecuencias
+      // quedó en 4+4 (butterfly reverse, shoulder press). Era un resto de sumar
+      // sobre el bloque que ya existía. Ahora 4+4 = 8 series semanales, y sin
+      // `setCount` sale del esquema de la semana, así que también descarga.
+      { name: 'Seated lateral raises dumbbell',    rm: 17,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true },
       { name: 'Butterfly reverse cable pull',      rm: 10.5, unit: 'kg/arm', testMethod: 'repmax', repRange: true, step: 1.5,
         note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
       // El leg curl de volumen se queda en el día de brazos: la FLEXIÓN de rodilla
@@ -574,9 +623,25 @@ const DAYS = [
         note: 'Torre de latzug/poleas de espalda: la placa va de 5 en 5 kg (confirmado 18/09/2026), así que las cargas sólo existen en múltiplos de 5. Este RM se midió por ESCALERA, no por Epley, y es el único de los tres de esta máquina que no ha dado problemas.' },
       { name: 'Seated row cable pull',       rm: 80,  unit: 'kg',     testMethod: 'repmax', step: 5,
         note: 'Torre de latzug/poleas de espalda: escalones de 5 kg (confirmado 18/09/2026). RM corregido de 91 a 80 el 18/09: con los 91 la app pedía 60 kg y el usuario sacaba las repeticiones justas, o sea 0-1 en reserva contra los 3 de la semana 1 — eso pone los 60 kg en el ~76 % y no en el 70 %. El 91 venía de repmax (Epley).' },
-      { name: 'One-armed row cable pull',    rm: 40,  unit: 'kg/arm', testMethod: 'repmax', step: 5, repRange: true,
-        note: 'Vuelta a POLEA el 03/10/2026: se probó con mancuerna y al usuario no le convence. El motivo del cambio se cae solo — se pasó a mancuerna porque el escalón de 5 kg de la torre daba saltos del 12,5 % y dejaba la carga clavada semanas, y con rango de repeticiones eso deja de importar: si 30 kg se quedan cortos, subes repeticiones hasta el tope del rango y entonces cambias de escalón. ⚠ Su RM de 40 nunca se ha medido en limpio, pero con rango de repeticiones ya no manda: solo siembra el peso inicial.' },
-      { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true, setCount: 4 },
+      // ─── REMO A UN BRAZO EN POLEA: ELIMINADO EL 21/11/2026 ──────────────────
+      // Lo pidió el usuario: "con el remo normal ya vale". Correcto, y además ya
+      // estaba dicho en la memoria el 18/09, cuando se añadió: el patrón NO se
+      // queda cojo, porque la tracción vertical la cubre el latzug y la
+      // horizontal bilateral el seated row. Lo único que aportaba el unilateral
+      // era corregir descompensaciones entre lados y algo más de recorrido de
+      // escápula, y su RM de 40 nunca se midió en limpio.
+      // Efecto: la espalda pasa de 24 a 16 series semanales (latzug 4 + seated
+      // row 4, martes y viernes), dentro del rango razonable de 10-20. Y el
+      // martes se queda en cuatro ejercicios.
+      // ⚠ Consecuencia que hay que tener presente: el recorte de bíceps directo
+      // de 12 a 8 series (03/10) se justificó contando ~24 series semanales de
+      // tracción donde el bíceps hace de ayudante, y el remo a un brazo era una
+      // de ellas. Ahora son ~16. Sigue habiendo de sobra (8 directas + 16
+      // indirectas), así que el bíceps no se toca, pero si en algún momento se
+      // queda atrás, este es el motivo y el sitio donde mirar.
+      // 11/11/2026: se le quita el `setCount: 4` fijo. El número no cambia (sigue
+      // siendo 4), pero ahora sale del esquema semanal y baja a 3 en la descarga.
+      { name: 'Seated lateral raises dumbbell', rm: 17,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, dumbbell: true },
       { name: 'Butterfly reverse cable pull', rm: 10.5,  unit: 'kg/arm', testMethod: 'repmax', repRange: true, step: 1.5,
         note: 'Torre de flys/butterfly: escalones de 1,5 kg y el número impreso son KILOS REALES (1:1, verificado 24/08/2026). RM corregido de 16 a 10,5 el 24/08 — el 16 se había anotado aplicando un ×1,5 que no existe.' },
     ]
@@ -596,7 +661,9 @@ const DAYS = [
       { name: 'Deadlift barbell',   rm: 180, unit: 'kg', type: 'olympic', sets: DL_PCT, testMethod: 'ladder' },
       { name: 'Squat barbell',      rm: 140, unit: 'kg', testMethod: 'video', mvt: 0.30,
         note: 'Las series extra de volumen que estaban en el miércoles se eliminaron el 02/10/2026: la sentadilla se queda en 4 series. ⚠ CONSECUENCIA: el cuádriceps vuelve a UNA exposición semanal, que es lo que la segunda exposición del 6/08 vino a resolver. Y ojo con el motivo: los olímpicos NO sustituyen trabajo de cuádriceps — está comprobado y documentado (network meta-analysis Frontiers 2025: halterofilia SUCRA 0,13 en fuerza máxima de tren inferior frente a 0,95 del entrenamiento tradicional), aunque el matiz importa: recoge la barra en sentadilla COMPLETA en los dos levantamientos, asi que los olimpicos SI dan 64 repeticiones semanales de salir de una sentadilla profunda frente a las 32 de la sesion de pierna (corregido el 10/11/2026; antes aqui se afirmaba por error que hacia power clean y power snatch). Lo que no dan es tension mecanica alta sostenida en el cuadriceps: son rapidos y ligeros en relacion al squat. La decisión se sostiene por duración de sesión y por espaciado de cadera, no porque los olímpicos cubran el cuádriceps.' },
-      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', setCount: 4, step: 5,
+      // 11/11/2026: fuera el `setCount: 4` fijo. El número no cambia (sigue siendo
+      // 4), pero ahora sale del esquema semanal y baja a 3 en la descarga.
+      { name: 'Leg curl machine',   rm: 97.5,  unit: 'kg', testMethod: 'repmax', step: 5,
         note: 'De 8 series a 4 el 05/09/2026: las otras 4 se hacen el miércoles, en fresco (ver VOLUME_LEGCURL). Sin Nordic curl: da el tirón fuerte para contraer y luego frena la vuelta controlando la fase excéntrica en vez de soltarla — es el mismo principio sin necesitar la fuerza de un Nordic curl completo. Aquí vas el tercero, detrás de peso muerto y sentadilla: si el excéntrico ya no se puede frenar, corta la serie.' },
       { name: 'Hip thrust machine', rm: 140, unit: 'kg', testMethod: 'ladder' },
       { name: 'Pallof press cable (hold isométrico)', type: 'bw', repsByPhase: PALLOF_SECONDS,
@@ -1674,7 +1741,11 @@ function RepRangeRow({ ex, weekIdx, loads, setLoad }) {
              : wt(ex.rm, p.pct);
   const weight = loads[key] !== undefined ? loads[key] : seed;
   const chosen = loads[key] !== undefined;
-  const nSets = ex.setCount || 4;
+  // 11/11/2026: antes era `ex.setCount || 4`, que IGNORABA la semana por completo.
+  // Consecuencia: en la semana 14 (descarga) y en la 15 los básicos bajaban a 3
+  // series y los nueve ejercicios de rango se quedaban en 4 — el aislamiento no
+  // descargaba nunca. Ahora sale del esquema semanal, igual que todo lo demás.
+  const nSets = setsCountFor(ex, weekIdx);
   const isArm = ex.unit === 'kg/arm';
   return (
     <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', marginBottom: 6 }}>
@@ -1719,7 +1790,11 @@ function NonOlympicRow({ ex, weekIdx, rmStore }) {
   // Un ejercicio puede llevar su propia intensidad/repeticiones por fase
   // (ej. la sentadilla de volumen del miércoles), al margen de la tabla PROG.
   const own = ex.byPhase ? ex.byPhase[prog.phase] : null;
-  const p = own ? { ...prog, pct: own.pct, sets: own.sets, rir: 2 } : prog;
+  // El RIR propio (2) de una tabla por fase NO manda en la semana de descarga:
+  // ahí el RIR de la semana es más alto a propósito.
+  const p = own
+    ? { ...prog, pct: own.pct, sets: trimForDeload(own.sets, weekIdx), rir: isDeloadWeek(weekIdx) ? prog.rir : 2 }
+    : prog;
   const effRM = effectiveRM(ex, rmStore);
   const overridden = effRM !== ex.rm;
   // La descarga multiplica el peso final y NO toca el RM: así sigue valiendo
@@ -1830,7 +1905,7 @@ function BackoffRestButton({ ex, compact }) {
 
 function BWRow({ ex, weekIdx, rmStore }) {
   const phase = PROG[weekIdx].phase;
-  const reps = ex.repsByPhase[phase];
+  const reps = trimForDeload(ex.repsByPhase[phase], weekIdx);
   const equipLabel = ex.equipLabel || 'Peso corporal';
   const unitSuffix = ex.unitSuffix || '';
   const note = ex.note || 'Objetivo por serie, no un número plano — respeta la caída de fatiga real entre series.';
@@ -4016,6 +4091,13 @@ function CookingTab() {
         <b style={{color:'#dcfce7'}}>Al servir:</b> espolvorea <b style={{color:'#f0fdf4'}}>1 g de mostaza parda en polvo</b> y
         cómetelo. Como no recalientas, el plato ya está templado y no hay que esperar nada — solo no dejarlo
         reposar después de echarla.<br/><br/>
+        <b style={{color:'#dcfce7'}}>Especias (21/11/2026).</b> A 220 °C algunas se queman y amargan, así que se reparten en dos momentos.{' '}
+        <b style={{color:'#f0fdf4'}}>Antes del horno</b>, mezcladas con el aceite: comino, semillas de hinojo o cilantro, guindilla en escamas.{' '}
+        <b style={{color:'#f0fdf4'}}>Al sacarlo:</b> pimentón (ahumado o dulce; si entra al horno, solo los últimos 5 min), orégano o tomillo, sal y limón.
+        Ajo: dientes enteros desde el principio o picado los últimos 5 min. ~½ cucharadita de cada especia por bandeja.<br/>
+        <b style={{color:'#dcfce7'}}>Combinaciones:</b> comino + guindilla → limón · pimentón ahumado + ajo → sal · hinojo + guindilla → ralladura de limón + orégano.
+        Lo que más levanta el brócoli frío es el <b style={{color:'#f0fdf4'}}>ácido</b>: ralladura y zumo de limón al servir.<br/>
+        <b style={{color:'#FCA5A5'}}>Nunca</b> parmesano ni queso encima (el almuerzo no lleva lácteo: el calcio frena el hierro) ni sal antes del horno.<br/><br/>
         <b style={{color:'#f0fdf4'}}>Por qué.</b> El sulforafano no está en el brócoli: lo forma la <b style={{color:'#f0fdf4'}}>mirosinasa</b>,
         una enzima que el horno destruye por completo. La mostaza la repone desde fuera. En el ensayo cruzado de
         Okunade (2018), 12 adultos con 200 g de brócoli cocido — la misma ración que tú — pasaron de 9,8 a
