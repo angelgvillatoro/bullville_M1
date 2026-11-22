@@ -619,7 +619,62 @@ const ANIM={
    [1,"4 · Guard","Both knees in front of him, feet on his hips, hands on his sleeves: guard recovered."]],
   readout:(S,t)=>[t<.6?"One leg trapped":"Both legs in front of him",t<.4],
   note:"Continues from the elbow-knee escape. Free the foot by pushing, never by twisting the knee.",
-  physics:["The knee shield is a frame made of your shin: it holds his weight off your chest while you move your hips."]}
+  physics:["The knee shield is a frame made of your shin: it holds his weight off your chest while you move your hips."]},
+ pull_guard:{title:"Pull guard",target:[30,50,0],cam:[-1.1,.25],dist:360,
+  keys:[
+   {t:0,A:{P:[0,95,0],up:[0,1,0],fw:[1,0,0],LA:[-4,6,-14],RA:[8,6,14],LKp:[1,0,0],RKp:[1,0,0],RW:[40,130,8],REp:[0,-1,.4],LW:[36,120,-20],LEp:[0,-1,-.4]},
+        D:{P:[58,95,0],up:[0,1,0],fw:[-1,0,0],LA:[66,6,14],RA:[52,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[14,130,-8],REp:[0,-1,-.4],LW:[22,120,22],LEp:[0,-1,.4]}},
+   {t:.3,A:{P:[-4,92,0],up:[-.1,.99,0],fw:[.99,.1,0],LA:[-4,6,-14],RA:[44,90,8],LKp:[1,0,0],RKp:[1,1,0],RW:[36,126,6],REp:[0,-1,.4],LW:[30,118,-18],LEp:[0,-1,-.4]},
+        D:{P:[58,95,0],up:[-.05,1,0],fw:[-1,-.05,0],LA:[66,6,14],RA:[52,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[14,128,-8],REp:[0,-1,-.4],LW:[22,118,22],LEp:[0,-1,.4]}},
+   {t:.43,A:{P:[0,52,-3],up:[-.25,.97,0],fw:[.97,.25,0],LA:[8,6,-14],RA:[43,76,8],LKp:[1,.5,0],RKp:[1,1,0],RW:[36,108,6],REp:[0,-1,.4],LW:[30,98,-17],LEp:[0,-1,-.4]},
+        D:{P:[55,90,0],up:[-.2,.98,0],fw:[-.98,-.2,0],LA:[65,6,14],RA:[52,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[18,96,-8],REp:[0,-1,-.4],LW:[24,94,21],LEp:[0,-1,.4]}},
+   {t:.55,A:{P:[6,16,-4],up:[-.45,.89,0],fw:[.89,.45,0],LA:[26,6,-14],RA:[42,60,8],LKt:[14,44,-16],RKt:[24,52,20],RW:[36,88,6],REp:[0,-1,.4],LW:[32,78,-16],LEp:[0,-1,-.4]},
+        D:{P:[50,80,0],up:[-.4,.92,0],fw:[-.92,-.4,0],LA:[64,6,14],RA:[52,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[22,58,-8],REp:[0,-1,-.4],LW:[26,64,20],LEp:[0,-1,.4]}},
+   {t:.8,A:{P:[8,13,0],up:[-1,.15,0],fw:[.15,1,0],LA:[60,40,-14],RA:[60,44,14],LKt:[36,40,-26],RKt:[36,40,26],LW:[-12,34,-12],LEp:[0,-.3,-1],RW:[-6,36,-2],REp:[0,-.3,1]},
+        D:{P:[40,58,0],up:[-.6,.8,0],fw:[-.8,-.6,0],LKt:[36,8,10],RKt:[36,8,-10],LA:[80,8,10],RA:[80,8,-10],LW:[10,32,14],LEp:[0,-.2,1],RW:[-4,30,-6],REp:[0,-1,-.3]}},
+   {t:1,A:{P:[8,13,0],up:[-1,0,0],fw:[0,1,0],LW:[-17,33,-12],RW:[-9,34,-2],LEp:[0,-.3,-1],REp:[0,-.3,1],LKt:[37.9,42.9,-28],LA:[63.2,59,6.9],RKt:[37.9,42.9,28],RA:[63.2,59,-6.9],LKp:[0,1,-1],RKp:[0,1,1]},
+        D:{P:[42,54,0],up:[-.75,.66,0],hd:[0,0,0],fw:[-.66,-.75,0],LW:[12,30,14],RW:[-10,31,-6],LEp:[0,-.2,1],REp:[0,-1,-.3],LKt:[37.4,8.2,10],LA:[83.4,8.2,10],RKt:[37.4,8.2,-10],RA:[83.4,8.2,-10]}}],
+  forces:[
+   {lab:"Grips",col:"#d3263a",from:0,to:.6,at:S=>S.A.Lw,dir:[-1,0,0],len:22,off:8},
+   {lab:"Foot on his hip",col:"#0f8b8d",from:.2,to:.6,at:S=>S.A.Ra,dir:[1,0,0],len:22,off:8},
+   {lab:"Pull him in",col:"#e09a00",from:.6,to:.9,at:S=>S.D.chest,dir:[-1,-.4,0],len:26,off:12}],
+  steps:[
+   [0,"1 · Grips first","Lapel and sleeve settled before you go anywhere."],
+   [.3,"2 · Foot on his hip","One foot on his hip, standing close to him. Never jump."],
+   [.55,"3 · Sit close to your heel","Sit down right next to your standing heel, keeping the grips and the foot on his hip."],
+   [.8,"4 · Pull him in","Lie back and pull him down onto his knees between your legs."],
+   [1,"5 · Close the guard","Lock your ankles behind his back: closed guard."]],
+  readout:(S,t)=>[`Your hips ${Math.round(S.A.P[1])} cm off the mat`,false],
+  note:"A legitimate choice when you don’t win the grip fight. Sit, don’t fall: no jumping into guard.",
+  physics:["Sitting close to your heel lowers you under control, instead of dropping your weight onto your back."]},
+ takedown:{title:"Takedown: foot sweep to side control",target:[56,48,-12],cam:[-1.2,.25],dist:380,
+  keys:[
+   {t:0,A:{P:[0,95,0],up:[0,1,0],fw:[1,0,0],LA:[-4,6,-14],RA:[8,6,14],LKp:[1,0,0],RKp:[1,0,0],RW:[40,130,8],REp:[0,-1,.4],LW:[36,120,-20],LEp:[0,-1,-.4]},
+        D:{P:[58,95,0],up:[0,1,0],fw:[-1,0,0],LA:[66,6,14],RA:[52,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[14,130,-8],REp:[0,-1,-.4],LW:[22,120,22],LEp:[0,-1,.4]}},
+   {t:.3,A:{P:[6,93,-4],up:[.05,1,-.05],fw:[1,-.05,0],LA:[-4,6,-14],RA:[24,16,20],LKp:[1,0,0],RKp:[1,0,.3],RW:[40,128,6],REp:[0,-1,.4],LW:[28,112,-18],LEp:[0,-1,-.4]},
+        D:{P:[52,93,4],up:[-.1,.99,.05],fw:[-.99,-.1,0],LA:[40,6,16],RA:[56,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[14,126,-8],REp:[0,-1,-.4],LW:[22,116,22],LEp:[0,-1,.4]}},
+   {t:.45,A:{P:[10,93,-6],up:[.05,1,-.08],fw:[1,-.05,0],LA:[-4,6,-14],RA:[40,10,2],LKp:[1,0,0],RKp:[1,0,0],RW:[42,124,6],REp:[0,-1,.4],LW:[30,108,-16],LEp:[0,-1,-.4]},
+        D:{P:[56,88,6],up:[.35,.93,.1],fw:[-.93,.35,0],LA:[42,22,-4],RA:[58,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[24,118,-8],REp:[0,-1,-.4],LW:[30,112,24],LEp:[0,-1,.4]}},
+   {t:.65,A:{P:[26,78,-14],up:[.3,.95,0],fw:[.95,-.3,0],LA:[6,6,-22],RA:[42,6,4],LKp:[1,0,0],RKp:[1,0,0],RW:[60,68,6],REp:[0,-1,.4],LW:[44,74,-12],LEp:[0,-1,-.4]},
+        D:{P:[66,45,4],up:[.85,.5,.1],fw:[-.5,.85,0],LA:[30,40,10],RA:[38,22,-10],LKp:[0,1,0],RKp:[0,1,0],RW:[96,70,-20],REp:[0,-1,-.4],LW:[90,74,26],LEp:[0,-1,.4]}},
+   {t:.82,A:{P:[72,42,-30],up:[.15,.55,.82],fw:[0,-.83,.55],LKt:[90,8,-62],RKt:[64,8,-62],LA:[92,8,-104],RA:[66,8,-104],LKp:[0,-1,0],RKp:[0,-1,0],LW:[112,22,4],LEp:[.3,.6,-.3],RW:[34,18,24],REp:[-.3,.6,-.3]},
+        D:{P:[64,14,0],up:[1,.03,0],fw:[0,1,-.12],LA:[32,7,12],RA:[30,10,-12],LKp:[0,1,0],RKp:[0,1,0],LW:[104,34,8],LEp:[-.5,-.4,1],RW:[100,34,-8],REp:[-.5,-.4,-1]}},
+   {t:1,A:{P:[80,32,-32],up:[.19,.155,.97],hd:[0,0,0],fw:[0,-1,0],LW:[126,8,8],RW:[24,8,34],LEp:[.3,.6,-.3],REp:[-.3,.6,-.3],LA:[98,8,-112],RA:[68,8,-112],LKt:[98,8,-72],RKt:[68,8,-72],LKp:[0,-1,0],RKp:[0,-1,0]},
+        D:{P:[64,13,0],up:[1,0,0],hd:[0,0,0],fw:[0,1,-.15],LW:[104,32,6],RW:[102,32,-8],LEp:[-.5,-.4,1],REp:[-.5,-.4,-1],LA:[32,7,12],RA:[32,7,-12],LKp:[0,1,0],RKp:[0,1,0]}}],
+  forces:[
+   {lab:"Pull the sleeve",col:"#d3263a",from:.1,to:.5,at:S=>S.A.Lw,dir:[-1,0,-.3],len:22,off:8},
+   {lab:"Sweep his foot",col:"#0f8b8d",from:.3,to:.55,at:S=>S.A.Ra,dir:[0,0,-1],len:24,off:8},
+   {lab:"Follow him down",col:"#e09a00",from:.65,to:.95,at:S=>S.A.P,dir:[.6,-.6,-.4],len:28,off:14}],
+  steps:[
+   [0,"1 · Grips","Lapel and sleeve."],
+   [.3,"2 · Off-balance","Pull his sleeve as he steps toward you: his weight comes onto that foot."],
+   [.45,"3 · Sweep","Sweep the foot he’s stepping on with the sole of your foot, just before the weight lands."],
+   [.65,"4 · He falls","Keep the sleeve grip: he lands on his back and can’t post."],
+   [.82,"5 · Follow him down","Drop onto him straight away, chest to chest."],
+   [1,"6 · Side control","Settle across his chest: side control."]],
+  readout:(S,t)=>[t<.55?"Both standing":"He’s down",false],
+  note:"Shown with de ashi barai (foot sweep), a throw with no load on your knees. The other throws are listed below.",
+  physics:["A foot about to take his weight is light and easy to move; once the weight lands it’s stuck to the mat."]}
 };
 const CAMS={Angle:[-1.2,.5],Side:[-1.5708,.2],Top:[-1.5708,1.45],Behind:[1.2,.55]};
 let xray=false,cam={yaw:-1.2,pitch:.5,dist:270},YOU="A",NOFORCE=false;
@@ -727,9 +782,9 @@ flat:{n:["Flattened, back taken","You flattened him"],d:[5,0],x:82,y:92,
    end: the role the one doing it ends in. tech: key points in T. anim: animation (the one doing it is body A).
    stop: how the other one stops it. */
 const TR=[
- {id:"pull_guard",from:"standing",by:"any",to:"cguard",end:"bottom",n:"Pull guard",kind:"Transition",tech:"tirar_guardia",
+ {id:"pull_guard",from:"standing",by:"any",to:"cguard",end:"bottom",n:"Pull guard",anim:"pull_guard",kind:"Transition",tech:"tirar_guardia",
   stop:"You end up in his closed guard. Posture up immediately: straight back, elbows in."},
- {id:"takedown",from:"standing",by:"any",to:"side",end:"top",n:"Takedown to side control",kind:"Takedown",judo:1,
+ {id:"takedown",from:"standing",by:"any",to:"side",end:"top",n:"Takedown to side control",anim:"takedown",kind:"Takedown",judo:1,
   steps:["Win the grips: sleeve and lapel.","Off-balance him before you enter (kuzushi).","Throw and follow him down to side control."],
   stop:"Grip fighting, upright posture and a sprawl against leg attacks. If the throw is already happening, breakfall instead of resisting on a twisted knee."},
  {id:"seated_guard",from:"seated",by:"bottom",to:"cguard",end:"bottom",n:"Pull him into closed guard",kind:"Transition",
