@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tatami: BJJ and judo</title>
+<title>Tatami: BJJ survival map</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,11 +13,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* VOICE: clear, direct coach; a study tool, no frills.
-   IDEA: the mat seen from above; positions are zones and transitions are lines on the mat.
-   PICTURE: the position map, large, at the top, with progress for each position.
-   COLOUR and TYPE: tatami blue dominant, gi white, obi red as accent; Barlow Condensed + Inter.
-   LAYOUT: section bar; map and position card side by side, stacked on mobile. */
+/* VOICE: clear, direct coach; a survival tool for a white belt.
+   IDEA: a map of states and the moves between them, played in 3D.
+   PICTURE: the 3D view of where you are, with your moves and his next to it.
+   COLOUR and TYPE: tatami blue dominant, gi white, obi red as accent; danger colours on states; Barlow Condensed + Inter.
+   LAYOUT: simulator (view + panel side by side, stacked on mobile) and a start map. */
 :root{color-scheme:light dark;--bg:light-dark(#f7f8fa,#0e1520);--card:light-dark(#fff,#162131);--ink:light-dark(#141821,#e8edf4);--mute:light-dark(#5a6372,#9aa6b8);--line:light-dark(#dde2ea,#26344a);--mat:light-dark(#1d4f9e,#2a63bf);--mat2:light-dark(#163d7a,#1b3f78);--red:#d3263a;--amber:light-dark(#9a5b00,#f0b04a);--ok:light-dark(#1d7a4a,#4cc28a)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
@@ -35,19 +35,7 @@ section[hidden]{display:none}
 .lead{color:var(--mute);max-width:70ch;margin:6px 0 18px}
 .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
 @media(max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
-.mapwrap{position:relative;background:var(--mat2);border-radius:16px;aspect-ratio:8/6;overflow:hidden;box-shadow:inset 0 0 0 10px var(--mat)}
-.mapwrap svg{position:absolute;inset:0;width:100%;height:100%}
-.node{position:absolute;transform:translate(-50%,-50%);background:#fff;color:#141821;border:0;border-radius:12px;padding:8px 12px;font:600 14px/1.15 Inter,sans-serif;cursor:pointer;min-height:44px;min-width:92px;box-shadow:0 3px 0 rgba(0,0,0,.25);text-align:center}
-.node small{display:block;font-weight:500;font-size:12px;color:#5a6372}
-.node[aria-pressed=true]{background:var(--red);color:#fff}.node[aria-pressed=true] small{color:#ffe0e4}
-.node .bar{display:block;height:4px;border-radius:2px;background:#e3e7ee;margin-top:5px;overflow:hidden}.node .bar i{display:block;height:100%;background:var(--ok)}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin-top:10px}
-.legend span::before{content:"";display:inline-block;width:22px;height:0;border-top:3px solid var(--k);vertical-align:middle;margin-right:6px}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:12px 0}
-.seg button{border:0;background:none;color:var(--ink);padding:10px 16px;font:600 15px Inter,sans-serif;min-height:44px;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--mat);color:#fff}
-.pts{font-weight:600;color:var(--red);font-size:15px}
 ul.clean{margin:6px 0 0;padding-left:20px}ul.clean li{margin:3px 0}
 .label{font-size:13px;font-weight:600;color:var(--mute);margin:16px 0 4px}
 .note{border-left:4px solid var(--amber);background:light-dark(#fff6e6,#2a2214);padding:10px 14px;border-radius:0 10px 10px 0;font-size:15px;margin:14px 0}
@@ -65,29 +53,7 @@ button.btn.primary{background:var(--mat);color:#fff;border-color:var(--mat)}
 button.btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 button.link{border:0;background:none;color:var(--mat);font:600 15px Inter,sans-serif;padding:6px 0;cursor:pointer;text-align:left;min-height:36px}
 :root[data-theme=dark] button.link{color:#8fb4f5}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) button.link{color:#8fb4f5}}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px}
-.plan ol{padding-left:0;list-style:none;margin:8px 0 0}
-.plan li{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
-.plan li span:first-child{color:var(--mute)}.plan li span:first-child::before{content:"If ";font-weight:600;color:var(--ink)}
 @media(max-width:600px){.plan li{grid-template-columns:minmax(0,1fr)}}
-table{width:100%;border-collapse:collapse;font-size:15px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:13px;color:var(--mute)}
-form.diary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
-form.diary .full{grid-column:1/-1}
-@media(max-width:600px){form.diary{grid-template-columns:minmax(0,1fr)}}
-label{display:block;font-size:14px;font-weight:600;margin-bottom:4px}
-input,select,textarea{width:100%;font:16px Inter,sans-serif;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:44px}
-textarea{min-height:76px;resize:vertical}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{display:inline-flex;align-items:center;gap:6px;background:var(--mat);color:#fff;border-radius:20px;padding:4px 6px 4px 12px;font-size:14px}
-.chip button{border:0;background:rgba(255,255,255,.2);color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 20px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.stat b{display:block;font:700 clamp(26px,4vw,34px)/1 "Barlow Condensed",sans-serif}.stat span{font-size:13px;color:var(--mute)}
-.entry{border-top:1px solid var(--line);padding:14px 0}.entry h3{font-size:19px}
-.entry p{margin:4px 0;font-size:15px}
-.flash{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,34px);min-height:260px;display:flex;flex-direction:column;gap:12px}
-.flash .front{font:700 clamp(24px,4vw,32px)/1.15 "Barlow Condensed",sans-serif}
-.empty{color:var(--mute);padding:22px;border:1px dashed var(--line);border-radius:14px;text-align:center}
 footer{color:var(--mute);font-size:13px;text-align:center;padding:0 16px 30px}
 .animfig{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .animfig svg{display:block;width:100%;height:auto}
@@ -95,6 +61,7 @@ footer{color:var(--mute);font-size:13px;text-align:center;padding:0 16px 30px}
 @media(max-width:600px){.svglbl{display:none}}
 .keyrow{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--mute);margin-top:10px}
 .keyrow span::before{content:"";display:inline-block;width:20px;height:5px;background:var(--c);vertical-align:middle;margin-right:6px;border-radius:3px}
+.ctrl[hidden]{display:none}
 .ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
 .ctrl input[type=range]{flex:1 1 220px;padding:0;min-height:44px;accent-color:var(--red)}
 .readout{font:700 26px/1 "Barlow Condensed",sans-serif;white-space:nowrap}
@@ -103,136 +70,68 @@ footer{color:var(--mute);font-size:13px;text-align:center;padding:0 16px 30px}
 .step{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card);color:var(--ink);text-align:left;font:15px/1.45 Inter,sans-serif;cursor:pointer}
 .step b{display:block;font-size:13px;color:var(--mute);margin-bottom:3px}
 .step[aria-current=true]{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
-@media(prefers-reduced-motion:no-preference){.node{transition:transform .15s,background .15s}.node:hover{transform:translate(-50%,-52%)}}
+
+.simbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.simbar #stateTitle{font:700 24px/1.1 "Barlow Condensed",Inter,sans-serif;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dchip{display:inline-block;font:600 13px Inter,sans-serif;padding:3px 10px;border-radius:20px;background:var(--d);color:#fff}
+.mvs{display:grid;gap:8px}
+.mv{display:grid;gap:2px;text-align:left;border:1px solid var(--line);border-left:6px solid var(--dc);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 12px;font:15px/1.35 Inter,sans-serif;cursor:pointer;min-height:44px}
+.mv .mvn{font-weight:600}.mv .mvd{font-size:14px;color:var(--mute)}.mv .mvd b{color:var(--dc)}
+.mv .tag{justify-self:start}
+.mv:hover{border-color:var(--dc)}
+.seen{color:var(--ok);font-weight:700}
+.note.stop{border-left-color:var(--red);background:light-dark(#fdecee,#341a1f)}
+.steps.one{grid-template-columns:minmax(0,1fr)}
+.result{flex:1 1 100%;font:700 26px/1.1 "Barlow Condensed",sans-serif;color:var(--d)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:4px 0 14px}
+.seg button{border:0;background:none;color:var(--ink);padding:10px 16px;font:600 15px Inter,sans-serif;min-height:44px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--mat);color:#fff}
+.mapwrap{position:relative;background:var(--mat2);border-radius:16px;aspect-ratio:1/1;max-width:760px;overflow:hidden;box-shadow:inset 0 0 0 10px var(--mat)}
+@media(max-width:600px){.mapwrap{aspect-ratio:3/4}}
+.mapwrap svg{position:absolute;inset:0;width:100%;height:100%}
+.node{position:absolute;transform:translate(-50%,-50%);background:#fff;color:#141821;border:0;border-left:6px solid var(--d);border-radius:12px;padding:6px 10px;font:600 14px/1.15 Inter,sans-serif;cursor:pointer;min-height:44px;max-width:30%;box-shadow:0 3px 0 rgba(0,0,0,.25);text-align:left}
+.node small{display:block;font-weight:500;font-size:12px;color:#5a6372}
+@media(max-width:600px){.node{font-size:12px;padding:5px 7px}.node small{font-size:11px}}
+.mapcard{max-width:760px;margin-top:12px;padding:14px 16px}
+.edge{opacity:.28;transition:opacity .15s}.sel .edge{opacity:.12}.sel .edge.on{opacity:1}
+.node[aria-pressed=true]{outline:3px solid var(--red);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin-top:10px;max-width:760px}
+.legend span::before{content:"";display:inline-block;width:22px;height:0;border-top:3px solid var(--k);vertical-align:middle;margin-right:6px}
+@media(prefers-reduced-motion:no-preference){.node{transition:transform .15s}.node:hover{transform:translate(-50%,-53%)}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Tatami: BJJ and judo</h1>
-  <p>Position map, game plans, judo for BJJ, training log and review. Techniques that load the operated knee are flagged.</p>
-  <nav id="nav">
-    <a href="#mapa">Map</a><a href="#planes">Game plans</a><a href="#judo">Judo for BJJ</a><a href="#diario">Training log</a><a href="#repaso">Review <span id="dueBadge"></span></a><a href="#anim">Biomechanics</a>
-  </nav>
+  <h1>Tatami: BJJ survival map</h1>
+  <p>Pick where you start, see the position in 3D and choose what happens next: your escapes and his attacks. Survive first, then escape to a better position.</p>
+  <nav id="nav"><a href="#sim">Simulator</a><a href="#map">Map</a></nav>
 </header>
 <main>
-  <section id="v-mapa">
+  <section id="v-sim" hidden>
+    <div class="simbar"><button class="btn" id="backBtn">← Back</button><div id="stateTitle"></div></div>
     <div class="grid">
       <div>
-        <div class="mapwrap" id="map"><svg id="mapSvg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg></div>
-        <div class="legend"><span style="--k:#fff">Progress on top (pass, advance)</span><span style="--k:#ff5d6e">Sweep or reversal from bottom</span></div>
-        <p class="lead">The green bar on each position shows how many of its techniques you’ve marked as seen or as using in sparring.</p>
+        <div class="animfig"><svg id="svgRoot" viewBox="0 0 900 520" role="img" aria-label="3D view of the current position. Drag to rotate." style="touch-action:none;cursor:grab"><g id="scene"></g></svg></div>
+        <div class="ctrl" id="ctrl" hidden><button class="btn primary" id="anPlay">Play</button><input type="range" id="anRange" min="0" max="1000" value="0" aria-label="Animation position"><span class="readout" id="anRead"></span></div>
+        <div class="row"><button class="btn" id="viewReset">Reset view</button><button class="btn" id="xrayBtn" aria-pressed="false">X-ray partner</button><span class="lead" style="margin:0">Drag the figures to rotate.</span></div>
+        <div class="keyrow" id="keyrow"></div>
       </div>
-      <div class="panel" id="posPanel"></div>
+      <div class="panel" id="side"></div>
     </div>
   </section>
-
-  <section id="v-planes" hidden>
-    <h2>Game plans</h2>
-    <p class="lead">Decision chains for a white belt: what to do depending on how your partner reacts. Survive first, then position, then submission.</p>
-    <div class="cards" id="plans"></div>
-  </section>
-
-  <section id="v-judo" hidden>
-    <h2>Judo for BJJ</h2>
-    <p class="lead">Takedowns that are useful for starting on the feet in BJJ, how to defend them, and which BJJ techniques come from judo. Knee risk is rated for an operated meniscus: what does the damage is <b>flexion under load combined with twisting</b>. Check it with your coach and with whoever looks after your knee.</p>
-    <div class="note"><b>Ukemi before throwing.</b> Learn to fall backwards (ushiro), to the side (yoko) and rolling forward (mae mawari): chin to chest, slap the mat with the whole arm, and never post on a straight arm.</div>
-    <h3 style="margin-top:22px">Takedowns</h3>
-    <div class="row" id="judoFilter"></div>
-    <div id="throws"></div>
-    <h3 style="margin-top:28px">Takedown defence</h3>
-    <div class="cards" id="defense" style="margin-top:10px"></div>
-    <h3 style="margin-top:28px">What BJJ inherited from judo</h3>
-    <p class="lead" id="history"></p>
-    <div class="scroll"><table class="stack" id="heritage"><thead><tr><th>Judo</th><th>BJJ</th><th>Note</th></tr></thead><tbody></tbody></table></div>
-    <h3 style="margin-top:24px">Rule differences that change tactics</h3>
-    <ul class="clean" id="rules"></ul>
-  </section>
-
-  <section id="v-diario" hidden>
-    <h2>Training log</h2>
-    <p class="lead">Write down what was taught and how sparring went. Every technique you log goes straight into review.</p>
-    <div class="stats" id="stats"></div>
-    <div class="panel">
-      <form class="diary" id="diaryForm">
-        <div><label for="dFecha">Date</label><input type="date" id="dFecha" required></div>
-        <div><label for="dMod">Format</label><select id="dMod"><option>Gi</option><option>No-gi</option></select></div>
-        <div class="full"><label for="dTec">Techniques drilled</label>
-          <div class="row" style="margin-top:0"><select id="dTec" style="flex:1 1 240px"></select><button type="button" class="btn" id="dTecAdd">Add</button></div>
-          <div class="chips" id="dChips"></div></div>
-        <div class="full"><label for="dDetalle">Details from the coach</label><textarea id="dDetalle" placeholder="E.g. on the triangle, cut the angle before locking"></textarea></div>
-        <div><label for="dBien">What worked in sparring</label><textarea id="dBien"></textarea></div>
-        <div><label for="dMal">Where I got stuck</label><textarea id="dMal"></textarea></div>
-        <div><label for="dPos">Position I struggled with most</label><select id="dPos"></select></div>
-        <div><label for="dRod">Knee discomfort (0-10)</label><input type="number" id="dRod" min="0" max="10" step="1" value="0" inputmode="numeric"></div>
-        <div class="full"><label><input type="checkbox" id="dCard" style="width:auto;min-height:0;margin-right:8px">Create a review card from the coach’s details</label></div>
-        <div class="full row"><button class="btn primary" type="submit">Save session</button><span id="dMsg" class="lead" style="margin:0"></span></div>
-      </form>
-    </div>
-    <div id="entries" style="margin-top:20px"></div>
-  </section>
-
-  <section id="v-anim" hidden>
-    <h2>Biomechanics</h2>
-    <p class="lead">Animated breakdowns of why a technique works: levers, fulcrums and the forces involved. Scrub through it slowly and match each step to your own body position.</p>
-    <div class="row" id="animList" style="margin:0 0 14px"></div>
-    <div id="animBox"></div>
-  </section>
-
-  <section id="v-repaso" hidden>
-    <h2>Review</h2>
-    <p class="lead">Spaced repetition with Leitner boxes: every card you get right takes longer to come back (1, 2, 4, 8, 16, 32 and 64 days), and a card you miss comes back the next day. Five minutes a day is enough.</p>
-    <div id="review"></div>
-    <h3 style="margin-top:28px">Add cards</h3>
-    <div class="row"><button class="btn" id="addBasics">Add survival basics</button><button class="btn" id="addHeritage">Add judo ↔ BJJ</button></div>
-    <h3 style="margin-top:28px">Your cards</h3>
-    <div id="cardList"></div>
+  <section id="v-map" hidden>
+    <h2>Where do you start?</h2>
+    <p class="lead">Tap a position to see its arrows, then start there. Arrows show how you move between positions when you’re the one underneath.</p>
+    <div class="seg" role="group" aria-label="Your role" id="roleSeg"><button data-r="bottom" aria-pressed="true">Underneath</button><button data-r="top" aria-pressed="false">On top</button></div>
+    <div class="mapwrap" id="map"><svg id="mapSvg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    <div class="panel mapcard" id="mapCard"></div>
+    <div class="legend"><span style="--k:#7ee2a3">Escape to a safer position</span><span style="--k:#ff6b7a">He takes you somewhere worse</span><span style="--k:#c9d4e6">Same level</span><span>↑ ways to end up on top</span></div>
   </section>
 </main>
-<footer><span id="sync">Loading…</span> · <button class="link" id="backup" style="font-size:13px">Copy backup</button> · <button class="link" id="restoreBtn" style="font-size:13px">Restore backup</button>
-  <div id="restorePanel" hidden style="max-width:640px;margin:12px auto 0;text-align:left">
-    <label for="restoreText">Paste a backup copied with “Copy backup” (from this or another device). It replaces everything saved here.</label>
-    <textarea id="restoreText" style="min-height:120px;font-size:14px"></textarea>
-    <div class="row"><button class="btn primary" id="restoreGo">Restore</button><button class="btn" id="restoreCancel">Cancel</button><span id="restoreMsg" class="lead" style="margin:0"></span></div>
-  </div></footer>
-
+<footer><span id="oldData"></span>The figures are solid and every joint stays within its natural range. Techniques that load the knee are flagged.</footer>
 <script>
+"use strict";
 {
-/* ---------- DATA ---------- */
-const POS=[
- {id:"pie",n:"Standing",x:50,y:10,mx:50,my:7,sides:["Attack","Defend"],
-  top:{pts:"Takedown: 2 points",obj:"Take him down and end up on top, or sit to guard with grips.",prio:["Grips first: sleeve and lapel (kumikata).","Off-balance him before you enter (kuzushi).","If you don’t win the grip, sit to guard instead of forcing a takedown."],tech:["tirar_guardia"],trans:[["gc","Pull guard"],["sc","Takedown and control (2)"]],err:["Shooting a takedown without off-balancing: you get countered or stuck.","Jumping guard: it punishes the standing partner’s knees."],more:"Takedowns and their defence are in the Judo for BJJ section."},
-  bot:{obj:"Don’t get thrown, and if you go down, fall well.",prio:["Upright posture, hips slightly back, feet never crossed.","Break his grips before he settles them.","If you’re going down, breakfall; never post on a straight arm."],tech:[],trans:[["gc","If he lands in your guard"]],err:["Resisting a throw with your foot planted and your knee twisting: that’s how a meniscus tears."],more:"Detailed defence is in Judo for BJJ."}},
- {id:"gc",n:"Closed guard",x:18,y:33,mx:24,my:24,
-  top:{pts:"Passing it: 3 points",obj:"Survive with posture, open the guard and pass.",prio:["Posture: straight back, head up, elbows in.","Never put your hands on his chest with straight arms: that’s the armbar entry.","Open the guard before trying to pass."],tech:["postura_cg"],trans:[["ga","Open the guard"]],err:["Leaning forward without control: he breaks your posture.","Leaving one arm in and one out: triangle."]},
-  bot:{pts:"Sweep: 2 points",obj:"Break his posture and attack in combinations; if he stands, switch to open guard.",prio:["Break posture: pull with your legs and control the head or collars.","Find an angle: almost nothing works square on, so move your hips to the side.","Chain attacks: kimura ↔ hip bump, armbar ↔ triangle."],tech:["armbar_cg","triangulo","kimura_cg","cruzado_cg","hip_bump","tijera"],trans:[["mo","Sweep: hip bump or scissor (2)"],["ga","If he stands up"]],err:["Lying flat with your feet crossed doing nothing.","Opening the guard without a plan: you gift him the pass."]}},
- {id:"ga",n:"Open guard",sub:"butterfly, seated",x:50,y:33,mx:76,my:24,
-  top:{pts:"Passing it: 3 points",obj:"Control his legs or hips before he gets hooks in, then pass around or under.",prio:["Control first: pants at the knees, or the hips.","Don’t put your head between his legs.","If his legs are active, pass around them (toreando); if he stays closed up, go under."],tech:["toreando","knee_cut","double_under"],trans:[["sc","Guard pass (3)"],["hg","He traps a leg"]],err:["Kneeling still in front of a butterfly guard: he sweeps you.","Opening your arms while passing: he recovers guard."]},
-  bot:{pts:"Sweep: 2 points",obj:"Keep distance with feet and grips, then sweep or stand up.",prio:["Always a foot or knee between you: don’t let him reach your chest.","Sit up; if he flattens you, turn on your side and recover.","Sweep when he shifts his weight forward."],tech:["mariposa","techstand"],trans:[["sc","Butterfly sweep (2)"],["pie","Technical stand-up"]],err:["Lying flat with no grips.","Letting him fold your legs onto your chest (he passes over the top)."]},
-  knee:"De La Riva-style hooks and W-sitting (foot out, knee in) load the knee in rotation. With four meniscus surgeries, start with butterfly, seated guard and knee shield."},
- {id:"hg",n:"Half guard",x:82,y:33,mx:50,my:41,
-  top:{pts:"Passing it: 3 points",obj:"Flatten him, win the underhook and free your leg.",prio:["Flatten him with a cross-face and the far-side underhook.","Hips low and weight on his chest, not on your knees.","Free the leg by pushing his knee with your other foot."],tech:["crossface_mg","knee_cut"],trans:[["sc","Pass (3)"],["mo","Free the leg and step to mount"]],err:["Staying upright: you give him room for the shield and the underhook.","Ripping the leg out against his knee shield."]},
-  bot:{pts:"Sweep: 2 points",obj:"On your side, with knee shield and underhook: sweep or recover guard.",prio:["Never flat on your back.","Win the underhook on the side of the trapped leg.","If he flattens you with a cross-face, frame and recover guard before he passes."],tech:["knee_shield","old_school","recup_guardia"],trans:[["sc","Old school sweep: you end on top"],["gc","Recover guard"],["es","Deep underhook → back"]],err:["Fighting flat with his cross-face on your jaw.","Twisting the trapped knee to escape while he drives weight down."]},
-  knee:"Trapped leg, opponent’s weight on top and your own twist: that’s the classic meniscus injury mechanism. If you feel strain in the trapped right knee, don’t twist: ease off and recover with the knee shield."},
- {id:"sc",n:"Side control",x:24,y:62,mx:24,my:58,
-  top:{pts:"Comes from a pass (3) or a takedown (2)",obj:"Pin him, then move up to knee on belly or mount.",prio:["Cross-face and underhook, or hip control.","Chest to chest, hips low.","Position before submission."],tech:["control_lat","americana","a_montada","rodilla_vientre"],trans:[["kb","Knee on belly (2)"],["mo","Mount (4)"],["tu","He turns to turtle"]],err:["Leaving space between your hips and his: he gets a knee in.","Going for the americana before you have control."]},
-  bot:{obj:"Don’t get mounted or submitted, and recover guard.",prio:["Frames: forearm on his neck or collarbone, other hand on his hip.","Bridge and shrimp: make space and insert your knee.","Elbows tight to your body."],tech:["frames_lat"],trans:[["gc","Recover guard"],["hg","Recover half guard"]],err:["Pushing with straight arms: you tire out and give him the arm.","Giving up your back by turning the wrong way."]}},
- {id:"kb",n:"Knee on belly",x:50,y:62,mx:76,my:58,
-  top:{pts:"2 points (hold it 3 s)",obj:"Apply pressure to force a reaction and use it: mount or armbar.",prio:["Shin diagonal across his belly, other foot wide for base.","Weight on the knee, not on the foot.","If he pushes your knee with straight arms, attack that arm or go to mount."],tech:["rodilla_vientre"],trans:[["mo","Mount (4)"],["sc","Back to side control if you lose base"]],err:["Knee perpendicular and no base: he sweeps you."]},
-  bot:{obj:"Get his knee off and recover guard.",prio:["Frame with your hands on his knee or hip.","Shrimp away and slide your knee into the gap.","Don’t push him with straight arms: armbar."],tech:[],trans:[["gc","Recover guard"]],err:["Lying still and absorbing the pressure."]},
-  knee:"On top, your base knee works bent and loaded over him: if the right one complains, use the left."},
- {id:"tu",n:"Turtle",x:80,y:62,mx:50,my:74,
-  top:{pts:"Taking the back: 4 points",obj:"Break the turtle and take the back.",prio:["Chest on his back, weight on him.","Seat belt before hooks.","First hook on the near side, then roll him with you."],tech:["espalda_tortuga"],trans:[["es","Back (4)"],["sc","Circle around to side control"]],err:["Putting hooks in without the seat belt: he sits out and recovers guard."]},
-  bot:{obj:"Turtle is a transition, not a place to stay.",prio:["Elbows glued to knees, chin down.","Don’t let him get hooks in.","Get back to guard or stand up."],tech:["salida_tortuga"],trans:[["gc","Recover guard"],["pie","Stand up"]],err:["Staying still in turtle: in judo it stops the match, in BJJ it opens the door to your back."]},
-  knee:"Kneeling with your opponent on top means deep, loaded flexion. Get out of there early."},
- {id:"mo",n:"Mount",x:33,y:88,mx:24,my:91,
-  top:{pts:"4 points",obj:"Keep it, climb high and attack.",prio:["Knees tight to his sides, feet under his thighs.","Hands out for base when he bridges; don’t cross your feet behind him.","Climb the mount toward his armpits to attack arms and neck."],tech:["mantener_mo","armbar_mo","cruzado_mo","americana"],trans:[["es","He turns: take the back (4)"]],err:["Sitting upright with no base: the upa throws you off.","Low mount on his hips: the elbow-knee escape gets him out."]},
-  bot:{obj:"Survive and escape to a guard.",prio:["Elbows in, hands protecting the neck.","Never give your back.","Upa if he climbs high; elbow-knee if he stays low."],tech:["upa","codo_rodilla"],trans:[["gc","Upa: you land in his guard"],["hg","Elbow-knee to half guard"]],err:["Pushing his chest with straight arms: armbar.","Turning face down: you give your back."]}},
- {id:"es",n:"Back",x:67,y:88,mx:76,my:91,
-  top:{pts:"4 points (with both hooks)",obj:"Control with seat belt and hooks, then choke.",prio:["Seat belt: one arm over the shoulder, the other under the armpit, hands joined.","Hooks inside his thighs, feet uncrossed.","Chest glued to his back."],tech:["control_esp","rnc","bow_arrow"],trans:[["mo","If he escapes to the mat, go to mount"]],err:["Crossing your feet: he footlocks you.","Chasing the neck with your hand without control: he grabs it and escapes."]},
-  bot:{obj:"Protect your neck and get back to a guard.",prio:["Hands to the neck first.","Get your shoulders to the mat.","Clear the hook on the side you fall to."],tech:["back_escape"],trans:[["gc","Turn into his guard"],["hg","Or into half guard"]],err:["Clearing the hooks with your hands and leaving your neck open."]}}
-];
-const EDGES=[["pie","gc",0],["pie","sc",0],["gc","ga",0],["ga","hg",0],["ga","sc",0],["hg","sc",0],["sc","kb",0],["sc","mo",0],["kb","mo",0],["sc","tu",0],["tu","es",0],["mo","es",0],["gc","mo",1],["ga","pie",1],["hg","tu",1]];
-
 const T={
  tirar_guardia:{n:"Sitting guard pull",t:"Transition",jp:"hiki-komi",k:["Settle your lapel and sleeve grips first.","Sit close to him with one foot on his hip; never jump.","Land with your grips in place and close the guard or start sweeping."]},
  postura_cg:{n:"Posture and opening the guard",t:"Control",k:["Straight back, head up; in the gi, fists in his collar on his chest, pressing down.","Elbows in, never hands far out on his chest.","To open, stand up with good base and let his weight open his legs, or put one knee in the middle and pin his thigh with your hand."],kn:"Opening standing loads the operated knee less than opening on your knees with a twist."},
@@ -291,8 +190,6 @@ const T={
  espalda_tortuga:{n:"Taking the back from turtle",t:"Transition",k:["Chest on his back, seat belt on.","Insert the near-side hook first.","Fall to your side pulling him with you and insert the second hook."]},
  salida_tortuga:{n:"Getting out of turtle",t:"Escape",r:1,k:["Elbows glued to knees, neck protected.","Bring one knee in front of his hip and sit out sideways toward guard.","Or grab a leg and stand up."],kn:"Moving on your knees with his weight on you: get out early and don’t pivot on the right knee."}
 };
-for(const p of POS)for(const s of["top","bot"])for(const id of p[s].tech){if(T[id]&&!T[id].p){T[id].p=p.id;T[id].s=s}}
-
 const JU=[
  {id:"ouchi",n:"O uchi gari",c:"Leg",r:0,k:["Off-balance him backwards, onto his heel.","Step in chest to chest; your leg hooks his from the inside and reaps in a semicircle.","Follow him down and go straight to half guard or side control."],bjj:"One of the best carry-overs to BJJ: if he doesn’t go down, chain into the double leg.",def:"Pull the hooked leg back and drop your hips; don’t get stuck on one foot."},
  {id:"kouchi",n:"Ko uchi gari",c:"Leg",r:0,k:["Sweep his heel from the inside with the sole of your foot, toward where his toes point.","Off-balance him diagonally backwards, over the heel you’re sweeping."],bjj:"Combines well with o uchi and with sitting to guard. Little risk of giving your back.",def:"Lift the swept foot and pull it back while keeping posture."},
@@ -316,189 +213,6 @@ const DEF=[
  ["When to let yourself fall","If the throw is already happening, don’t resist with your foot planted and your knee twisting: breakfall. For your meniscus, losing that point is the better deal."],
  ["Tactical option","Sitting to guard with grips removes most of the standing risk. It’s a legitimate choice while you learn to take people down."]
 ];
-const HER=[
- ["Ude hishigi juji gatame","Armbar","Same mechanics. In judo it’s drilled heavily right after a throw."],
- ["Sankaku jime","Triangle","Heavily developed in kosen judo, the ground-focused university style."],
- ["Ude garami (gyaku)","Kimura","Named after Masahiko Kimura, the judoka who beat Hélio Gracie with it in 1951."],
- ["Ude garami","Americana","The same lock, turned the other way."],
- ["Hadaka jime","Rear naked choke","The ‘naked’ choke, without using the gi."],
- ["Okuri eri jime","Sliding collar choke from the back","The basis of the bow and arrow."],
- ["Juji jime","Cross collar choke","From guard or mount, both hands in the collars."],
- ["Kata gatame","Arm triangle","In judo it’s a pin that also chokes."],
- ["Yoko shiho gatame","Side control (100 kilos)",""],
- ["Kesa gatame","Kesa (scarf hold)","Seated side control, very typical of judo."],
- ["Tate shiho gatame","Mount",""],
- ["Kami shiho gatame","North-south",""],
- ["Hiki-komi / tomoe nage","Guard pull","Sitting down and dragging the opponent to the mat."],
- ["Sumi gaeshi","Butterfly sweep","Hook under the thigh and fall to the side: the same mechanics."],
- ["Kuzushi","Off-balancing","Breaking his base before the technique, in sweeps and in passes."],
- ["Ukemi","Breakfalls","The same in both sports."]
-];
-const HIST="Mitsuyo Maeda, a Kodokan judoka, arrived in Brazil in 1914, settled in Belém and taught Carlos Gracie there. At the time, outside Japan, Kano’s judo was also called ‘jiu-jitsu’, hence the name. The Gracies focused on the ground, above all the guard, and BJJ developed it far beyond what judo rules allow.";
-const RULES=["In judo you win with a clean throw or a 20-second pin, and the referee stops groundwork if there’s no progress. That’s why judoka turtle face down to wait it out; in BJJ that gives up the back (4 points).","IJF rules ban grabbing the legs; in BJJ the double leg, single leg and ankle pick are legal.","Judo only allows elbow locks and chokes. In BJJ leg locks open up by belt.","In judo, on your back means you’ve lost; in BJJ, on your back with a guard is an attacking position."];
-const PLANS=[
- {t:"Closed guard, bottom",d:"Your safest place to attack from.",r:[["he’s upright","break his posture by pulling with your legs and on his neck or collars.","postura_cg"],["he posts a hand on the mat","kimura.","kimura_cg"],["he leaves one arm in and one out","triangle.","triangulo"],["he pushes your chest with straight arms","armbar.","armbar_cg"],["he sits up straight on his knees","hip bump; if he posts his arm to stop it, kimura.","hip_bump"],["he stands up","open the guard, feet on his hips and switch to open guard.","techstand"]]},
- {t:"Closed guard, top",d:"Survive first; then open and pass.",r:[["he breaks your posture","hands on his hips or chest with elbows in, and get your back straight again.","postura_cg"],["you have posture","stand up to open the guard.","postura_cg"],["he puts in butterfly hooks or feet on your hips","toreando.","toreando"],["he stays closed and heavy","double under pass.","double_under"],["he traps a leg","half guard top: cross-face and underhook.","crossface_mg"]]},
- {t:"Stuck on the bottom",d:"Order: don’t get submitted, recover guard, then sweep.",r:[["you’re in side control","frames and shrimp to get your knee in.","frames_lat"],["he mounts high","elbows in and upa.","upa"],["he mounts low","elbow-knee to half guard.","codo_rodilla"],["he has your back","hands to the neck, shoulders to the mat, clear the hook.","back_escape"],["he flattens you in half guard","on your side, knee shield and underhook.","knee_shield"]]},
- {t:"On top after passing",d:"Position ladder: side control, knee on belly, mount, back. Position before submission.",r:[["he’s flat and still in side control","knee on belly or move to mount.","a_montada"],["he pushes your knee with straight arms","armbar or go to mount.","rodilla_vientre"],["he straightens his arms under mount","armbar from mount.","armbar_mo"],["he hides his arms under mount","climb higher and look for the cross collar.","cruzado_mo"],["he turns on his side under mount","take the back.","control_esp"],["he turtles","seat belt and first hook.","espalda_tortuga"]]},
- {t:"Standing (judo for BJJ)",d:"Grips, off-balance, then technique. If you don’t win the grip, guard.",r:[["you win the grip and he backs up","o uchi gari or ko uchi gari.","j:ouchi"],["he steps forward heavily","de ashi barai as his foot lands.","j:deashi"],["he bends far forward","tomoe nage, sumi gaeshi or pull guard.","j:tomoe"],["he leaves a foot forward and leans on it","ankle pick.","j:kibisu"],["you can’t get the grip or he dominates it","sit to guard with grips before he throws you.","tirar_guardia"]]}
-];
-
-/* ---------- STATE ---------- */
-const KEY="tatami-bjj-v1";
-let S={estado:{},repaso:{},diario:[],custom:[]};
-try{const l=localStorage.getItem(KEY);if(l)S=Object.assign(S,JSON.parse(l))}catch(e){}
-let ref=null,writing=Promise.resolve(),timer=null;
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
-const addDays=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
-function setSync(t){$("#sync").textContent=t}
-function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-  if(!ref)return;
-  clearTimeout(timer);
-  timer=setTimeout(()=>{const body=JSON.parse(JSON.stringify(S));writing=writing.then(()=>ref.set(body)).then(()=>setSync("Saved to your account")).catch(e=>setSync(e&&e.code==="quota_exceeded"?"Account storage full: copy the backup":"Couldn’t save to your account; kept in this browser"))},1200);
-}
-setSync("Saved in this browser");
-
-/* ---------- REVIEW ---------- */
-const INT=[1,2,4,8,16,32,64];
-const posName=id=>(POS.find(p=>p.id===id)||{}).n||"";
-function cardOf(id){
-  const [k,v]=id.split(":");
-  if(k==="t"&&T[v])return{f:T[v].n,ctx:posName(T[v].p)+(T[v].s==="top"?" · top":" · bottom"),b:T[v].k};
-  if(k==="j"){const j=JU.find(x=>x.id===v);if(j)return{f:j.n,ctx:"Judo takedown",b:j.k}}
-  if(k==="h"){const h=HER[+v];if(h)return{f:"What is ‘"+h[0]+"’ called in BJJ?",ctx:"Judo ↔ BJJ",b:[h[1]+(h[2]?". "+h[2]:"")]}}
-  if(k==="c"){const c=S.custom.find(x=>x.id===id);if(c)return{f:c.f,ctx:"Your own card",b:[c.b]}}
-  return null;
-}
-function addCard(id){if(!S.repaso[id]&&cardOf(id)){S.repaso[id]={b:0,due:today()};return true}return false}
-let revShow=false;
-function dueList(){const t=today();return Object.keys(S.repaso).filter(id=>S.repaso[id].due<=t&&cardOf(id)).sort((a,b)=>S.repaso[a].due<S.repaso[b].due?-1:1)}
-function renderReview(){
-  const q=dueList();$("#dueBadge").textContent=q.length?"("+q.length+")":"";
-  const box=$("#review");
-  if(!Object.keys(S.repaso).length){box.innerHTML='<div class="empty">No cards yet. Log a session in the training log, press “Add to review” on any technique, or start with the survival basics.</div>'}
-  else if(!q.length){box.innerHTML='<div class="empty">Nothing to review today. The next card is due on '+esc(Object.values(S.repaso).map(c=>c.due).sort()[0])+'.</div>'}
-  else{const id=q[0],c=cardOf(id);
-    box.innerHTML=`<div class="flash"><span class="tag">${esc(c.ctx)} · ${q.length} left</span><div class="front">${esc(c.f)}</div>
-    ${revShow?`<ul class="clean">${c.b.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><div class="row"><button class="btn" data-g="0">Forgot it</button><button class="btn" data-g="1">Hesitated</button><button class="btn primary" data-g="2">Got it</button></div>`:`<p class="lead" style="margin:0">Say the key points out loud before you look.</p><div class="row"><button class="btn primary" id="showAns">Show answer</button></div>`}</div>`;
-    const sa=$("#showAns");if(sa)sa.onclick=()=>{revShow=true;renderReview()};
-    box.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const g=+b.dataset.g,s=S.repaso[id];
-      if(g===0){s.b=0;s.due=addDays(today(),1)}else if(g===1){s.due=addDays(today(),INT[s.b])}else{s.b=Math.min(6,s.b+1);s.due=addDays(today(),INT[s.b])}
-      revShow=false;save();renderReview()});
-  }
-  const ids=Object.keys(S.repaso).filter(cardOf);
-  $("#cardList").innerHTML=ids.length?`<div class="scroll"><table class="stack"><thead><tr><th>Card</th><th>Box</th><th>Next review</th><th></th></tr></thead><tbody>${ids.sort((a,b)=>S.repaso[a].due<S.repaso[b].due?-1:1).map(id=>`<tr><td>${esc(cardOf(id).f)}</td><td>${S.repaso[id].b+1} of 7</td><td style="white-space:nowrap">${esc(S.repaso[id].due)}</td><td><button class="link" data-rm="${esc(id)}">Remove</button></td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">No cards yet.</div>';
-  $("#cardList").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{delete S.repaso[b.dataset.rm];save();renderReview()});
-}
-
-/* ---------- MAP ---------- */
-let cur="gc",side="bot";
-const narrow=matchMedia("(max-width:600px)");
-function progress(p){const ids=[...new Set([...p.top.tech,...p.bot.tech])];if(!ids.length)return null;return ids.filter(i=>S.estado[i]>0).length/ids.length}
-function renderMap(){
-  const m=narrow.matches,map=$("#map");map.style.aspectRatio=m?"3/4":"8/6";
-  const P=id=>{const p=POS.find(x=>x.id===id);return m?[p.mx,p.my]:[p.x,p.y]};
-  $("#mapSvg").innerHTML=EDGES.map(([a,b,sw])=>{const[x1,y1]=P(a),[x2,y2]=P(b);return`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${sw?"#ff5d6e":"rgba(255,255,255,.75)"}" stroke-width="3" vector-effect="non-scaling-stroke" ${sw?'stroke-dasharray="7 6"':''}/>`}).join("");
-  map.querySelectorAll(".node").forEach(n=>n.remove());
-  for(const p of POS){const[x,y]=P(p.id),pr=progress(p),b=document.createElement("button");
-    b.className="node";b.style.left=x+"%";b.style.top=y+"%";b.setAttribute("aria-pressed",p.id===cur);
-    b.innerHTML=esc(p.n)+(p.sub&&!m?`<small>${esc(p.sub)}</small>`:"")+(pr!==null?`<span class="bar"><i style="width:${Math.round(pr*100)}%"></i></span>`:"");
-    b.onclick=()=>{cur=p.id;renderMap();renderPanel();if(m)$("#posPanel").scrollIntoView({behavior:"smooth",block:"start"})};map.appendChild(b)}
-}
-const KN=["","Knee caution","Avoid for now (knee)"];
-function techHTML(id){const t=T[id];if(!t)return"";const st=S.estado[id]||0,inR=!!S.repaso["t:"+id];
-  return`<details class="tech"><summary><b>${esc(t.n)}</b><span class="tag">${esc(t.t)}</span>${t.r?`<span class="tag k${t.r}">${KN[t.r]}</span>`:""}${st?`<span class="tag s${st}">${st===1?"Seen":"Using it"}</span>`:""}</summary><div class="body">
-  ${t.jp?`<p class="lead" style="margin:0 0 6px">In judo: <b>${esc(t.jp)}</b></p>`:""}<ul class="clean">${t.k.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>${t.kn?`<div class="note">${esc(t.kn)}</div>`:""}
-  <div class="row"><button class="btn ${st===0?"on":""}" data-st="${id}:0">New</button><button class="btn ${st===1?"on":""}" data-st="${id}:1">Seen</button><button class="btn ${st===2?"on":""}" data-st="${id}:2">Using it</button><button class="btn ${inR?"on":""}" data-rv="${id}">${inR?"In review":"Add to review"}</button>${ANIM[id]?`<button class="btn primary" data-an="${id}">Watch animation</button>`:""}</div></div></details>`}
-function bindTech(root,rerender){
-  root.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{const[i,v]=b.dataset.st.split(":");S.estado[i]=+v;save();rerender();renderMap()});
-  root.querySelectorAll("[data-an]").forEach(b=>b.onclick=()=>{pendingAnim=b.dataset.an;if(location.hash==="#anim")route();else location.hash="anim"});
-  root.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{const id="t:"+b.dataset.rv;if(S.repaso[id])delete S.repaso[id];else addCard(id);save();rerender();renderReview()});
-}
-function renderPanel(keepOpen){
-  const p=POS.find(x=>x.id===cur),d=p[side],lbl=p.sides||["Top","Bottom"],box=$("#posPanel");
-  const open=[...box.querySelectorAll("details[open] b")].map(b=>b.textContent);
-  box.innerHTML=`<h2>${esc(p.n)}</h2><div class="seg" role="group" aria-label="Perspective"><button aria-pressed="${side==="top"}" data-side="top">${lbl[0]}</button><button aria-pressed="${side==="bot"}" data-side="bot">${lbl[1]}</button></div>
-  ${d.pts?`<div class="pts">${esc(d.pts)}</div>`:""}<p style="margin:6px 0 0">${esc(d.obj)}</p>
-  <div class="label">Priorities</div><ul class="clean">${d.prio.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
-  ${p.knee?`<div class="note"><b>Knee.</b> ${esc(p.knee)}</div>`:""}
-  ${d.tech.length?`<div class="label">Techniques</div>${d.tech.map(techHTML).join("")}`:""}
-  ${d.more?`<p><button class="link" data-go="judo">${esc(d.more)} →</button></p>`:""}
-  <div class="label">From here you can go to</div>${d.trans.map(([to,txt])=>`<div><button class="link" data-to="${to}">${esc(txt)} → ${esc(posName(to))}</button></div>`).join("")}
-  <div class="label">Common mistakes</div><ul class="clean">${d.err.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
-  if(keepOpen)box.querySelectorAll("details").forEach(dt=>{if(open.includes(dt.querySelector("b").textContent))dt.open=true});
-  box.querySelectorAll("[data-side]").forEach(b=>b.onclick=()=>{side=b.dataset.side;renderPanel()});
-  box.querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{cur=b.dataset.to;renderMap();renderPanel()});
-  box.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{location.hash="judo"});
-  bindTech(box,()=>renderPanel(true));
-}
-
-/* ---------- PLANS ---------- */
-function renderPlans(){
-  $("#plans").innerHTML=PLANS.map(pl=>`<div class="panel plan"><h3>${esc(pl.t)}</h3><p class="lead" style="margin:4px 0 0">${esc(pl.d)}</p><ol>${pl.r.map(([si,ent,id])=>{
-    const isJ=id.startsWith("j:"),nm=isJ?(JU.find(j=>"j:"+j.id===id)||{}).n:(T[id]||{}).n;
-    return`<li><span>${esc(si)}</span><span>${esc(ent)} <button class="link" data-plan="${esc(id)}" style="font-size:14px;padding:0;min-height:0">${esc(nm)}</button></span></li>`}).join("")}</ol></div>`).join("");
-  $("#plans").querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>{const id=b.dataset.plan;
-    if(id.startsWith("j:")){location.hash="judo";setTimeout(()=>{const el=document.getElementById("th-"+id.slice(2));if(el){el.open=true;el.scrollIntoView({block:"center"})}},50);return}
-    const t=T[id];cur=t.p;side=t.s;location.hash="mapa";renderMap();renderPanel();
-    setTimeout(()=>{const dt=[...document.querySelectorAll("#posPanel details")].find(d=>d.querySelector("b").textContent===t.n);if(dt){dt.open=true;dt.scrollIntoView({block:"center"})}},50)});
-}
-
-/* ---------- JUDO ---------- */
-let jf="todos";
-function renderJudo(){
-  const F=[["todos","All"],["0","Low knee risk"],["1","Caution"],["2","Avoid for now"]];
-  $("#judoFilter").innerHTML=F.map(([v,l])=>`<button class="btn ${jf===v?"on":""}" data-jf="${v}">${l}</button>`).join("");
-  $("#judoFilter").querySelectorAll("[data-jf]").forEach(b=>b.onclick=()=>{jf=b.dataset.jf;renderJudo()});
-  const list=JU.filter(j=>jf==="todos"||String(j.r)===jf);
-  $("#throws").innerHTML=list.map(j=>{const inR=!!S.repaso["j:"+j.id];return`<details class="tech" id="th-${j.id}"><summary><b>${esc(j.n)}</b><span class="tag">${esc(j.c)}</span><span class="tag ${j.r?"k"+j.r:"s2"}">${j.r?KN[j.r]:"Knee: low risk"}</span>${j.leg?'<span class="tag">Banned in judo</span>':""}</summary><div class="body">
-    <ul class="clean">${j.k.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>${j.rn?`<div class="note">${esc(j.rn)}</div>`:""}
-    <div class="label">In BJJ</div><p style="margin:0">${esc(j.bjj)}</p><div class="label">How to defend it</div><p style="margin:0">${esc(j.def)}</p>
-    <div class="row"><button class="btn ${inR?"on":""}" data-jr="${j.id}">${inR?"In review":"Add to review"}</button></div></div></details>`}).join("");
-  $("#throws").querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{const id="j:"+b.dataset.jr;if(S.repaso[id])delete S.repaso[id];else addCard(id);save();renderJudo();renderReview();const el=document.getElementById("th-"+b.dataset.jr);if(el)el.open=true});
-  $("#defense").innerHTML=DEF.map(([t,d])=>`<div class="panel"><h3>${esc(t)}</h3><p style="margin:6px 0 0">${esc(d)}</p></div>`).join("");
-  $("#history").textContent=HIST;
-  $("#heritage tbody").innerHTML=HER.map(h=>`<tr><td><b>${esc(h[0])}</b></td><td>${esc(h[1])}</td><td>${esc(h[2])}</td></tr>`).join("");
-  $("#rules").innerHTML=RULES.map(r=>`<li>${esc(r)}</li>`).join("");
-}
-
-/* ---------- TRAINING LOG ---------- */
-let chips=[],confirmDel=null;
-const tName=c=>{const[k,v]=c.split(":");return k==="t"?(T[v]||{}).n:(JU.find(j=>j.id===v)||{}).n};
-function initDiary(){
-  $("#dFecha").value=today();
-  $("#dTec").innerHTML='<option value="">Choose a technique…</option>'+POS.map(p=>{const ids=[...p.top.tech,...p.bot.tech].filter(i=>T[i]&&T[i].p===p.id);return ids.length?`<optgroup label="${esc(p.n)}">${ids.map(i=>`<option value="t:${i}">${esc(T[i].n)}</option>`).join("")}</optgroup>`:""}).join("")+`<optgroup label="Judo">${JU.map(j=>`<option value="j:${j.id}">${esc(j.n)}</option>`).join("")}</optgroup>`;
-  $("#dPos").innerHTML='<option value="">None in particular</option>'+POS.map(p=>`<option value="${p.id}">${esc(p.n)}</option>`).join("");
-  $("#dTecAdd").onclick=()=>{const v=$("#dTec").value;if(v&&!chips.includes(v))chips.push(v);renderChips()};
-  $("#diaryForm").onsubmit=e=>{e.preventDefault();
-    const en={id:Date.now().toString(36),f:$("#dFecha").value||today(),m:$("#dMod").value,t:chips.slice(),det:$("#dDetalle").value.trim(),bien:$("#dBien").value.trim(),mal:$("#dMal").value.trim(),pos:$("#dPos").value,rod:Math.max(0,Math.min(10,+$("#dRod").value||0))};
-    S.diario.unshift(en);S.diario.sort((a,b)=>a.f<b.f?1:-1);
-    let n=0;for(const c of chips){if(addCard(c))n++;if(c.startsWith("t:")&&!S.estado[c.slice(2)])S.estado[c.slice(2)]=1}
-    if($("#dCard").checked&&en.det){const cid="c:"+en.id;S.custom.push({id:cid,f:"Class detail ("+en.f+")"+(chips[0]?": "+tName(chips[0]):""),b:en.det});addCard(cid);n++}
-    save();chips=[];renderChips();e.target.reset();$("#dFecha").value=today();$("#dRod").value=0;
-    $("#dMsg").textContent="Session saved"+(n?` · ${n} new card${n>1?"s":""} in review`:"");
-    renderEntries();renderReview();renderMap();renderPanel()};
-  $("#addBasics").onclick=()=>{let n=0;for(const i of["frames_lat","upa","codo_rodilla","back_escape","knee_shield","postura_cg"])if(addCard("t:"+i))n++;save();renderReview();flashMsg(n)};
-  $("#addHeritage").onclick=()=>{let n=0;HER.forEach((h,i)=>{if(addCard("h:"+i))n++});save();renderReview();flashMsg(n)};
-}
-function flashMsg(n){const p=document.createElement("p");p.className="lead";p.textContent=n?`${n} cards added.`:"You already had them all.";$("#review").prepend(p)}
-function renderChips(){$("#dChips").innerHTML=chips.map((c,i)=>`<span class="chip">${esc(tName(c))}<button type="button" aria-label="Remove" data-ci="${i}">×</button></span>`).join("");
-  $("#dChips").querySelectorAll("[data-ci]").forEach(b=>b.onclick=()=>{chips.splice(+b.dataset.ci,1);renderChips()})}
-function renderEntries(){
-  const D=S.diario,t=today(),last28=D.filter(e=>e.f>=addDays(t,-28)).length;
-  const cnt={};D.forEach(e=>{if(e.pos)cnt[e.pos]=(cnt[e.pos]||0)+1});const worst=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
-  const r5=D.slice(0,5),rod=r5.length?(r5.reduce((s,e)=>s+(e.rod||0),0)/r5.length).toFixed(1):"–";
-  $("#stats").innerHTML=`<div class="stat"><b>${D.length}</b><span>sessions logged</span></div><div class="stat"><b>${last28}</b><span>in the last 4 weeks</span></div><div class="stat"><b>${worst?esc(posName(worst)):"–"}</b><span>where you get stuck most</span></div><div class="stat"><b>${rod}</b><span>knee, average of last 5</span></div>`;
-  $("#entries").innerHTML=D.length?`<h3>Sessions</h3>`+D.map(e=>`<div class="entry"><h3>${esc(e.f)} · ${esc(e.m)}${e.rod?` · knee ${e.rod}/10`:""}</h3>
-    ${e.t.length?`<div class="chips">${e.t.map(c=>`<span class="tag">${esc(tName(c))}</span>`).join("")}</div>`:""}
-    ${e.det?`<p><b>Details:</b> ${esc(e.det)}</p>`:""}${e.bien?`<p><b>Worked:</b> ${esc(e.bien)}</p>`:""}${e.mal?`<p><b>Got stuck:</b> ${esc(e.mal)}</p>`:""}${e.pos?`<p><b>Toughest position:</b> ${esc(posName(e.pos))}</p>`:""}
-    <button class="link" data-del="${e.id}">${confirmDel===e.id?"Press again to delete":"Delete"}</button></div>`).join(""):'<div class="empty">No sessions yet. Log your next class right after it ends: two minutes is enough.</div>';
-  $("#entries").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const id=b.dataset.del;if(confirmDel===id){S.diario=S.diario.filter(e=>e.id!==id);confirmDel=null;save()}else confirmDel=id;renderEntries()});
-}
-
 /* ---------- BIOMECHANICS ANIMATIONS (3D) ---------- */
 const V={add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul:(a,k)=>[a[0]*k,a[1]*k,a[2]*k],dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
  cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],len:a=>Math.hypot(a[0],a[1],a[2]),lerp:(a,b,u)=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u]};
@@ -658,9 +372,9 @@ const ANIM={
    {t:.85,A:{P:[6,18,-18],up:[-.95,0,.3],hd:[0,0,0],fw:[.29,.45,.84],LW:[-30,44,-22],RW:[-7,42,22],LEp:[.3,-.8,-.6],REp:[.3,-.5,1],LA:[32,7,-12],RA:[24,32,28],RKt:[-6,30,12],LKp:[.1,1,.3],RKp:[.3,.2,1]},
         D:{P:[-20,44,32],up:[-.19,.155,-.97],hd:[0,0,0],fw:[0,-1,0],LW:[-62,8,-8],RW:[40,8,-34],LEp:[-.3,.6,.3],REp:[.3,.6,.3],LA:[-34,8,112],RA:[-4,8,112],LKt:[-34,8,72],RKt:[-4,8,72],LKp:[0,-1,0],RKp:[0,-1,0]}},
    {t:.93,A:{P:[8,15,-14],up:[-.98,0,.2],hd:[0,0,0],fw:[0,.8,.6],LW:[-39,34,-20],RW:[-12,32,20],LEp:[0,-.5,-1],REp:[.3,-.5,1],LA:[4,62,14],RA:[0,34,38],RKt:[-6,40,8],LKp:[0,1,-.2],RKp:[.3,1,.3]},
-        D:{P:[-12,34,30],up:[-.45,.15,-.88],hd:[0,0,0],fw:[0,-1,.1],LW:[-62,8,-14],RW:[-62,8,-30],LEp:[-.3,.6,.3],REp:[.5,.3,-.8],LA:[-30,8,110],RA:[2,8,108],LKt:[-32,8,70],RKt:[0,8,70],LKp:[0,-1,0],RKp:[0,-1,0]}},
+        D:{P:[-12,34,30],up:[-.45,.15,-.88],hd:[0,0,0],fw:[0,-1,.1],LW:[-62,8,-14],RW:[24,8,-44],LEp:[-.3,.6,.3],REp:[.3,.6,.3],LA:[-30,8,110],RA:[2,8,108],LKt:[-32,8,70],RKt:[0,8,70],LKp:[0,-1,0],RKp:[0,-1,0]}},
    {t:1,A:{P:[8,15,-14],up:[-.98,0,.2],hd:[0,0,0],fw:[0,.8,.6],LW:[-39,34,-20],RW:[-12,32,20],LEp:[0,-.5,-1],REp:[.3,-.5,1],LA:[-8,50,44],RA:[0,34,38],RKt:[-6,40,8],LKp:[0,1,.3],RKp:[.3,1,.3]},
-        D:{P:[-12,34,30],up:[-.45,.15,-.88],hd:[0,0,0],fw:[0,-1,.1],LW:[-62,8,-14],RW:[-62,8,-30],LEp:[-.3,.6,.3],REp:[.5,.3,-.8],LA:[-30,8,110],RA:[2,8,108],LKt:[-32,8,70],RKt:[0,8,70],LKp:[0,-1,0],RKp:[0,-1,0]}}],
+        D:{P:[-12,34,30],up:[-.45,.15,-.88],hd:[0,0,0],fw:[0,-1,.1],LW:[-62,8,-14],RW:[24,8,-44],LEp:[-.3,.6,.3],REp:[.3,.6,.3],LA:[-30,8,110],RA:[2,8,108],LKt:[-32,8,70],RKt:[0,8,70],LKp:[0,-1,0],RKp:[0,-1,0]}}],
   pins:[["A","La",0,.9,1],["A","Ra",0,.7,1]],
   forces:[
    {lab:"Neck frame",col:"#d3263a",from:.2,to:.95,at:S=>S.A.Lw,dir:[0,.5,.86],len:22,off:6},
@@ -704,7 +418,8 @@ const ANIM={
   physics:["<b>It’s a lever.</b> His elbow is the pivot. Your hands pull at the wrist, about a forearm’s length (25–30 cm) from the elbow, and your hips push from the other side, right next to the joint.","<b>Torque = force × distance.</b> 200 N of pull (about the weight of 20 kg) at 0.28 m is 56 N·m. Gripping at the wrist instead of mid-forearm roughly doubles the distance, so the same pull gives about twice the torque.","<b>Why the hips and not the arms.</b> Lifting the hips uses your glutes and hip extensors, much stronger than his biceps. Pulling with your arms is your arms against his arm.","<b>Why the thumb points up.</b> Then the elbow’s hinge faces your hips. With the thumb sideways, the arm bends sideways around your hips and slips out instead of straightening.","<b>Why the pivot.</b> Square on, his arm points along your body and your hips can’t get under his elbow. Turning 90° lines your hips up under the joint.","<b>Why the legs.</b> The left leg on his back and the right knee over his head keep his shoulder and head down. If he can posture up, the shoulder moves away from your hips and the lever disappears."]}
 };
 const CAMS={Angle:[-1.2,.5],Side:[-1.5708,.2],Top:[-1.5708,1.45],Behind:[1.2,.55]};
-let xray=false,anCur=null,anT=0,anPlay=false,anRaf=0,anLast=0,cam={yaw:-1.2,pitch:.5,dist:270};
+let xray=false,cam={yaw:-1.2,pitch:.5,dist:270},YOU="A",NOFORCE=false;
+/* @@HOOK@@ */
 function project(p,a){const tg=a.target,cp=Math.cos(cam.pitch),C=[tg[0]+cam.dist*cp*Math.sin(cam.yaw),tg[1]+cam.dist*Math.sin(cam.pitch),tg[2]+cam.dist*cp*Math.cos(cam.yaw)];
   const f=V.norm(V.sub(tg,C));let r=V.cross(f,[0,1,0]);if(V.len(r)<1e-6)r=[1,0,0];r=V.norm(r);const u=V.cross(r,f),d=V.sub(p,C),z=V.dot(d,f),F=820;
   return[450+F*V.dot(d,r)/z,280-F*V.dot(d,u)/z,z,F/z]}
@@ -718,84 +433,395 @@ function sceneAt(a,t){const pA=poseAt(a.keys,"A",t),pD=poseAt(a.keys,"D",t),S={A
   S.pins=(a.pins||[]).filter(p=>t>=p[2]&&t<=p[3]).map(p=>({b:p[0],c:PINCH[p[1]],strict:!!p[4],pt:(p[0]==="A"?pA:pD)[PINCH[p[1]][5]]}));S.pen=solve(S,40);return S}
 function elbowInfo(J){const a=V.sub(J.Rs,J.Re),b=V.sub(J.Rw,J.Re),dev=Math.round(180-Math.acos(Math.max(-1,Math.min(1,V.dot(a,b)/(V.len(a)*V.len(b)))))*180/Math.PI);
   const u=V.dot(V.sub(J.Re,J.Rs),V.sub(J.Rw,J.Rs))/V.dot(V.sub(J.Rw,J.Rs),V.sub(J.Rw,J.Rs)),onLine=V.add(J.Rs,V.mul(V.sub(J.Rw,J.Rs),u));return{dev,up:J.Re[1]>onLine[1]}}
+function autoFloor(S){let xs=[],zs=[];for(const b of["A","D"])for(const k of JOINTS){xs.push(S[b][k][0]);zs.push(S[b][k][2])}const sn=v=>Math.round(v/20)*20;return[sn(Math.min(...xs)-40),sn(Math.max(...xs)+40),sn(Math.min(...zs)-40),sn(Math.max(...zs)+40)]}
 function renderScene(a,t){
   const S=sceneAt(a,t);let s="";
   const fl=(p,q)=>{const A=project(p,a),B=project(q,a);return A[2]>1&&B[2]>1?`<line x1="${A[0].toFixed(1)}" y1="${A[1].toFixed(1)}" x2="${B[0].toFixed(1)}" y2="${B[1].toFixed(1)}" stroke="rgba(29,79,158,.22)" stroke-width="1.2"/>`:""};
-  const [X0,X1,Z0,Z1]=a.floor||[-110,130,-140,80],cn=[[X0,0,Z0],[X1,0,Z0],[X1,0,Z1],[X0,0,Z1]].map(p=>project(p,a));
+  const [X0,X1,Z0,Z1]=a.floor||autoFloor(S),cn=[[X0,0,Z0],[X1,0,Z0],[X1,0,Z1],[X0,0,Z1]].map(p=>project(p,a));
   s+=`<polygon points="${cn.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")}" fill="rgba(29,79,158,.07)" stroke="rgba(29,79,158,.35)" stroke-width="2"/>`;
   for(let x=X0;x<=X1;x+=20)s+=fl([x,0,Z0],[x,0,Z1]);for(let z=Z0;z<=Z1;z+=20)s+=fl([X0,0,z],[X1,0,z]);
-  const prims=[];for(const b of["A","D"])for(const p of PARTS)prims.push({a:S[b][p[1]],b:S[b][p[2]],r:p[3],col:PAL[b][p[5]],x:b==="D"&&xray});
-  const th=S.D.thumb;if(th)prims.push({a:S.D.Rw,b:V.add(S.D.Rw,V.mul(th,7)),r:2.6,col:PAL.D.r});
+  const prims=[];for(const b of["A","D"])for(const p of PARTS)prims.push({a:S[b][p[1]],b:S[b][p[2]],r:p[3],col:PAL[b===YOU?"A":"D"][p[5]],x:b!==YOU&&xray});
+  const th=S.D.thumb;if(th)prims.push({a:S.D.Rw,b:V.add(S.D.Rw,V.mul(th,7)),r:2.6,col:PAL[YOU==="D"?"A":"D"].r,x:YOU!=="D"&&xray});
   const P=prims.map(p=>{const A=project(p.a,a),B=project(p.b,a);return{A,B,z:(A[2]+B[2])/2-p.r*.6,w:p.r*(A[3]+B[3]),col:p.col,x:p.x}}).sort((x,y)=>y.z-x.z);
   for(const p of P){const l=(w,c)=>`<line x1="${p.A[0].toFixed(1)}" y1="${p.A[1].toFixed(1)}" x2="${p.B[0].toFixed(1)}" y2="${p.B[1].toFixed(1)}" stroke="${c}" stroke-width="${w.toFixed(1)}" stroke-linecap="round"/>`;s+=p.x?`<g opacity=".32">${l(p.w+4.5,PAL.O)+l(p.w,p.col)}</g>`:l(p.w+4.5,PAL.O)+l(p.w,p.col)}
-  for(const f of a.forces){const m=Math.min(1,Math.max(0,(t-f.from)/.15))*(f.to?Math.min(1,Math.max(0,(f.to-t)/.06)):1);if(m<=0)continue;const at=f.at(S),d=V.norm(f.dir),head=V.sub(at,V.mul(d,f.off)),tail=V.sub(head,V.mul(d,f.len*(.4+.6*m)));
+  for(const f of (NOFORCE?[]:a.forces)){const m=Math.min(1,Math.max(0,(t-f.from)/.15))*(f.to?Math.min(1,Math.max(0,(f.to-t)/.06)):1);if(m<=0)continue;const at=f.at(S),d=V.norm(f.dir),head=V.sub(at,V.mul(d,f.off)),tail=V.sub(head,V.mul(d,f.len*(.4+.6*m)));
     const H=project(head,a),T=project(tail,a);s+=`<g opacity="${Math.min(1,m*1.6)}">${arrow2(T,H,f.col,7)}<text class="svglbl" x="${(T[0]+12).toFixed(1)}" y="${(T[1]-6).toFixed(1)}">F ${f.lab.toLowerCase()}</text></g>`}
   return{svg:s,S,pen:S.pen}}
-function drawAnim(){const a=ANIM[anCur],g=$("#anSvg");if(!a||!g)return;const R=renderScene(a,anT);g.innerHTML=R.svg;
-  const r=$("#anRead"),ro=a.readout(R.S,anT);r.textContent=ro[0];r.style.color=ro[1]?"var(--red)":"";
-  $("#anRange").value=Math.round(anT*1000);const si=a.steps.reduce((k,st,i)=>anT>=st[0]-.1?i:k,0);document.querySelectorAll("#anSteps .step").forEach((b,i)=>b.setAttribute("aria-current",i===si))}
-function tick(ts){if(!anPlay)return;const dt=anLast?(ts-anLast)/1000:0;anLast=ts;anT+=dt/11;if(anT>=1.12)anT=0;const keep=anT;anT=Math.min(1,anT);drawAnim();anT=keep;anRaf=requestAnimationFrame(tick)}
-function setPlay(p){anPlay=p;anLast=0;cancelAnimationFrame(anRaf);const b=$("#anPlay");if(b)b.textContent=p?"Pause":"Play";if(p)anRaf=requestAnimationFrame(tick)}
-function renderAnim(id){
-  setPlay(false);anCur=ANIM[id]?id:Object.keys(ANIM)[0];anT=0;const a=ANIM[anCur];if(a.cam)[cam.yaw,cam.pitch]=a.cam;xray=!!a.xray;
-  $("#animList").innerHTML=Object.keys(ANIM).map(k=>`<button class="btn ${k===anCur?"on":""}" data-anl="${k}">${esc(ANIM[k].title)}</button>`).join("")+'<span class="lead" style="margin:0">More coming, one at a time.</span>';
-  $("#animList").querySelectorAll("[data-anl]").forEach(b=>b.onclick=()=>renderAnim(b.dataset.anl));
-  $("#animBox").innerHTML=`<div class="animfig"><svg id="anSvgRoot" viewBox="0 0 900 520" role="img" aria-label="${esc(a.title)}, 3D animation. Drag to rotate." style="touch-action:none;cursor:grab"><g id="anSvg"></g></svg></div>
-   <div class="ctrl"><button class="btn primary" id="anPlay">Play</button><input type="range" id="anRange" min="0" max="1000" value="0" aria-label="Animation position"><span class="readout" id="anRead"></span></div>
-   <div class="row">${Object.keys(CAMS).map(k=>`<button class="btn" data-cam="${k}">${k} view</button>`).join("")}<button class="btn ${xray?"on":""}" id="anXray" aria-pressed="${xray}">X-ray partner</button><span class="lead" style="margin:0">Drag the figure to rotate it.</span></div>
-   <div class="keyrow">${a.forces.map(f=>`<span style="--c:${f.col}">F ${esc(f.lab.toLowerCase())}</span>`).join("")}<span style="--c:${PAL.A.b}">You (darker = your left side)</span><span style="--c:${PAL.D.b}">Partner (darker = his left side)</span></div>
-   <p class="lead" style="margin:8px 0 0">${esc(a.note)}</p>
-   <div class="steps" id="anSteps" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">${a.steps.map((s,i)=>`<button class="step" data-sti="${i}"><b>${esc(s[1])}</b>${esc(s[2])}</button>`).join("")}</div>
-   <div class="panel" style="margin-top:16px"><h3>The physics</h3><ul class="clean">${a.physics.map(x=>`<li>${x}</li>`).join("")}</ul>${T[anCur]?`<p><button class="link" data-antech="${anCur}">See the key points in the position map →</button></p>`:""}</div>`;
-  $("#anPlay").onclick=()=>setPlay(!anPlay);
-  $("#anRange").oninput=e=>{setPlay(false);anT=+e.target.value/1000;drawAnim()};
-  document.querySelectorAll("#anSteps [data-sti]").forEach(b=>b.onclick=()=>{setPlay(false);anT=a.steps[+b.dataset.sti][0];drawAnim()});
-  document.querySelectorAll("[data-cam]").forEach(b=>b.onclick=()=>{[cam.yaw,cam.pitch]=CAMS[b.dataset.cam];drawAnim()});
-  $("#anXray").onclick=e=>{xray=!xray;e.currentTarget.classList.toggle("on",xray);e.currentTarget.setAttribute("aria-pressed",xray);drawAnim()};
-  const svg=$("#anSvgRoot");let drag=null;
-  svg.addEventListener("pointerdown",e=>{drag=[e.clientX,e.clientY,cam.yaw,cam.pitch];try{svg.setPointerCapture(e.pointerId)}catch(_){}});
-  svg.addEventListener("pointermove",e=>{if(!drag)return;cam.yaw=drag[2]-(e.clientX-drag[0])*.01;cam.pitch=Math.min(1.5,Math.max(.05,drag[3]+(e.clientY-drag[1])*.01));drawAnim()});
-  const end=()=>{drag=null};svg.addEventListener("pointerup",end);svg.addEventListener("pointercancel",end);
-  const bt=document.querySelector("[data-antech]");if(bt)bt.onclick=()=>{const t=T[anCur];cur=t.p;side=t.s;location.hash="mapa";renderMap();renderPanel()};
-  drawAnim();
-}
 
-/* ---------- ROUTES ---------- */
-const VIEWS=["mapa","planes","judo","diario","repaso","anim"];
-function route(){const h=location.hash.slice(1),v=VIEWS.includes(h)?h:"mapa";
-  VIEWS.forEach(x=>{$("#v-"+x).hidden=x!==v});
-  document.querySelectorAll("#nav a").forEach(a=>{if(a.getAttribute("href")==="#"+v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
-  if(v==="repaso")renderReview();
-  if(v==="anim"){if(!anCur)renderAnim(pendingAnim);else if(pendingAnim&&pendingAnim!==anCur)renderAnim(pendingAnim);pendingAnim=null}else setPlay(false);}
-let pendingAnim=null;
+/* ---------- STATES ---------- */
+/* Every position has two roles: bottom (or the one in trouble) and top. Standing is symmetric.
+   Canonical poses: A is always the bottom role. */
+const POSES={
+standing:{target:[29,92,0],cam:[-1.0,.2],dist:350,
+ A:{P:[0,95,0],up:[0,1,0],fw:[1,0,0],LA:[-4,6,-14],RA:[8,6,14],LKp:[1,0,0],RKp:[1,0,0],RW:[40,130,8],REp:[0,-1,.4],LW:[36,120,-20],LEp:[0,-1,-.4]},
+ D:{P:[58,95,0],up:[0,1,0],fw:[-1,0,0],LA:[66,6,14],RA:[52,6,-14],LKp:[-1,0,0],RKp:[-1,0,0],RW:[14,130,-8],REp:[0,-1,-.4],LW:[22,120,22],LEp:[0,-1,.4]}},
+seated:{target:[28,45,0],cam:[-1.0,.35],dist:320,
+ A:{P:[0,13,0],up:[.15,.99,0],fw:[.99,-.15,0],LA:[36,6,-18],RA:[34,6,18],LKp:[0,1,0],RKp:[0,1,0],LW:[-18,8,-28],LEp:[0,0,-1],RW:[40,90,8],REp:[0,-1,.5]},
+ D:{P:[58,54,0],up:[-.15,.99,0],fw:[-.99,-.15,0],LKt:[54,8,13],RKt:[54,8,-13],LA:[100,6,13],RA:[100,6,-13],RW:[22,54,-8],REp:[0,-1,-.3],LW:[30,66,24],LEp:[0,-1,.5]}},
+turtle:{target:[8,40,20],cam:[-.6,.5],dist:320,
+ A:{P:[0,54,0],up:[1,-.15,0],fw:[0,-1,0],hd:[0,-.7,0],LKt:[2,8,-11],RKt:[2,8,11],LA:[-42,6,-11],RA:[-42,6,11],LEt:[20,14,-14],REt:[20,14,14],LW:[40,22,-8],RW:[40,22,8]},
+ D:{P:[-2,48,44],up:[.1,.65,-.75],fw:[0,-.75,-.65],LKt:[-14,8,48],RKt:[10,8,48],LA:[-14,6,94],RA:[10,6,94],LKp:[0,0,-1],RKp:[0,0,-1],LW:[-6,72,-2],LEp:[0,1,1],RW:[30,48,-18],REp:[1,1,0]}},
+back:{target:[0,40,0],cam:[-.9,.35],
+ A:{P:[0,13,0],up:[-.2,.98,0],fw:[.98,.2,0],LA:[86,6,-16],RA:[86,6,16],LKp:[0,1,0],RKp:[0,1,0],LW:[2,57,-8],RW:[-4,62,2],LEp:[0,-1,-.3],REp:[0,-1,.3]},
+ D:{P:[-28,13,0],up:[-.25,.97,0],fw:[.97,.25,0],LKt:[-4,34,-30],RKt:[-4,34,30],LA:[26,24,-5],RA:[26,24,5],LKp:[0,1,-1],RKp:[0,1,1],RW:[6,52,-14],REp:[0,1,0],LW:[2,48,-16],LEp:[0,-1,-.5]}},
+flat:{target:[-10,25,0],cam:[-1.1,.45],
+ A:{P:[0,13,0],up:[1,0,0],fw:[0,-1,0],LA:[-92,6,-14],RA:[-92,6,14],LKp:[0,-1,0],RKp:[0,-1,0],LEt:[34,6,-24],REt:[34,6,24],LW:[48,14,-6],RW:[48,14,6]},
+ D:{P:[-6,40,0],up:[1,.05,0],fw:[0,-1,0],LKt:[-26,8,-28],RKt:[-26,8,28],LA:[-70,6,-26],RA:[-70,6,26],LW:[50,16,-12],LEp:[0,1,-1],RW:[44,24,10],REp:[0,1,1]}},
+kob:{target:[-6,38,14],cam:[-.5,.4],dist:330,
+ A:{P:[0,13,0],up:[-1,0,0],fw:[0,1,0],LA:[40,6,-18],RA:[40,6,18],LKp:[0,1,0],RKp:[0,1,0],RW:[-4,42,10],REp:[0,-1,1],LW:[-2,44,-2],LEp:[0,-1,-1]},
+ D:{P:[0,64,30],up:[-.45,.8,-.4],fw:[-.55,-.35,-.75],RKt:[-6,34,2],RA:[30,6,40],RKp:[0,1,0],LA:[-30,6,70],LKp:[-.5,.5,.5],RW:[-30,40,8],REp:[0,1,1],LW:[8,30,16],LEp:[1,1,0]}},
+ns:{target:[-50,25,0],cam:[-.9,.5],
+ A:{P:[0,13,0],up:[-1,0,0],fw:[0,1,0],LA:[40,6,-18],RA:[40,6,18],LKp:[0,1,0],RKp:[0,1,0],LW:[-34,40,-18],RW:[-34,40,18],LEp:[0,-1,-1],REp:[0,-1,1]},
+ D:{P:[-76,25,0],up:[1,0,0],fw:[0,-1,0],LKt:[-118,8,-16],RKt:[-118,8,16],LA:[-160,6,-16],RA:[-160,6,16],LW:[-4,22,-24],LEp:[0,1,-1],RW:[-4,22,24],REp:[0,1,1]}},
+/* taken from the first or last frame of an animation */
+mount:{anim:"upa",t:0},cguard:{anim:"armbar_cg",t:0},side:{anim:"frames_lat",t:0},hguard:{anim:"codo_rodilla",t:1},oguard:{anim:"frames_lat",t:1}
+};
+
+/* d: danger for the bottom role / for the top role (0 safe … 5 critical) */
+const POSN={
+standing:{n:["Standing","Standing"],d:[1,1],x:50,y:7,
+ safe:[["Upright posture, hips slightly back, feet never crossed.","Win the grips: break his lapel grip, control his sleeve.","If you’re going down, breakfall; never post on a straight arm.","If you don’t win the grips, sitting to guard is a legitimate choice."],null]},
+seated:{n:["Seated, he’s kneeling","Kneeling, he’s seated"],d:[1,1],x:16,y:24,
+ safe:[["Sit on one hip, a hand posted behind, the other gripping his collar or sleeve.","Feet active, knees between you: never lie flat.","Turn on your hip to keep facing him as he moves."],
+       ["Posture up, grips on his collar or knees.","Don’t lean over his legs: he pulls you into his guard.","Move around his feet, not through them."]]},
+cguard:{n:["Closed guard (bottom)","In his closed guard"],d:[1,1],x:50,y:24,
+ safe:[["Break his posture: pull with your legs, control his head or collars.","Control his arms: one arm in and one out is your triangle, a posted hand is your kimura.","If he stands up, don’t hang on: switch to open guard with feet on his hips."],
+       ["Posture: straight back, head up, elbows in.","Hands on his hips or belly, never pushing his chest with straight arms.","Never one arm in and one out: triangle."]]},
+oguard:{n:["Open guard (bottom)","In his open guard"],d:[1,1],x:84,y:24,
+ safe:[["Always a foot or a knee between you: don’t let him reach your chest.","Sit up or turn on your side; never flat on your back.","Grips on his sleeves or collar to steer him."],
+       ["Control first: his pants at the knees, or his hips.","Don’t put your head between his legs.","Don’t kneel still in front of his hooks: he sweeps you."]]},
+hguard:{n:["Half guard (bottom)","In his half guard"],d:[2,1],x:50,y:42,
+ safe:[["Never flat on your back: on your side, facing him.","Knee shield: your top knee between you, frame on his neck or shoulder.","Win the underhook on the side of the trapped leg."],
+       ["Flatten him: cross-face and the far-side underhook.","Hips low, weight on his chest, not on your knees.","Free your leg by pushing his knee with your other foot."]],
+ kn:"Trapped leg, weight on top and a twist is the classic meniscus mechanism. If the trapped knee strains, don’t twist: ease off and recover with the knee shield."},
+side:{n:["Side control: under","Side control: on top"],d:[3,0],x:16,y:60,
+ safe:[["Elbows tight to your body, turned a little toward him: never flat.","Frames: forearm against his neck or collarbone, other hand on his hip.","Don’t push with straight arms: you tire, and you hand him the arm."],
+       ["Cross-face and underhook, or hip control.","Chest to chest, hips low.","Position before submission."]]},
+kob:{n:["Knee on belly: under","Knee on belly: on top"],d:[3,0],x:50,y:60,
+ safe:[["Frame on his knee and his hip with bent arms.","Turn toward him; don’t give him your back.","Never push his chest with straight arms: that’s his armbar."],
+       ["Shin diagonal across his belly, other foot wide for base.","Weight on the knee, not on the foot.","If he pushes with straight arms, attack that arm or go to mount."]],
+ kn:"On top, the base knee works bent and loaded: if the right one complains, use the left."},
+ns:{n:["North-south: under","North-south: on top"],d:[3,0],x:84,y:60,
+ safe:[["Elbows tight: don’t let him isolate an arm away from your body.","Frame on his hips or shoulders with bent arms.","Keep turning to face him; walk your feet to follow his hips."],
+       ["Chest on his chest, hips low and heavy.","Control his arms close to his body.","Walk around his head without losing pressure."]]},
+mount:{n:["Mounted","Mount: on top"],d:[4,0],x:16,y:78,
+ safe:[["Elbows in, hands protecting your neck.","Never push his chest with straight arms: armbar.","Never turn face down: you give your back.","Upa if he climbs high, elbow-knee if he sits low."],
+       ["Knees tight to his sides, feet under his thighs.","Hands out for base when he bridges.","Climb toward his armpits before attacking."]]},
+turtle:{n:["Turtle","He’s in turtle"],d:[3,0],x:84,y:76,
+ safe:[["Elbows glued to your knees, chin down, hands guarding your collar.","No space for his hooks.","Turtle is a doorway, not a place to stay: get out to guard or stand up."],
+       ["Chest on his back, weight on him.","Seat belt before hooks.","First hook on the near side, then roll him with you."]],
+ kn:"Kneeling with his weight on you is deep, loaded flexion: get out early and don’t pivot on the right knee."},
+back:{n:["Back taken","You have his back"],d:[5,0],x:44,y:92,
+ safe:[["Your neck first: chin down, both hands on his choking arm.","Don’t try to clear his hooks with your hands while your neck is open.","Get your shoulders to the mat, then work out."],
+       ["Seat belt: one arm over the shoulder, one under the armpit, hands joined.","Hooks inside his thighs, feet never crossed.","Chest glued to his back."]]},
+flat:{n:["Flattened, back taken","You flattened him"],d:[5,0],x:82,y:92,
+ safe:[["Protect your neck: hands at your collar, chin down.","Don’t reach forward: elbows tight.","Get back to your knees or onto your side."],
+       ["Hips heavy on his lower back.","Keep his arms close to his body.","Work for the choke with your chest on him."]]}
+};
+
+/* Transitions. by: who does it (bottom/top/any). to: destination position or "sub".
+   end: the role the one doing it ends in. tech: key points in T. anim: animation (the one doing it is body A).
+   stop: how the other one stops it. */
+const TR=[
+ {id:"pull_guard",from:"standing",by:"any",to:"cguard",end:"bottom",n:"Pull guard",kind:"Transition",tech:"tirar_guardia",
+  stop:"You end up in his closed guard. Posture up immediately: straight back, elbows in."},
+ {id:"takedown",from:"standing",by:"any",to:"side",end:"top",n:"Takedown to side control",kind:"Takedown",judo:1,
+  steps:["Win the grips: sleeve and lapel.","Off-balance him before you enter (kuzushi).","Throw and follow him down to side control."],
+  stop:"Grip fighting, upright posture and a sprawl against leg attacks. If the throw is already happening, breakfall instead of resisting on a twisted knee."},
+ {id:"seated_guard",from:"seated",by:"bottom",to:"cguard",end:"bottom",n:"Pull him into closed guard",kind:"Transition",
+  steps:["Keep your grips on his collar and sleeve.","As he comes forward, lie back with your feet on his hips.","Pull him in and lock your ankles behind his back."],
+  stop:"Keep your posture and don’t lean over his legs; move to the side of his feet instead of into them."},
+ {id:"seated_stand",from:"seated",by:"bottom",to:"standing",end:null,n:"Technical stand-up",kind:"Transition",tech:"techstand",
+  stop:"Pressure him while he’s getting up: grab a leg or push him back down before his feet are under him."},
+ {id:"seated_pass",from:"seated",by:"top",to:"side",end:"top",n:"Gets around your legs",kind:"Pass",
+  steps:["Pushes your knees to one side.","Runs around them and drops his chest on you."],
+  stop:"Keep a foot or a knee between you and turn on your hip to keep facing him. If he gets past your knees, turn on your side and frame."},
+ {id:"seated_back",from:"seated",by:"top",to:"back",end:"top",n:"Circles behind you",kind:"Back take",
+  steps:["Moves to the side of your posted hand.","Gets behind your shoulder and sits in with his hooks."],
+  stop:"Keep facing him: turn on your hip as he moves and never let him get behind your shoulder."},
+ {id:"cg_hipbump",from:"cguard",by:"bottom",to:"mount",end:"top",n:"Hip bump sweep",kind:"Sweep",tech:"hip_bump",
+  stop:"Don’t sit upright and static on your knees; keep your hands on his hips and your weight back."},
+ {id:"cg_scissor",from:"cguard",by:"bottom",to:"mount",end:"top",n:"Scissor sweep",kind:"Sweep",tech:"tijera",
+  stop:"Keep your base wide and don’t let him pull your weight forward over his shin."},
+ {id:"cg_armbar",from:"cguard",by:"bottom",to:"sub",n:"Armbar",kind:"Submission",tech:"armbar_cg",anim:"armbar_cg",
+  stop:"Posture up, elbows in, hands on his hips or belly. Never leave an arm on his chest with your elbow straight."},
+ {id:"cg_triangle",from:"cguard",by:"bottom",to:"sub",n:"Triangle",kind:"Submission",tech:"triangulo",
+  stop:"Never one arm in and one arm out: keep both inside his legs or both outside, and keep your posture."},
+ {id:"cg_kimura",from:"cguard",by:"bottom",to:"sub",n:"Kimura",kind:"Submission",tech:"kimura_cg",
+  stop:"Don’t post a hand on the mat away from your body; keep your elbows in."},
+ {id:"cg_open",from:"cguard",by:"top",to:"oguard",end:"top",n:"Opens your guard",kind:"Transition",tech:"postura_cg",
+  stop:"Keep breaking his posture. If he stands, let go of the closed guard and put your feet on his hips."},
+ {id:"og_close",from:"oguard",by:"bottom",to:"cguard",end:"bottom",n:"Close the guard",kind:"Transition",
+  steps:["Feet on his hips, grips on his sleeves or collar.","Pull him in toward you.","Lock your ankles behind his back."],
+  stop:"Keep your hips back and control his knees so he can’t wrap his legs around you."},
+ {id:"og_butterfly",from:"oguard",by:"bottom",to:"side",end:"top",n:"Butterfly sweep",kind:"Sweep",tech:"mariposa",
+  note:"You usually land in side control or mount.",
+  stop:"Keep your hips low and your weight back; don’t let him get the underhook and the arm on the same side."},
+ {id:"og_stand",from:"oguard",by:"bottom",to:"standing",end:null,n:"Technical stand-up",kind:"Transition",tech:"techstand",
+  stop:"Pressure him as he gets up: don’t give him the distance to stand."},
+ {id:"og_toreando",from:"oguard",by:"top",to:"side",end:"top",n:"Toreando pass",kind:"Pass",tech:"toreando",
+  stop:"Break his grips on your pants and keep your knees facing him. If he runs around, turn on your side and get a knee across."},
+ {id:"og_kneecut",from:"oguard",by:"top",to:"side",end:"top",n:"Knee cut pass",kind:"Pass",tech:"knee_cut",
+  stop:"Knee shield and a frame on his shoulder; win the underhook on his cutting side."},
+ {id:"og_double",from:"oguard",by:"top",to:"side",end:"top",n:"Double under pass",kind:"Pass",tech:"double_under",
+  stop:"Don’t let both his arms under your legs: feet on his hips or biceps. If he stacks you, turn out to your side."},
+ {id:"og_half",from:"oguard",by:"top",to:"hguard",end:"top",n:"Gets past one leg",kind:"Pass",
+  steps:["Clears one of your legs.","You trap his other leg between yours: half guard."],
+  stop:"Keep both knees in front of him; if he clears one, trap the other leg straight away rather than give him the whole pass."},
+ {id:"hg_recover",from:"hguard",by:"bottom",to:"oguard",end:"bottom",n:"Knee shield, recover guard",kind:"Escape",tech:"recup_guardia",
+  stop:"Flatten him before he builds the shield: cross-face and underhook."},
+ {id:"hg_oldschool",from:"hguard",by:"bottom",to:"side",end:"top",n:"Old school sweep",kind:"Sweep",tech:"old_school",
+  stop:"Don’t give him the deep underhook; keep your weight over him, not upright."},
+ {id:"hg_pass",from:"hguard",by:"top",to:"side",end:"top",n:"Flattens you and passes",kind:"Pass",tech:"crossface_mg",
+  stop:"Stay on your side, win the underhook and frame on his neck. Never flat on your back with his shoulder on your jaw."},
+ {id:"hg_mount",from:"hguard",by:"top",to:"mount",end:"top",n:"Frees his leg to mount",kind:"Pass",
+  steps:["Flattens you with a cross-face.","Pushes your knees down with his free foot and pulls his leg out.","Steps straight over into mount."],
+  stop:"Keep the knee shield and the underhook; don’t let your legs get pushed flat to the mat."},
+ {id:"sc_frames",from:"side",by:"bottom",to:"oguard",end:"bottom",n:"Frames, shrimp, knee in",kind:"Escape",tech:"frames_lat",anim:"frames_lat",
+  stop:"Stay heavy and chest to chest; kill his frames with the cross-face and keep your hips tight to his."},
+ {id:"sc_turtle",from:"side",by:"bottom",to:"turtle",end:"bottom",n:"Turn to your knees",kind:"Escape",
+  steps:["Frame on his hips and bridge.","Turn toward him onto your knees.","Elbows to your knees immediately."],
+  note:"Emergency exit: turtle isn’t safe either, so keep moving to guard or to your feet.",
+  stop:"Follow him onto his back: seat belt and hooks."},
+ {id:"sc_mount",from:"side",by:"top",to:"mount",end:"top",n:"Steps to mount",kind:"Transition",tech:"a_montada",
+  stop:"Keep your top knee up with your elbow tight to it: the elbow-knee wall stops his knee sliding across."},
+ {id:"sc_kob",from:"side",by:"top",to:"kob",end:"top",n:"Knee on belly",kind:"Transition",tech:"rodilla_vientre",
+  stop:"Frame his hip with your near hand; when he lifts his weight to step up, shrimp away and get your knee in."},
+ {id:"sc_ns",from:"side",by:"top",to:"ns",end:"top",n:"Walks to north-south",kind:"Transition",
+  steps:["Keeps chest-to-chest pressure.","Walks around your head to the other side of your body."],
+  stop:"Keep your frames and turn toward him as he walks; keep your elbows tight."},
+ {id:"sc_americana",from:"side",by:"top",to:"sub",n:"Americana",kind:"Submission",tech:"americana",
+  stop:"Elbows tight to your ribs; never leave your arm bent at 90° beside your head."},
+ {id:"mt_upa",from:"mount",by:"bottom",to:"cguard",end:"top",n:"Upa: bridge and roll",kind:"Escape",tech:"upa",anim:"upa",
+  stop:"Don’t let him trap an arm and a foot on the same side. When he bridges, post your hands wide on the mat."},
+ {id:"mt_elbowknee",from:"mount",by:"bottom",to:"hguard",end:"bottom",n:"Elbow-knee escape",kind:"Escape",tech:"codo_rodilla",anim:"codo_rodilla",
+  stop:"Climb high toward his armpits: from low on his hips his elbow and knee can meet."},
+ {id:"mt_back",from:"mount",by:"top",to:"back",end:"top",n:"Takes your back when you turn",kind:"Back take",
+  steps:["You turn face down to escape.","He rises on his knees and lets you turn underneath him.","Hooks in and seat belt."],
+  stop:"Never turn your back to escape the mount: stay on your back or on your side facing him."},
+ {id:"mt_armbar",from:"mount",by:"top",to:"sub",n:"Armbar from mount",kind:"Submission",tech:"armbar_mo",
+  stop:"Never push his chest with straight arms; elbows in, hands at your neck."},
+ {id:"mt_choke",from:"mount",by:"top",to:"sub",n:"Cross collar choke",kind:"Submission",tech:"cruzado_mo",
+  stop:"Hands at your collar, chin down; fight his first grip before the second one arrives."},
+ {id:"kob_escape",from:"kob",by:"bottom",to:"oguard",end:"bottom",n:"Push the knee, recover guard",kind:"Escape",
+  steps:["Frame on his knee and hip with bent arms.","Turn toward him and shrimp your hips away from the knee.","Slide your bottom knee into the gap: guard."],
+  stop:"Keep your weight on the knee and switch to mount as soon as he frames."},
+ {id:"kob_mount",from:"kob",by:"top",to:"mount",end:"top",n:"Slides to mount",kind:"Transition",
+  steps:["Slides the knee across your belly.","Plants it on the far side: mount."],
+  stop:"Keep framing his knee and bring your own knees up to block the slide."},
+ {id:"kob_armbar",from:"kob",by:"top",to:"sub",n:"Armbar when you push",kind:"Submission",
+  steps:["You push his knee or chest with straight arms.","He steps around your head and sits back into the armbar."],
+  stop:"Frame with bent arms and elbows in; push the knee, never his chest."},
+ {id:"ns_escape",from:"ns",by:"bottom",to:"oguard",end:"bottom",n:"Turn in, recover guard",kind:"Escape",
+  steps:["Frame on his hips or shoulders with bent arms.","Walk your feet to turn your hips toward him.","Shrimp and bring your knees between you."],
+  stop:"Stay heavy on his chest and walk with him so he can’t square up."},
+ {id:"ns_side",from:"ns",by:"top",to:"side",end:"top",n:"Back to side control",kind:"Transition",
+  steps:["Walks back around your head.","Settles chest to chest on your side."],
+  stop:"Use the moment he moves to turn in and get a knee between you."},
+ {id:"ns_kimura",from:"ns",by:"top",to:"sub",n:"North-south kimura",kind:"Submission",
+  steps:["Isolates one of your arms away from your body.","Figure-four grip on the wrist and turns the arm behind your back."],
+  stop:"Keep your elbows tight to your body; don’t reach around him with an arm he can isolate."},
+ {id:"tt_sitout",from:"turtle",by:"bottom",to:"oguard",end:"bottom",n:"Sit out to guard",kind:"Escape",tech:"salida_tortuga",
+  stop:"Keep your chest on his back and follow his hips; get the seat belt before he sits out."},
+ {id:"tt_stand",from:"turtle",by:"bottom",to:"standing",end:null,n:"Stand up",kind:"Escape",
+  steps:["Post one foot and keep your elbows tight.","Grab a leg or push his arm away to make space.","Stand up facing him."],
+  stop:"Keep your weight on him and don’t let him get a foot planted."},
+ {id:"tt_back",from:"turtle",by:"top",to:"back",end:"top",n:"Takes your back",kind:"Back take",tech:"espalda_tortuga",
+  stop:"Elbows glued to your knees, no space for hooks; get out of turtle early."},
+ {id:"tt_flat",from:"turtle",by:"top",to:"flat",end:"top",n:"Flattens you",kind:"Transition",
+  steps:["Gets his hooks or knees in.","Stretches your legs back and drives his hips into your lower back."],
+  stop:"Keep your knees under you and your base wide; don’t reach forward with your arms."},
+ {id:"tt_clock",from:"turtle",by:"top",to:"sub",n:"Clock choke",kind:"Submission",
+  steps:["Deep grip in your collar from the side, chest on your back.","Walks around your head like the hand of a clock."],
+  stop:"Hands guarding your collar, chin down; get out of turtle."},
+ {id:"bk_escape",from:"back",by:"bottom",to:"cguard",end:"top",n:"Back escape",kind:"Escape",tech:"back_escape",
+  stop:"Keep your chest glued to his back and your hooks in; follow him if he slides down."},
+ {id:"bk_rnc",from:"back",by:"top",to:"sub",n:"Rear naked choke",kind:"Submission",tech:"rnc",
+  stop:"Chin down and both hands on his choking arm before anything else."},
+ {id:"bk_bow",from:"back",by:"top",to:"sub",n:"Bow and arrow choke",kind:"Submission",tech:"bow_arrow",
+  stop:"Fight his collar grip with both hands and get your shoulders to the mat."},
+ {id:"bk_flat",from:"back",by:"top",to:"flat",end:"top",n:"Flattens you face down",kind:"Transition",
+  steps:["Pushes his hips into your lower back.","Stretches you out face down with his hooks in."],
+  stop:"Keep your shoulders back against him and fall to your side, never onto your stomach."},
+ {id:"fl_knees",from:"flat",by:"bottom",to:"turtle",end:"bottom",n:"Back to your knees",kind:"Escape",
+  steps:["One hand protecting your neck.","Bring your knees under you one at a time.","Push up to turtle, elbows to knees."],
+  stop:"Keep your hips heavy on his lower back and stretch his legs out."},
+ {id:"fl_side",from:"flat",by:"bottom",to:"back",end:"bottom",n:"Roll onto your side",kind:"Escape",
+  steps:["Hands on his choking arm.","Turn onto your side, your back against his chest.","From there, work the back escape."],
+  stop:"Keep him flat: hips heavy and don’t let his shoulder turn under you."},
+ {id:"fl_rnc",from:"flat",by:"top",to:"sub",n:"Rear naked choke",kind:"Submission",tech:"rnc",
+  stop:"Hands on his choking arm, chin down, elbows tight."}
+];
+
+/* ---------- SIMULATOR ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const SKEY="tatami-sim-v1";
+let ST={seen:{}};try{const v=JSON.parse(localStorage.getItem(SKEY)||"null");if(v&&typeof v==="object"&&v.seen)ST=v}catch(e){}
+function saveST(){try{localStorage.setItem(SKEY,JSON.stringify(ST))}catch(e){}}
+const DCOL=["#1f8a4c","#2a7bd5","#c98a00","#e06a1b","#d3263a","#8e1020"],DLAB=["Safe","Neutral","Careful","Danger","High danger","Critical"];
+const ri=r=>r==="top"?1:0;
+const stName=(p,r)=>POSN[p].n[ri(r)],danger=(p,r)=>POSN[p].d[ri(r)];
+
+/* scene sources: {a: animation-like object, t: 0 or 1}. Canonical poses keep the bottom role in body A. */
+function canon(pos){const p=POSES[pos];if(p.anim)return{a:ANIM[p.anim],t:p.t};
+  return{a:{title:POSN[pos].n[0],target:p.target,cam:p.cam,dist:p.dist,keys:[{t:0,A:p.A,D:p.D},{t:1,A:p.A,D:p.D}],forces:[],steps:[]},t:0}}
+const specAt=src=>{const k=src.a.keys;return src.t>=1?k[k.length-1]:k[0]};
+
+/* Rigid alignment: an animation is turned and moved so that you start exactly where you are. */
+function rotY(v,th){const c=Math.cos(th),s=Math.sin(th);return[v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c]}
+const heading=s=>{const u=V.norm(s.up);let v=[u[0],0,u[2]];if(Math.hypot(v[0],v[2])<.5){const f=V.norm(s.fw);v=[f[0],0,f[2]]}return Math.atan2(v[0],v[2])};
+const PTK={P:1,LW:1,RW:1,LA:1,RA:1,LEt:1,REt:1,LKt:1,RKt:1},DRK={up:1,fw:1,LEp:1,REp:1,LKp:1,RKp:1,LT:1,LS:1,RT:1,RS:1,hd:1,th:1};
+function xfSpec(s,th,T){const o={};for(const k in s){const v=s[k];o[k]=PTK[k]?V.add(rotY(v,th),T):DRK[k]?rotY(v,th):v}return o}
+function specDiff(a,b){let d=0;for(const k of["P","LW","RW","LA","RA"])if(a[k]&&b[k])d+=V.len(V.sub(a[k],b[k]));return d}
+function buildPlay(a0,start,you){
+  const k0=a0.keys[0],th=heading(start[you])-heading(k0[you]),r=rotY(k0[you].P,th),T=[start[you].P[0]-r[0],0,start[you].P[2]-r[2]];
+  const keys=a0.keys.map(k=>({t:k.t,A:xfSpec(k.A,th,T),D:xfSpec(k.D,th,T)}));
+  const diff=specDiff(start.A,keys[0].A)+specDiff(start.D,keys[0].D),L=diff>3?.12:0,m=t=>L+t*(1-L);
+  const out=Object.assign({},a0,{keys:(L?[{t:0,A:start.A,D:start.D}]:[]).concat(keys.map(k=>Object.assign(k,{t:m(k.t)}))),
+    pins:(a0.pins||[]).map(p=>[p[0],p[1],m(p[2]),m(p[3]),p[4]]),
+    forces:a0.forces.map(f=>Object.assign({},f,{from:m(f.from),to:f.to===undefined?undefined:m(f.to),dir:rotY(f.dir,th)})),
+    steps:a0.steps.map(s=>[m(s[0]),s[1],s[2]]),
+    readout:a0.readout?(S,t)=>a0.readout(S,Math.min(1,Math.max(0,(t-L)/(1-L)))):null,
+    target:V.add(rotY(a0.target,th),T),cam:[a0.cam[0]+th,a0.cam[1]],dist:a0.dist||270,dur:11/(1-L)});
+  let xs=[],zs=[];for(const k of out.keys)for(const b of["A","D"])for(const f of["P","LA","RA","LW","RW"])if(k[b][f]){xs.push(k[b][f][0]);zs.push(k[b][f][2])}
+  const sn=v=>Math.round(v/20)*20;out.floor=[sn(Math.min(...xs)-50),sn(Math.max(...xs)+50),sn(Math.min(...zs)-50),sn(Math.max(...zs)+50)];
+  return out}
+
+/* ---------- STATE ---------- */
+let cur=null,hist=[],play=null,role0="bottom";
+function camTo(a){[cam.yaw,cam.pitch]=a.cam;cam.dist=a.dist||270;camTarget=a.target.slice()}
+function goState(pos,role,src,you,keepCam){
+  if(cur)hist.push({...cur,cam:[cam.yaw,cam.pitch,cam.dist,camTarget.slice()]});
+  if(!src){src=canon(pos);you=pos==="standing"||role==="bottom"?"A":"D"}
+  cur={pos,role:pos==="standing"?"bottom":role,src,you};play=null;setPlay(false);
+  if(!keepCam){camTo(src.a);xray=!!src.a.xray}
+  location.hash="sim";renderSide();draw()}
+function goBack(){if(play){play=null;setPlay(false);renderSide();draw();return}
+  const h=hist.pop();if(!h){location.hash="map";return}cur={pos:h.pos,role:h.role,src:h.src,you:h.you};
+  [cam.yaw,cam.pitch,cam.dist]=h.cam;camTarget=h.cam[3];renderSide();draw()}
+function movesFor(pos,role){const mine=[],his=[];for(const tr of TR){if(tr.from!==pos)continue;if(tr.by==="any"){mine.push(tr);his.push(tr)}else(tr.by===role?mine:his).push(tr)}return{mine,his}}
+function dest(tr,me){if(tr.to==="sub")return{sub:1,win:me};if(tr.to==="standing")return{pos:"standing",role:"bottom"};return{pos:tr.to,role:me?tr.end:(tr.end==="top"?"bottom":"top")}}
+function destLabel(d){return d.sub?(d.win?"You submit him":"He submits you"):stName(d.pos,d.role)}
+function destCol(d){return d.sub?(d.win?DCOL[0]:DCOL[5]):DCOL[danger(d.pos,d.role)]}
+
+function startTr(id,me){const tr=TR.find(x=>x.id===id);if(!tr)return;ST.seen[tr.id]=1;saveST();
+  const d=dest(tr,me);play={tr,me,d,a:null,t:0,done:!tr.anim};
+  if(tr.anim){const sp=specAt(cur.src),mine=sp[cur.you],his=sp[cur.you==="A"?"D":"A"],you=me?"A":"D";
+    play.a=buildPlay(ANIM[tr.anim],me?{A:mine,D:his}:{A:his,D:mine},you);play.you=you;
+    play.cam0=[cam.yaw,cam.pitch,cam.dist,camTarget.slice()];xray=!!ANIM[tr.anim].xray;setPlay(true)}
+  renderSide();draw();const f=$("#svgRoot");if(f.getBoundingClientRect().top<0)f.scrollIntoView({block:"start",behavior:"smooth"})}
+function finishTr(){const p=play;if(!p)return;if(p.d.sub)return;
+  if(p.a)goState(p.d.pos,p.d.role,{a:p.a,t:1},p.you,true);else goState(p.d.pos,p.d.role)}
+
+/* ---------- 3D VIEW ---------- */
+let camTarget=[0,30,0],anRaf=0,anLast=0,anPlay=false;
+function curScene(){return play&&play.a?{a:play.a,t:play.t,you:play.you}:{a:cur.src.a,t:cur.src.t,you:cur.you,still:1}}
+function draw(){const g=$("#scene");if(!g||!cur)return;const sc=curScene();YOU=sc.you;NOFORCE=!!sc.still;
+  if(play&&play.a){const u=Math.min(1,play.t/.1),c0=play.cam0,c1=play.a;let dy=c1.cam[0]-c0[0];dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+    if(!play.camSet){cam.yaw=c0[0]+dy*u;cam.pitch=c0[1]+(c1.cam[1]-c0[1])*u;cam.dist=c0[2]+(c1.dist-c0[2])*u;camTarget=V.lerp(c0[3],c1.target,u);if(u>=1)play.camSet=1}}
+  const R=renderScene(Object.assign({},sc.a,{target:camTarget,floor:sc.a.floor}),sc.t);g.innerHTML=R.svg;
+  const ctl=$("#ctrl");ctl.hidden=!(play&&play.a);
+  if(play&&play.a){$("#anRange").value=Math.round(play.t*1000);const ro=play.a.readout?play.a.readout(R.S,play.t):["",false],r=$("#anRead");r.textContent=ro[0];r.style.color=ro[1]?"var(--red)":"";
+    const si=play.a.steps.reduce((k,st,i)=>play.t>=st[0]-.05?i:k,0);document.querySelectorAll("#trSteps .step").forEach((b,i)=>b.setAttribute("aria-current",i===si));
+    const cont=$("#contBtn");if(cont)cont.hidden=play.t<.999}
+  $("#xrayBtn").classList.toggle("on",xray);$("#xrayBtn").setAttribute("aria-pressed",xray);
+  $("#keyrow").innerHTML=`<span style="--c:${PAL.A.b}">You (darker = your left side)</span><span style="--c:${PAL.D.b}">Partner (darker = his left side)</span>`+(play&&play.a?play.a.forces.map(f=>`<span style="--c:${f.col}">F ${esc(f.lab.toLowerCase())}</span>`).join(""):"")}
+function tick(ts){if(!anPlay||!play||!play.a)return;const dt=anLast?(ts-anLast)/1000:0;anLast=ts;play.t=Math.min(1,play.t+dt/play.a.dur);draw();
+  if(play.t>=1){setPlay(false);play.done=true;renderActions();return}anRaf=requestAnimationFrame(tick)}
+function setPlay(p){anPlay=p;anLast=0;cancelAnimationFrame(anRaf);const b=$("#anPlay");if(b)b.textContent=p?"Pause":"Play";if(p){if(play&&play.t>=1)play.t=0;anRaf=requestAnimationFrame(tick)}}
+
+/* ---------- SIDE PANEL ---------- */
+const knTag=r=>r?`<span class="tag k${r}">${r===2?"High knee load":"Knee load"}</span>`:"";
+function mvBtn(tr,me){const d=dest(tr,me),T0=tr.tech&&T[tr.tech];
+  return`<button class="mv" data-tr="${tr.id}" data-me="${me?1:0}" style="--dc:${destCol(d)}"><span class="mvn">${esc(tr.n)}${tr.anim?' <span class="tag s2">3D</span>':""}${ST.seen[tr.id]?' <span class="seen" title="Seen">✓</span>':""}</span><span class="mvd">${esc(tr.kind)} → <b>${esc(destLabel(d))}</b></span>${me&&T0?knTag(T0.r):""}</button>`}
+function renderSide(){const box=$("#side");if(!cur)return;
+  const P=POSN[cur.pos],dg=danger(cur.pos,cur.role);
+  $("#stateTitle").innerHTML=`<b>${esc(stName(cur.pos,cur.role))}</b> <span class="dchip" style="--d:${DCOL[dg]}">${DLAB[dg]}</span>`;
+  if(play){renderTr();return}
+  const {mine,his}=movesFor(cur.pos,cur.role),safe=P.safe[ri(cur.role)]||P.safe[0];
+  box.innerHTML=`<h2>${esc(stName(cur.pos,cur.role))}</h2>
+   <div class="label">Stay safe here</div><ul class="clean">${safe.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+   ${P.kn?`<div class="note">${esc(P.kn)}</div>`:""}
+   <div class="label">Your moves</div><div class="mvs">${mine.length?mine.map(t=>mvBtn(t,true)).join(""):'<p class="lead">Nothing mapped yet from here.</p>'}</div>
+   <div class="label">His moves</div><div class="mvs">${his.length?his.map(t=>mvBtn(t,false)).join(""):'<p class="lead">Nothing mapped yet from here.</p>'}</div>`;
+  box.querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>startTr(b.dataset.tr,b.dataset.me==="1"))}
+function trSteps(tr,me){const T0=tr.tech&&T[tr.tech];return tr.steps||(T0?T0.k:[])}
+function renderTr(){const box=$("#side"),{tr,me,d}=play,T0=tr.tech&&T[tr.tech],a=play.a;
+  const who=me?"Your move":"His move",steps=trSteps(tr,me);
+  const stepsHTML=a?`<div class="steps one" id="trSteps">${a.steps.map((s,i)=>`<button class="step" data-sti="${i}"><b>${esc(s[1])}</b>${esc(s[2])}</button>`).join("")}</div>`
+    :`<ol class="clean">${steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`;
+  const stop=`<div class="note stop"><b>${me?"How he stops it":"How to stop it"}</b><br>${esc(tr.stop||"")}</div>`;
+  let judo="";if(tr.judo){judo=me?`<div class="label">Throws that work for BJJ</div>${JU.map(j=>`<details class="tech"><summary><b>${esc(j.n)}</b>${knTag(j.r)}</summary><div class="body"><ol class="clean">${j.k.map(x=>`<li>${esc(x)}</li>`).join("")}</ol><p>${esc(j.bjj)}</p>${j.rn?`<div class="note">${esc(j.rn)}</div>`:""}</div></details>`).join("")}`
+      :`<div class="label">Defending takedowns</div>${DEF.map(x=>`<details class="tech"><summary><b>${esc(x[0])}</b></summary><div class="body">${esc(x[1])}</div></details>`).join("")}`}
+  box.innerHTML=`<button class="link" id="trCancel">← Back to ${esc(stName(cur.pos,cur.role))}</button>
+   <h2>${esc(tr.n)}</h2><p class="lead" style="margin-bottom:6px">${who} · ${esc(tr.kind)} → <b style="color:${destCol(d)}">${esc(destLabel(d))}</b></p>
+   ${me?"":stop}
+   ${a?"":`<div class="note">Animation pending: we’ll add it. For now, the steps.</div>`}
+   <div class="label">${me?"Step by step":"How he does it (written from his side)"}</div>${stepsHTML}
+   ${tr.note?`<p class="lead">${esc(tr.note)}</p>`:""}
+   ${me&&T0&&T0.kn?`<div class="note">${esc(T0.kn)}</div>`:""}
+   ${me?stop:""}${judo}
+   ${a&&a.physics?`<details class="tech"><summary><b>Why it works</b></summary><div class="body"><ul class="clean">${a.physics.map(x=>`<li>${x}</li>`).join("")}</ul></div></details>`:""}
+   <div class="row" id="trActions"></div>`;
+  $("#trCancel").onclick=()=>{play=null;setPlay(false);renderSide();draw()};
+  box.querySelectorAll("[data-sti]").forEach(b=>b.onclick=()=>{setPlay(false);play.t=a.steps[+b.dataset.sti][0];draw()});
+  renderActions()}
+function renderActions(){const el=$("#trActions");if(!el||!play)return;const d=play.d;
+  if(d.sub){el.innerHTML=(play.a&&!play.done?"":`<div class="result" style="--d:${destCol(d)}">${d.win?"Tap. You finish it.":"Tap. He finishes it."}</div>`)+`<button class="btn" id="subBack">Back to ${esc(stName(cur.pos,cur.role))}</button><button class="btn" id="subMap">Choose a position</button>`;
+    $("#subBack").onclick=()=>{play=null;setPlay(false);renderSide();draw()};$("#subMap").onclick=()=>{location.hash="map"};return}
+  el.innerHTML=`<button class="btn primary" id="contBtn" ${play.a&&play.t<.999?"hidden":""}>${play.a?"Continue":"Go"} in ${esc(destLabel(d))} →</button>`;
+  $("#contBtn").onclick=finishTr}
+
+/* ---------- MAP ---------- */
+function renderMap(){const box=$("#map");if(!box)return;
+  const edges=[],up={};
+  for(const tr of TR){if(tr.to==="sub")continue;
+    const mes=tr.by==="any"?[true,false]:[tr.by==="bottom"];
+    for(const me of mes){ // seen from the one who is underneath (or standing)
+      const from={pos:tr.from,role:"bottom"},d=dest(tr,me);
+      if(d.role==="top"){up[tr.from]=(up[tr.from]||0)+1;continue}
+      if(d.pos===tr.from)continue;edges.push([tr.from,d.pos,me,danger(d.pos,d.role)-danger(from.pos,"bottom")])}}
+  const seen=new Set();let s=`<defs>${["g","r","n"].map(k=>`<marker id="m${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${k==="g"?"#7ee2a3":k==="r"?"#ff6b7a":"#c9d4e6"}"/></marker>`).join("")}</defs>`;
+  for(const[f,t,me,dd]of edges){const key=f+">"+t;if(seen.has(key))continue;seen.add(key);const A=POSN[f],B=POSN[t],k=dd<0?"g":dd>0?"r":"n";
+    const mx=(A.x+B.x)/2,my=(A.y+B.y)/2,nx=-(B.y-A.y),ny=B.x-A.x,nl=Math.hypot(nx,ny)||1,c=[mx+nx/nl*5,my+ny/nl*5];
+    const sh=(P,Q,r)=>{const dx=Q[0]-P[0],dy=Q[1]-P[1],l=Math.hypot(dx,dy)||1;return[P[0]+dx/l*r,P[1]+dy/l*r]};const p0=sh([A.x,A.y],c,7),p1=sh([B.x,B.y],c,7);
+    s+=`<path data-f="${f}" class="edge" d="M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}" fill="none" stroke="${k==="g"?"#7ee2a3":k==="r"?"#ff6b7a":"#c9d4e6"}" stroke-width=".7" vector-effect="non-scaling-stroke" style="stroke-width:3px" marker-end="url(#m${k})"/>`}
+  $("#mapSvg").innerHTML=s;
+  box.querySelectorAll(".node").forEach(n=>n.remove());
+  for(const id in POSN){const P=POSN[id],r=id==="standing"?"bottom":role0,dg=danger(id,r),b=document.createElement("button");b.className="node";b.style.left=P.x+"%";b.style.top=P.y+"%";b.style.setProperty("--d",DCOL[dg]);
+    b.innerHTML=`${esc(stName(id,r))}<small>${DLAB[dg]}${role0==="bottom"&&up[id]?` · ↑${up[id]}`:""}</small>`;b.dataset.id=id;b.setAttribute("aria-pressed",id===mapSel);b.onclick=()=>selNode(id);box.appendChild(b)}
+  selNode(mapSel,true)}
+let mapSel=null;
+function selNode(id,quiet){mapSel=id;document.querySelectorAll("#map .node").forEach(n=>n.setAttribute("aria-pressed",n.dataset.id===id));
+  document.querySelectorAll("#mapSvg .edge").forEach(e=>e.classList.toggle("on",e.dataset.f===id));$("#map").classList.toggle("sel",!!id);
+  const c=$("#mapCard");if(!id){c.innerHTML='<p class="lead" style="margin:0">Tap a position to see where you can go from it.</p>';return}
+  const r=id==="standing"?"bottom":role0,{mine,his}=movesFor(id,r),dg=danger(id,r);
+  c.innerHTML=`<h3>${esc(stName(id,r))} <span class="dchip" style="--d:${DCOL[dg]}">${DLAB[dg]}</span></h3><p class="lead" style="margin:6px 0 10px">${mine.length} moves for you, ${his.length} for him.</p><button class="btn primary" id="startHere">Start here →</button>`;
+  $("#startHere").onclick=()=>{hist=[];cur=null;goState(id,r);scrollTo(0,0)}}
+
+/* ---------- WIRING ---------- */
+function route(){const v=location.hash.slice(1)==="map"||!cur?"map":"sim";$("#v-sim").hidden=v!=="sim";$("#v-map").hidden=v!=="map";
+  document.querySelectorAll("#nav a").forEach(a=>a.toggleAttribute("aria-current",a.getAttribute("href")==="#"+v));if(v==="map"){setPlay(false);renderMap()}else draw()}
 addEventListener("hashchange",route);
-narrow.addEventListener("change",renderMap);
+$("#anPlay").onclick=()=>setPlay(!anPlay);
+$("#anRange").oninput=e=>{if(!play)return;setPlay(false);play.t=+e.target.value/1000;play.camSet=1;draw();if(play.t>=.999){play.done=true;renderActions()}};
+$("#viewReset").onclick=()=>{const a=play&&play.a?play.a:cur.src.a;[cam.yaw,cam.pitch]=a.cam;cam.dist=a.dist||270;camTarget=a.target.slice();draw()};
+$("#xrayBtn").onclick=()=>{xray=!xray;draw()};
+$("#backBtn").onclick=goBack;
+document.querySelectorAll("#roleSeg button").forEach(b=>b.onclick=()=>{role0=b.dataset.r;document.querySelectorAll("#roleSeg button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderMap()});
+{const svg=$("#svgRoot");let drag=null;
+ svg.addEventListener("pointerdown",e=>{drag=[e.clientX,e.clientY,cam.yaw,cam.pitch];if(play)play.camSet=1;try{svg.setPointerCapture(e.pointerId)}catch(_){}});
+ svg.addEventListener("pointermove",e=>{if(!drag)return;cam.yaw=drag[2]-(e.clientX-drag[0])*.01;cam.pitch=Math.min(1.5,Math.max(.05,drag[3]+(e.clientY-drag[1])*.01));draw()});
+ const end=()=>{drag=null};svg.addEventListener("pointerup",end);svg.addEventListener("pointercancel",end)}
+renderMap();route();
 
-let restoreArmed=false;
-$("#restoreBtn").onclick=()=>{$("#restorePanel").hidden=false;$("#restoreText").focus()};
-$("#restoreCancel").onclick=()=>{$("#restorePanel").hidden=true;restoreArmed=false;$("#restoreGo").textContent="Restore";$("#restoreMsg").textContent=""};
-$("#restoreGo").onclick=()=>{let d;try{d=JSON.parse($("#restoreText").value)}catch(e){$("#restoreMsg").textContent="That isn’t a valid backup.";return}
-  if(!d||typeof d!=="object"||Array.isArray(d)||!Array.isArray(d.diario)||typeof d.repaso!=="object"||typeof d.estado!=="object"){$("#restoreMsg").textContent="That isn’t a valid backup.";return}
-  if(!restoreArmed){restoreArmed=true;$("#restoreGo").textContent="Press again to replace your data";$("#restoreMsg").textContent=`${d.diario.length} sessions and ${Object.keys(d.repaso).length} cards in the backup.`;return}
-  S={estado:Object.assign({},d.estado),repaso:Object.assign({},d.repaso),diario:d.diario.slice(),custom:Array.isArray(d.custom)?d.custom.slice():[]};
-  save();renderAll();restoreArmed=false;$("#restoreGo").textContent="Restore";$("#restoreText").value="";$("#restorePanel").hidden=true;setSync("Backup restored")};
-$("#backup").onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(S));setSync("Backup copied to clipboard")}catch(e){setSync("The browser blocked copying")}};
+/* Old training log: no longer shown; offer a copy once if there is one. */
+(async()=>{let d=null;try{d=JSON.parse(localStorage.getItem("tatami-bjj-v1")||"null")}catch(e){}
+  try{if(window.claude&&claude.use){const db=await claude.use("db"),user=await claude.use("user");const uid=user&&await user.id();if(db&&uid){const sn=await db.collection("data/users/"+uid).doc("estado").get();if(sn.exists)d=sn.data()}}}catch(e){}
+  if(d&&Array.isArray(d.diario)&&d.diario.length){const el=$("#oldData");el.innerHTML=`Your old training log (${d.diario.length} sessions) is no longer shown. <button class="link" id="oldCopy" style="font-size:13px">Copy it</button> · `;
+    $("#oldCopy").onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(d,null,1));$("#oldCopy").textContent="Copied"}catch(e){$("#oldCopy").textContent="The browser blocked copying"}}}})();
 
-function renderAll(){renderMap();renderPanel();renderPlans();renderJudo();renderEntries();renderReview()}
-initDiary();renderAll();route();
-
-/* ---------- ACCOUNT STORAGE ---------- */
-(async()=>{try{
-  if(!window.claude||!claude.use)return;
-  const db=await claude.use("db"),user=await claude.use("user");if(!db||!user)return;
-  const uid=await user.id();if(!uid)return;
-  const r=db.collection("data/users/"+uid).doc("estado");
-  const snap=await Promise.race([r.get(),new Promise((_,rej)=>setTimeout(()=>rej({code:"timeout"}),10000))]);
-  ref=r;
-  if(snap.exists){const d=snap.data()||{};S={estado:Object.assign({},d.estado),repaso:Object.assign({},d.repaso),diario:Array.isArray(d.diario)?d.diario.slice():[],custom:Array.isArray(d.custom)?d.custom.slice():[]};
-    try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};renderAll();setSync("Saved to your account")}
-  else{const has=S.diario.length||Object.keys(S.repaso).length||Object.keys(S.estado).length;if(has)save();setSync("Saved to your account")}
-}catch(e){setSync(e&&e.code==="timeout"?"Couldn’t reach your account; saving in this browser":"Saved in this browser")}})();
 }
 </script>
 </body>
