@@ -898,9 +898,9 @@ function camTo(a){[cam.yaw,cam.pitch]=a.cam;cam.dist=a.dist||270;camTarget=a.tar
 function goState(pos,role,src,you,keepCam){
   if(cur)hist.push({...cur,cam:[cam.yaw,cam.pitch,cam.dist,camTarget.slice()]});
   if(!src){src=canon(pos);you=pos==="standing"||role==="bottom"?"A":"D"}
-  cur={pos,role:pos==="standing"?"bottom":role,src,you};play=null;setPlay(false);
+  cur={pos,role:pos==="standing"?"bottom":role,src,you};play=null;setPlay(false);ST.last={pos:cur.pos,role:cur.role};saveST();
   if(!keepCam){camTo(src.a);xray=!!src.a.xray}
-  location.hash="sim";renderSide();draw()}
+  renderSide();if(location.hash!=="#sim")location.hash="sim";else route()}
 function goBack(){if(play){play=null;setPlay(false);renderSide();draw();return}
   const h=hist.pop();if(!h){location.hash="map";return}cur={pos:h.pos,role:h.role,src:h.src,you:h.you};
   [cam.yaw,cam.pitch,cam.dist]=h.cam;camTarget=h.cam[3];renderSide();draw()}
@@ -1001,11 +1001,12 @@ function selNode(id,quiet){mapSel=id;document.querySelectorAll("#map .node").for
   document.querySelectorAll("#mapSvg .edge").forEach(e=>e.classList.toggle("on",e.dataset.f===id));$("#map").classList.toggle("sel",!!id);
   const c=$("#mapCard");if(!id){c.innerHTML='<p class="lead" style="margin:0">Tap a position to see where you can go from it.</p>';return}
   const r=id==="standing"?"bottom":role0,{mine,his}=movesFor(id,r),dg=danger(id,r);
-  c.innerHTML=`<h3>${esc(stName(id,r))} <span class="dchip" style="--d:${DCOL[dg]}">${DLAB[dg]}</span></h3><p class="lead" style="margin:6px 0 10px">${mine.length} moves for you, ${his.length} for him.</p><button class="btn primary" id="startHere">Start here →</button>`;
+  c.innerHTML=`<h3>${esc(stName(id,r))} <span class="dchip" style="--d:${DCOL[dg]}">${DLAB[dg]}</span></h3><p class="lead" style="margin:6px 0 10px">${mine.length} moves for you, ${his.length} for him. ${mine.filter(t=>t.anim).length} of yours have a 3D animation.</p><button class="btn primary" id="startHere">Start here →</button>`;
   $("#startHere").onclick=()=>{hist=[];cur=null;goState(id,r);scrollTo(0,0)}}
 
 /* ---------- WIRING ---------- */
-function route(){const v=location.hash.slice(1)==="map"||!cur?"map":"sim";$("#v-sim").hidden=v!=="sim";$("#v-map").hidden=v!=="map";
+function route(){const h=location.hash.slice(1);if(h==="sim"&&!cur){const l=ST.last&&POSN[ST.last.pos]?ST.last:{pos:"mount",role:"bottom"};goState(l.pos,l.role);return}
+  const v=h==="map"||!cur?"map":"sim";$("#v-sim").hidden=v!=="sim";$("#v-map").hidden=v!=="map";
   document.querySelectorAll("#nav a").forEach(a=>a.toggleAttribute("aria-current",a.getAttribute("href")==="#"+v));if(v==="map"){setPlay(false);renderMap()}else draw()}
 addEventListener("hashchange",route);
 $("#anPlay").onclick=()=>setPlay(!anPlay);
